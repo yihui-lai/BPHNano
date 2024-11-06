@@ -26,14 +26,14 @@ production_tag = datetime.date.today().strftime('%Y%b%d')
 
 def parse_args():
     parser = ArgumentParser(description="A multicrab submission script")
-    parser.add_argument('-y', '--yaml', default = 'samples.yml', help = 'File with dataset descriptions')
+    parser.add_argument('-y', '--yaml', default = 'test_samples.yml', help = 'File with dataset descriptions')
     parser.add_argument('-c', '--cmd', default='submit', choices = ['submit', 'status'], help= 'Crab command')
     parser.add_argument('-f', '--filter', default='*', help = 'filter samples, POSIX regular expressions allowed') 
-    parser.add_argument('-w', '--workarea', default='BParkingNANO_%s' % production_tag, help = 'Crab working area name')
-    parser.add_argument('-o', '--outputdir', default= '/store/group/phys_bphys/cpv_sin2beta/', help='LFN Output high-level directory: the LFN will be saved in outputdir+workarea ')
+    parser.add_argument('-w', '--workarea', default='BPHNANO_%s' % production_tag, help = 'Crab working area name')
+    parser.add_argument('-o', '--outputdir', default= '/store/group/phys_bphys/cpv_sin2b/', help='LFN Output high-level directory: the LFN will be saved in outputdir+workarea ')
     parser.add_argument('-t', '--tag', default=production_tag, help='Production Tag extra')
-    parser.add_argument('-p', '--psetcfg', default="../test/run_nano_cfg.py", help='Plugin configuration file')
-    parser.add_argument('-e', '--extra', nargs='*', help='Optional extra input files')
+    parser.add_argument('-p', '--psetcfg', default="../test/run_bphNano_cfg.py", help='Plugin configuration file')
+    parser.add_argument('-e', '--extra', nargs='*', default=list(),  help='Optional extra input files')
     return parser.parse_args()
     
 def submit(config):
@@ -72,6 +72,7 @@ expected_schema = Schema({
 samples_schema = Schema({
     "dataset": And(str, error="dataset should be a string"),
     "isMC": And(bool, error="isMC should be a boolean"),
+    Optional("goldenjson") : And(str, error="golden json file path should be a string"),
     Optional("globaltag") : And(str, error="globaltag should be a string"),
     Optional("parts"): [And(int, error="parts should be a list of integers")]
 })
@@ -116,7 +117,7 @@ def get_data_config(config, common_config, dataset_config, production_tag):
      if not isMC:
          config.Data.lumiMask = common_config.get(
                  'lumimask', 
-                 common_config[data_type].get('lumimask', None)
+                 dataset_config.get('lumimask', None)
          )
      else:
          config.Data.lumiMask = ''
@@ -153,10 +154,13 @@ if __name__ == '__main__':
         # loop over samples
         for sample, info in samples['samples'].items():
             # Given we have repeated datasets check for different parts
+            print(sample, info)
             parts = info['parts'] if 'parts' in info else [None]
             for part in parts:
                 name = sample % part if part is not None else sample
-        
+                config.General.workArea = "workarea/" + args.workarea + "_" + name
+                config.Data.outLFNDirBase = args.outputdir + '/'+ config.General.workArea
+                
                 # filter names according to what we need
                 if not fnmatch(name, args.filter): continue
         
@@ -169,9 +173,9 @@ if __name__ == '__main__':
                 config.JobType.outputFiles = ['_'.join(['BPHNano', 'mc' if info['isMC'] else 'data', production_tag])+'.root']
  
 
-                print(config)  
                 print(f"Submit Crab job for {name}")
-                #submit(config)
+                print(config)   
+                submit(config)
     elif args.cmd == "status":
         print(f"Getting crab status for {args.dir}")
         status(args.dir)

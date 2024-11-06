@@ -29,6 +29,12 @@ def Defaultsamples(isMC,decay):
 
 options = VarParsing('python')
 
+options.register('globalTag', '130X_dataRun3_Prompt', 
+    VarParsing.multiplicity.singleton,
+    VarParsing.varType.string,
+    "Global tag"
+)
+
 options.register('isMC', True,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
@@ -70,6 +76,7 @@ options.register('decay', 'KshortLL',
 
 options.setDefault('maxEvents', 1000)
 options.setDefault('tag', 'test')
+print(options)
 options.parseArguments()
 print("////////////////// BPHnano running with options: ////////////////////////")
 print(options)
