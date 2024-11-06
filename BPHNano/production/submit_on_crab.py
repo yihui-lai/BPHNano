@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument('-c', '--cmd', default='submit', choices = ['submit', 'status'], help= 'Crab command')
     parser.add_argument('-f', '--filter', default='*', help = 'filter samples, POSIX regular expressions allowed') 
     parser.add_argument('-w', '--workarea', default='BPHNANO_%s' % production_tag, help = 'Crab working area name')
-    parser.add_argument('-o', '--outputdir', default= '/store/group/phys_bphys/cpv_sin2b/', help='LFN Output high-level directory: the LFN will be saved in outputdir+workarea ')
+    parser.add_argument('-o', '--outputdir', default= '/store/user/valukash/', help='LFN Output high-level directory: the LFN will be saved in outputdir+workarea ')
     parser.add_argument('-t', '--tag', default=production_tag, help='Production Tag extra')
     parser.add_argument('-p', '--psetcfg', default="../test/run_bphNano_cfg.py", help='Plugin configuration file')
     parser.add_argument('-e', '--extra', nargs='*', default=list(),  help='Optional extra input files')
@@ -106,7 +106,7 @@ def get_common_config(args):
     config_.JobType.allowUndistributedCMSSW = True
     config_.JobType.inputFiles = args.extra
 
-    config_.Site.storageSite = 'T2_CH_CERN'
+    config_.Site.storageSite = 'T2_CH_CSCS'
 
     return config_
 
@@ -148,18 +148,19 @@ if __name__ == '__main__':
     validate_yaml(samples)
 
     if args.cmd == "submit":
+        print("")
         print(f"Submit Crab jobs for {args.yaml} with filter {args.filter} applied")
         config = get_common_config(args)
         common = samples['common'] if 'common' in samples else {'data' : {}, 'mc' : {}}
         # loop over samples
         for sample, info in samples['samples'].items():
             # Given we have repeated datasets check for different parts
-            print(sample, info)
+            
             parts = info['parts'] if 'parts' in info else [None]
             for part in parts:
                 name = sample % part if part is not None else sample
+                config.Data.outLFNDirBase = args.outputdir + config.General.workArea
                 config.General.workArea = "workarea/" + args.workarea + "_" + name
-                config.Data.outLFNDirBase = args.outputdir + '/'+ config.General.workArea
                 
                 # filter names according to what we need
                 if not fnmatch(name, args.filter): continue
