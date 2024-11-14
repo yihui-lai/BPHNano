@@ -188,34 +188,30 @@ process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, globaltag, '')
+from PhysicsTools.BPHNano.nanoBPH_cff import *
 if options.isMC:
-   from PhysicsTools.BPHNano.nanoBPH_cff import nanoAOD_customizeMC 
    process = nanoAOD_customizeMC(process)
-
-
-
-from PhysicsTools.BPHNano.nanoBPH_cff import nanoAOD_customizeMuonBPH, nanoAOD_customizeDiMuonBPH, nanoAOD_customizeTrackBPH
 
 process = nanoAOD_customizeMuonBPH(process,options.isMC)
 process = nanoAOD_customizeDiMuonBPH(process,options.isMC)
 process = nanoAOD_customizeTrackBPH(process,options.isMC)
 
-if options.decay == "all" or options.decay == "KLL":
-   from PhysicsTools.BPHNano.nanoBPH_cff import nanoAOD_customizeBToKLL
+if options.decay == "KLL":
    process = nanoAOD_customizeBToKLL(process,options.isMC)
 
-elif options.decay == "all" or options.decay == "KstarLL":
-   from PhysicsTools.BPHNano.nanoBPH_cff import nanoAOD_customizeBToKstarLL 
+elif options.decay == "KstarLL":
    process = nanoAOD_customizeBToKstarLL(process,options.isMC)
 
-elif options.decay == "all" or options.decay == "KshortLL": 
-   print("KSHORT")
-   from PhysicsTools.BPHNano.nanoBPH_cff import nanoAOD_customizeBToKshortLL
+elif options.decay == "KshortLL": 
    process = nanoAOD_customizeBToKshortLL(process,options.isMC)
-   print(process.dumpPython())
+
+elif options.decay == "all":
+   process = nanoAOD_customizeBToKLL(process,options.isMC)
+   process = nanoAOD_customizeBToKstarLL(process,options.isMC)
+   process = nanoAOD_customizeBToKshortLL(process,options.isMC)
 
 else:
-   print("Undefined")
+   print("Undefined decay option")
    import sys
    sys.exit(1)
 
