@@ -66,7 +66,7 @@ options.register('skip', 0,
     "Skip first N events"
 )
 
-options.register('decay', 'KshortLL',
+options.register('decay', 'all',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Options: all KLL KshortLL KstarLL"
@@ -90,15 +90,8 @@ if options.isMC:
 else:
    options.tag+="_data"
 
-if options.decay=="all":
-   options.tag+="_all"
-elif options.decay=="KLL":
-   options.tag+="_kll"
-elif options.decay=="KstarLL":
-   options.tag+="_kstarll"
-elif options.decay=="KshortLL":
-   options.tag+="_kshortll"
-
+options.tag+='_'
+options.tag+=options.decay
 
 outputFileNANO = cms.untracked.string('_'.join(['bph_nano',options.tag])+'.root')
 outputFileFEVT = cms.untracked.string('_'.join(['bph_edm',options.tag])+'.root')
