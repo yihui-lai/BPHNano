@@ -31,9 +31,11 @@ def parse_args():
     parser.add_argument('-f', '--filter', default='*', help = 'filter samples, POSIX regular expressions allowed') 
     parser.add_argument('-w', '--workarea', default='BPHNANO_%s' % production_tag, help = 'Crab working area name')
     parser.add_argument('-o', '--outputdir', default= '/store/user/valukash/', help='LFN Output high-level directory: the LFN will be saved in outputdir+workarea ')
+    parser.add_argument('-s', '--site', default='T2_CH_CSCS', help='T2 or T3 cite where user has access. To be checked with crab checkout')
     parser.add_argument('-t', '--tag', default=production_tag, help='Production Tag extra')
     parser.add_argument('-p', '--psetcfg', default="../test/run_bphNano_cfg.py", help='Plugin configuration file')
     parser.add_argument('-e', '--extra', nargs='*', default=list(),  help='Optional extra input files')
+    parser.add_argument('-tt', '--test', action='store_true', help='Flag a test job')
     return parser.parse_args()
     
 def submit(config):
@@ -72,6 +74,7 @@ expected_schema = Schema({
 samples_schema = Schema({
     "dataset": And(str, error="dataset should be a string"),
     "isMC": And(bool, error="isMC should be a boolean"),
+    Optional("decay") : And(str, error="decay to reconstruct"), 
     Optional("goldenjson") : And(str, error="golden json file path should be a string"),
     Optional("globaltag") : And(str, error="globaltag should be a string"),
     Optional("parts"): [And(int, error="parts should be a list of integers")]
@@ -86,7 +89,8 @@ def validate_yaml(data):
        print("YAML structure is valid.")
     except SchemaError as e:
        print("YAML structure is invalid:", e)
-    
+       import sys
+       sys.exit(1)
 
 def get_common_config(args):
 
@@ -102,41 +106,43 @@ def get_common_config(args):
 
     config_.JobType.pluginName = 'Analysis'
     config_.JobType.psetName = args.psetcfg
-    config_.JobType.maxJobRuntimeMin = 3000
+    config_.JobType.maxJobRuntimeMin = 2700 #can not use with Automatic 
     config_.JobType.allowUndistributedCMSSW = True
     config_.JobType.inputFiles = args.extra
 
-    config_.Site.storageSite = 'T2_CH_CSCS'
+    config_.Site.storageSite = args.site
 
     return config_
 
-def get_data_config(config, common_config, dataset_config, production_tag):
-     isMC = info['isMC']       
+def get_dataset_config(config, common_config, dataset_config, production_tag):
+     isMC = dataset_config['isMC']       
      data_type = 'mc' if isMC else 'data'
-     config.Data.splitting = 'FileBased' if isMC else 'LumiBased'
+
+     config.Data.splitting = 'FileBased'
      if not isMC:
-         config.Data.lumiMask = common_config.get(
-                 'lumimask', 
-                 dataset_config.get('lumimask', None)
-         )
+         config.Data.lumiMask = dataset_config.get('lumimask', None)
      else:
          config.Data.lumiMask = ''
-     config.Data.unitsPerJob = info.get(
-                    'splitting',
-                    common_config[data_type].get('splitting', None)
-     )
-     globaltag = info.get(
-        'globaltag',
-                    common_config[data_type].get('globaltag', None) if dataset_config.get('globaltag', None) == None\
-                    else dataset_config.get('globaltag', None) 
-            )
+     config.Data.unitsPerJob = common_config[data_type].get('splitting', None)
+
+     globaltag = dataset_config.get('globaltag', "auto:run3_data")
+     if globaltag == "auto:run3_data":
+         globaltag = common_config[data_type].get('globaltag', "auto:run3_data")
+
+     decay = dataset_config.get('decay', 'KshortLL')
+     
+     maxevents = -1
         
      config.JobType.pyCfgParams = [
                     'isMC=%s' % isMC, 'reportEvery=1000',
                     'tag=%s' % production_tag,
                     'globalTag=%s' % globaltag,
+                    'decay=%s' % decay,
+                    'maxEvents=%s' % maxevents,
      ]
- 
+
+
+
      return config
    
 
@@ -146,7 +152,7 @@ if __name__ == '__main__':
     with open(args.yaml, "r") as f:
         samples = yaml.safe_load(f) # Parse YAML file
     validate_yaml(samples)
-
+  
     if args.cmd == "submit":
         print("")
         print(f"Submit Crab jobs for {args.yaml} with filter {args.filter} applied")
@@ -168,9 +174,11 @@ if __name__ == '__main__':
                 config.Data.inputDataset = info['dataset'] % part \
                                          if part is not None else \
                                                   info['dataset']
-                get_data_config(config, common, info, production_tag)
+                get_dataset_config(config, common, info, production_tag)
+                if args.test:
+                   config.Data.totalUnits = 10
 
-                config.General.requestName = name
+                config.General.requestName = name + "_" + production_tag
                 config.JobType.outputFiles = ['_'.join(['BPHNano', 'mc' if info['isMC'] else 'data', production_tag])+'.root']
  
 
