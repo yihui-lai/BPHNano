@@ -22,14 +22,20 @@ def Defaultsamples(isMC,decay):
                   'root://cms-xrd-global.cern.ch//store/mc/Run3Summer22EEMiniAODv4/BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13p6TeV_pythia8-evtgen/MINIAODSIM/130X_mcRun3_2022_realistic_postEE_v6-v2/2540000/04415d2e-62f7-4c64-aa43-27cd63a43243.root',\
                   'root://cms-xrd-global.cern.ch//store/mc/Run3Summer23MiniAODv4/B0ToJpsiK0s_JpsiFilter_MuFilter_K0sFilter_TuneCP5_13p6TeV_pythia8-evtgen/MINIAODSIM/130X_mcRun3_2023_realistic_v14-v3/2820000/02555ce8-49a9-485f-9d46-3c5c49a8359c.root']
     else:
-       return ['root://cms-xrd-global.cern.ch//store/data/Run2023B/ParkingDoubleMuonLowMass0/MINIAOD/PromptReco-v1/000/366/729/00000/27addd1b-2dfd-422e-9ee6-32540a1680c7.root'] 
-
+       #return ['root://cms-xrd-global.cern.ch//store/data/Run2023B/ParkingDoubleMuonLowMass0/MINIAOD/PromptReco-v1/000/366/729/00000/27addd1b-2dfd-422e-9ee6-32540a1680c7.root'] 
+       return ['root://cms-xrd-global.cern.ch//store/data/Run2022D/ParkingDoubleMuonLowMass0/MINIAOD/10Dec2022-v2/25610000/79a953fb-ecee-457c-a06a-41352cf1ec10.root']
 
 
 
 options = VarParsing('python')
 
-options.register('isMC', True,
+options.register('globalTag', '130X_dataRun3_Prompt_v3', 
+    VarParsing.multiplicity.singleton,
+    VarParsing.varType.string,
+    "Global tag"
+)
+
+options.register('isMC', False,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "Adds gen info/matching"
@@ -60,38 +66,32 @@ options.register('skip', 0,
     "Skip first N events"
 )
 
-options.register('decay', 'KshortLL',
+options.register('decay', 'all',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Options: all KLL KshortLL KstarLL"
 )
 
 
-
-options.setDefault('maxEvents', 1000)
+options.setDefault('maxEvents', -1)
 options.setDefault('tag', 'test')
+
+print(options)
 options.parseArguments()
 print("////////////////// BPHnano running with options: ////////////////////////")
 print(options)
 print("/////////////////////////////////////////////////////////////////////////")
 
-
 globaltag = '124X_mcRun3_2022_realistic_v11' if options.isMC else '130X_dataRun3_Prompt_v3'
+
 
 if options.isMC:
    options.tag+="_mc"
 else:
    options.tag+="_data"
 
-if options.decay=="all":
-   options.tag+="_all"
-elif options.decay=="KLL":
-   options.tag+="_kll"
-elif options.decay=="KstarLL":
-   options.tag+="_kstarll"
-elif options.decay=="KshortLL":
-   options.tag+="_kshortll"
-
+options.tag+='_'
+options.tag+=options.decay
 
 outputFileNANO = cms.untracked.string('_'.join(['bph_nano',options.tag])+'.root')
 outputFileFEVT = cms.untracked.string('_'.join(['bph_edm',options.tag])+'.root')
@@ -182,7 +182,6 @@ process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, globaltag, '')
 from PhysicsTools.BPHNano.nanoBPH_cff import *
-
 if options.isMC:
    process = nanoAOD_customizeMC(process)
 
@@ -190,16 +189,24 @@ process = nanoAOD_customizeMuonBPH(process,options.isMC)
 process = nanoAOD_customizeDiMuonBPH(process,options.isMC)
 process = nanoAOD_customizeTrackBPH(process,options.isMC)
 
-if options.decay == "all" or options.decay == "KLL":
+if options.decay == "KLL":
    process = nanoAOD_customizeBToKLL(process,options.isMC)
 
-if options.decay == "all" or options.decay == "KstarLL":
+elif options.decay == "KstarLL":
    process = nanoAOD_customizeBToKstarLL(process,options.isMC)
 
-if options.decay == "all" or options.decay == "KshortLL":
+elif options.decay == "KshortLL": 
    process = nanoAOD_customizeBToKshortLL(process,options.isMC)
 
+elif options.decay == "all":
+   process = nanoAOD_customizeBToKLL(process,options.isMC)
+   process = nanoAOD_customizeBToKstarLL(process,options.isMC)
+   process = nanoAOD_customizeBToKshortLL(process,options.isMC)
 
+else:
+   print("Undefined decay option")
+   import sys
+   sys.exit(1)
 
 print("processing modules:",process.nanoSequence)
 
@@ -236,3 +243,7 @@ process.NANOAODoutput.fakeNameForCrab=cms.untracked.bool(True)
 process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
 process = customiseEarlyDelete(process)
+
+print(process.dumpPython())
+
+
