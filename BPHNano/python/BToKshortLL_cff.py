@@ -93,6 +93,7 @@ BToKshortMuMuTable = cms.EDProducer(
 
 CountBToKshortMuMu = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(1),
+    maxNumber = cms.uint32(999999),
     src = cms.InputTag("BToKshortMuMu")
 )
 

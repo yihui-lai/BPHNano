@@ -103,6 +103,7 @@ BToKstarMuMuTable = cms.EDProducer(
 
 CountBToKstarMuMu = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(1),
+    maxNumber = cms.uint32(999999),
     src = cms.InputTag("BToKstarMuMu")
 )
 
