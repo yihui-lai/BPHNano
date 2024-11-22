@@ -206,6 +206,9 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     pcand.addUserFloat("covQopPhi", trk.bestTrack()->covariance(0 ,2));
     pcand.addUserFloat("covLamPhi", trk.bestTrack()->covariance(1 ,2));
 
+    // Additional track parameters for tagging
+    pcand.addUserFloat("ptErr", trk.bestTrack()->ptError());
+    pcand.addUserFloat("normChi2", trk.bestTrack()->normalizedChi2());
 
     //adding the candidate in the composite stuff for fit (need to test)
     if ( iTrk < nTracks )

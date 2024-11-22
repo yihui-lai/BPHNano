@@ -47,6 +47,11 @@ trackBPHTable = cms.EDProducer(
         covLamLam = Var("userFloat(covLamLam)", float, doc="Cov. of lambda with lambda", precision=10),
         covLamPhi = Var("userFloat(covLamPhi)", float, doc="Cov. of lambda with phi", precision=10),
         covPhiPhi = Var("userFloat(covPhiPhi)", float, doc="Cov. of phi with phi", precision=10),
+        # Additional track parameters for tagging
+        ptErr = Var("userFloat(ptErr)", float, doc="Pt uncertainty", precision=10),
+        normChi2 = Var("userFloat(normChi2)", float, doc="Track fit chi-squared divided by n.d.o.f.", precision=10),
+        # TODO: number pixel hits
+        # TODO: check impact parameters
         ),
 )
 
