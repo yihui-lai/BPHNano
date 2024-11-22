@@ -28,8 +28,6 @@
 #include "helper.h"
 
 
-
-
 class TrackMerger : public edm::global::EDProducer<> {
 
 
@@ -47,17 +45,17 @@ public:
     maxDzDilep_(cfg.getParameter<double>("maxDzDilep")),
     dcaSig_(cfg.getParameter<double>("dcaSig")),
     track_selection_(cfg.getParameter<std::string>("trackSelection"))
-{
-    produces<pat::CompositeCandidateCollection>("SelectedTracks");  
-    produces<TransientTrackCollection>("SelectedTransientTracks");  
-}
+  {
+    produces<pat::CompositeCandidateCollection>("SelectedTracks");
+    produces<TransientTrackCollection>("SelectedTransientTracks");
+  }
 
   ~TrackMerger() override {}
 
   void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
 
-  static void fillDescriptions(edm::ConfigurationDescriptions &descriptions) {}
-  
+  static void fillDescriptions(edm::ConfigurationDescriptions & descriptions) {}
+
 
 private:
   const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> bFieldToken_;
@@ -68,15 +66,11 @@ private:
   const edm::EDGetTokenT<pat::MuonCollection> muonToken_;
   const edm::EDGetTokenT<pat::ElectronCollection> eleToken_;
 
-  //selections                                                                 
+  //selections
   const double maxDzDilep_;
   const double dcaSig_;
   const StringCutObjectSelector<pat::PackedCandidate> track_selection_;
 };
-
-
-
-
 
 
 void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const &stp) const {
@@ -86,7 +80,7 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   evt.getByToken(beamSpotSrc_, beamSpotHandle);
   if ( ! beamSpotHandle.isValid() ) {
     edm::LogError("BToKstllProducer") << "No beam spot available from Event" ;
-  }  
+  }
   const reco::BeamSpot& beamSpot = *beamSpotHandle;
 
   const auto& bField = stp.getData(bFieldToken_);
@@ -107,32 +101,32 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   unsigned int nTracks = tracks->size();
   unsigned int totalTracks = nTracks + lostTracks->size();
 
-  //ok this was CompositeCandidateCollection 
+  //ok this was CompositeCandidateCollection
   std::unique_ptr<pat::CompositeCandidateCollection> tracks_out      (new pat::CompositeCandidateCollection);
   std::unique_ptr<TransientTrackCollection>          trans_tracks_out(new TransientTrackCollection);
 
-   std::vector< std::pair<pat::CompositeCandidate,reco::TransientTrack> > vectrk_ttrk; 
+  std::vector< std::pair<pat::CompositeCandidate, reco::TransientTrack> > vectrk_ttrk;
   //try topreserve same logic avoiding the copy of the full collection
   /*
   //correct logic but a bit convoluted -> changing to smthn simpler
    std::vector<pat::PackedCandidate> totalTracks(*tracks);
    totalTracks.insert(totalTracks.end(),lostTracks->begin(),lostTracks->end());
   */
-  // for loop is better to be range based - especially for large ensembles  
-  for( unsigned int iTrk=0; iTrk<totalTracks; ++iTrk ) {
-    const pat::PackedCandidate & trk = (iTrk < nTracks) ? (*tracks)[iTrk] : (*lostTracks)[iTrk-nTracks];
+  // for loop is better to be range based - especially for large ensembles
+  for ( unsigned int iTrk = 0; iTrk < totalTracks; ++iTrk ) {
+    const pat::PackedCandidate & trk = (iTrk < nTracks) ? (*tracks)[iTrk] : (*lostTracks)[iTrk - nTracks];
     //arranging cuts for speed
     if (!trk.hasTrackDetails()) continue;
     if (fabs(trk.pdgId()) != 211) continue; //do we want also to keep muons?
     if ( !track_selection_(trk) ) continue;
 
-    bool skipTrack=true;
+    bool skipTrack = true;
     float dzTrg = 0.0;
-    for (const pat::CompositeCandidate & dilep: *dileptons){
+    for (const pat::CompositeCandidate & dilep : *dileptons) {
       //if dz is negative it is deactivated
-      if( fabs(trk.vz() - dilep.vz()) > maxDzDilep_ && maxDzDilep_ > 0)
+      if ( fabs(trk.vz() - dilep.vz()) > maxDzDilep_ && maxDzDilep_ > 0)
         continue;
-      skipTrack=false;
+      skipTrack = false;
       dzTrg = trk.vz() - dilep.vz();
       break; // at least for one dilepton candidate to pass this cuts
     }
@@ -141,50 +135,49 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     if (skipTrack) continue;
 
     // high purity requirment applied only in packedCands
-    if( iTrk < nTracks && !trk.trackHighPurity()) continue;
+    if ( iTrk < nTracks && !trk.trackHighPurity()) continue;
     const reco::TransientTrack trackTT( (*trk.bestTrack()) , &bField);
 
     //distance closest approach in x,y wrt beam spot
-    std::pair<double,double> DCA = computeDCA(trackTT, beamSpot);
+    std::pair<double, double> DCA = computeDCA(trackTT, beamSpot);
     float DCABS = DCA.first;
     float DCABSErr = DCA.second;
-    float DCASig = (DCABSErr != 0 && float(DCABSErr) == DCABSErr) ? fabs(DCABS/DCABSErr) : -1;
-    if (DCASig >  dcaSig_  && dcaSig_ >0) continue;
+    float DCASig = (DCABSErr != 0 && float(DCABSErr) == DCABSErr) ? fabs(DCABS / DCABSErr) : -1;
+    if (DCASig >  dcaSig_  && dcaSig_ > 0) continue;
 
 
     // clean tracks wrt to all muons
     int matchedToMuon       = 0;
     for (const pat::Muon &imutmp : *muons) {
-        for (unsigned int i = 0; i < imutmp.numberOfSourceCandidatePtrs(); ++i) {
-            if (! ((imutmp.sourceCandidatePtr(i)).isNonnull() && 
-                   (imutmp.sourceCandidatePtr(i)).isAvailable())
-               )   continue;
-            
-            const edm::Ptr<reco::Candidate> & source = imutmp.sourceCandidatePtr(i);
-            if (source.id() == tracks.id() && source.key() == iTrk){
-                matchedToMuon =1;
-                break;
-            }
+      for (unsigned int i = 0; i < imutmp.numberOfSourceCandidatePtrs(); ++i) {
+        if (! ((imutmp.sourceCandidatePtr(i)).isNonnull() &&
+        (imutmp.sourceCandidatePtr(i)).isAvailable())
+           )   continue;
+
+        const edm::Ptr<reco::Candidate> & source = imutmp.sourceCandidatePtr(i);
+        if (source.id() == tracks.id() && source.key() == iTrk) {
+          matchedToMuon = 1;
+          break;
         }
+      }
     }
 
     // clean tracks wrt to all pf electrons
     int matchedToEle        = 0;
     for (const pat::Electron &ietmp : *pfele) {
-        for (unsigned int i = 0; i < ietmp.numberOfSourceCandidatePtrs(); ++i) {
-            
-            if (! ((ietmp.sourceCandidatePtr(i)).isNonnull() && 
-                   (ietmp.sourceCandidatePtr(i)).isAvailable())
-               )   continue;
-            const edm::Ptr<reco::Candidate> & source = ietmp.sourceCandidatePtr(i);
-            if (source.id() == tracks.id() && source.key() == iTrk){
-                matchedToEle =1;
-                break;
-            }        
+      for (unsigned int i = 0; i < ietmp.numberOfSourceCandidatePtrs(); ++i) {
+
+        if (! ((ietmp.sourceCandidatePtr(i)).isNonnull() &&
+        (ietmp.sourceCandidatePtr(i)).isAvailable())
+           )   continue;
+        const edm::Ptr<reco::Candidate> & source = ietmp.sourceCandidatePtr(i);
+        if (source.id() == tracks.id() && source.key() == iTrk) {
+          matchedToEle = 1;
+          break;
         }
+      }
 
     }
-    
 
     // output
     pat::CompositeCandidate pcand;
@@ -193,11 +186,11 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     pcand.setVertex(trk.vertex());
     pcand.setPdgId(trk.pdgId());
     pcand.addUserInt("isPacked", (iTrk < nTracks));
-    pcand.addUserInt("isLostTrk", (iTrk < nTracks) ? 0 : 1);      
+    pcand.addUserInt("isLostTrk", (iTrk < nTracks) ? 0 : 1);
     pcand.addUserFloat("dxy", trk.dxy());
-    pcand.addUserFloat("dxyS", trk.dxy()/trk.dxyError());
-    pcand.addUserFloat("dz", trk.dz()); 
-    pcand.addUserFloat("dzS", trk.dz()/trk.dzError());
+    pcand.addUserFloat("dxyS", trk.dxy() / trk.dxyError());
+    pcand.addUserFloat("dz", trk.dz());
+    pcand.addUserFloat("dzS", trk.dz() / trk.dzError());
     pcand.addUserFloat("DCASig", DCASig);
     pcand.addUserFloat("dzTrg", dzTrg);
     pcand.addUserInt("isMatchedToMuon", matchedToMuon);
@@ -205,14 +198,23 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     pcand.addUserInt("nValidHits", trk.bestTrack()->found());
     pcand.addUserInt("keyPacked", iTrk);
 
+    // Covariance matrix elements for helix parameters for decay time uncertainty
+    pcand.addUserFloat("covQopQop", trk.bestTrack()->covariance(0, 0));
+    pcand.addUserFloat("covLamLam", trk.bestTrack()->covariance(1, 1));
+    pcand.addUserFloat("covPhiPhi", trk.bestTrack()->covariance(2, 2));
+    pcand.addUserFloat("covQopLam", trk.bestTrack()->covariance(0 ,1));
+    pcand.addUserFloat("covQopPhi", trk.bestTrack()->covariance(0 ,2));
+    pcand.addUserFloat("covLamPhi", trk.bestTrack()->covariance(1 ,2));
+
+
     //adding the candidate in the composite stuff for fit (need to test)
     if ( iTrk < nTracks )
       pcand.addUserCand( "cand", edm::Ptr<pat::PackedCandidate> ( tracks, iTrk ));
-    else 
-      pcand.addUserCand( "cand", edm::Ptr<pat::PackedCandidate> ( lostTracks, iTrk-nTracks ));   
- 
-  //in order to avoid revoking the sxpensive ttrack builder many times and still have everything sorted, we add them to vector of pairs
-   vectrk_ttrk.emplace_back( std::make_pair(pcand,trackTT ) );   
+    else
+      pcand.addUserCand( "cand", edm::Ptr<pat::PackedCandidate> ( lostTracks, iTrk - nTracks ));
+
+    //in order to avoid revoking the sxpensive ttrack builder many times and still have everything sorted, we add them to vector of pairs
+    vectrk_ttrk.emplace_back( std::make_pair(pcand, trackTT ) );
   }
 
   // sort to be uniform with leptons
@@ -222,7 +224,7 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
            );
 
   // finnaly save ttrks and trks to the correct _out vectors
-  for ( auto & trk: vectrk_ttrk){
+  for ( auto & trk : vectrk_ttrk) {
     tracks_out -> emplace_back( trk.first);
     trans_tracks_out -> emplace_back(trk.second);
   }
