@@ -39,7 +39,7 @@ trackBPHTable = cms.EDProducer(
         dzTrg   = Var("userFloat('dzTrg')", float, doc="dz from the corresponding trigger muon [cm]", precision=10),
         isMatchedToMuon = Var("userInt('isMatchedToMuon')", bool, doc="track was used to build a muon"),
         isMatchedToEle  = Var("userInt('isMatchedToEle')", bool, doc="track was used to build a PF ele"),
-        nValidHits      = Var("userInt('nValidHits')", int, doc="Number of valid hits on track", precision=10),
+        nValidHits      = Var("userInt('nValidHits')", int, doc="Number of valid hits", precision=10),
         # Covariance matrix elements for helix parameters for decay time uncertainty
         covQopQop = Var("userFloat(covQopQop)", float, doc="Cov. of q/p with q/p", precision=10),
         covQopLam = Var("userFloat(covQopLam)", float, doc="Cov. of q/p with lambda", precision=10),
@@ -48,9 +48,9 @@ trackBPHTable = cms.EDProducer(
         covLamPhi = Var("userFloat(covLamPhi)", float, doc="Cov. of lambda with phi", precision=10),
         covPhiPhi = Var("userFloat(covPhiPhi)", float, doc="Cov. of phi with phi", precision=10),
         # Additional track parameters for tagging
-        ptErr = Var("userFloat(ptErr)", float, doc="Pt uncertainty", precision=10),
-        normChi2 = Var("userFloat(normChi2)", float, doc="Track fit chi-squared divided by n.d.o.f.", precision=10),
-        # TODO: number pixel hits
+        ptErr      = Var("userFloat(ptErr)", float, doc="Pt uncertainty", precision=10),
+        normChi2   = Var("userFloat(normChi2)", float, doc="Track fit chi-squared divided by n.d.o.f.", precision=10),
+        nPixelHits = Var("userInt(nPixelHits)", float, doc="Number of pixel hits", precision=10),
         # TODO: check impact parameters
         ),
 )
