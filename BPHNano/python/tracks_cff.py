@@ -47,8 +47,6 @@ trackBPHTable = cms.EDProducer(
         covLamLam = Var("userFloat(covLamLam)", float, doc="Cov. of lambda with lambda", precision=10),
         covLamPhi = Var("userFloat(covLamPhi)", float, doc="Cov. of lambda with phi", precision=10),
         covPhiPhi = Var("userFloat(covPhiPhi)", float, doc="Cov. of phi with phi", precision=10),
-        # Additional variables for tagging
-        ptErr = Var("ptError()", float, doc="error on Pt", precision=10),
         ),
 )
 
