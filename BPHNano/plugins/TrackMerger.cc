@@ -209,7 +209,7 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     // Additional track parameters for tagging
     pcand.addUserFloat("ptErr", trk.bestTrack()->ptError());
     pcand.addUserFloat("normChi2", trk.bestTrack()->normalizedChi2());
-    pcand.addUserInt("nPixelHits", trk.bestTrack()->numberOfPixelHits());
+    pcand.addUserInt("nValidPixelHits", trk.numberOfPixelHits());
 
     //adding the candidate in the composite stuff for fit (need to test)
     if ( iTrk < nTracks )
