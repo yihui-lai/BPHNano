@@ -50,7 +50,7 @@ trackBPHTable = cms.EDProducer(
         # Additional track parameters for tagging
         ptErr      = Var("userFloat(ptErr)", float, doc="Pt uncertainty", precision=10),
         normChi2   = Var("userFloat(normChi2)", float, doc="Track fit chi-squared divided by n.d.o.f.", precision=10),
-        nPixelHits = Var("userInt(nValidPixelHits)", float, doc="Number of pixel hits", precision=10),
+        nValidPixelHits = Var("userInt(nValidPixelHits)", float, doc="Number of pixel hits", precision=10),
         # TODO: check impact parameters
         ),
 )
