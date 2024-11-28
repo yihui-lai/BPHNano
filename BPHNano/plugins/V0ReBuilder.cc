@@ -152,12 +152,18 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
        if (!post_vtx_selection_(cand)) //reject bkg
             continue;
 
-       cand.addUserFloat("vtx_x", cand.vx());
-       cand.addUserFloat("vtx_y", cand.vy());
-       cand.addUserFloat("vtx_z", cand.vz());
-       cand.addUserFloat("vtx_ex", sqrt(fitter.fitted_vtx_uncertainty().cxx()));
-       cand.addUserFloat("vtx_ey", sqrt(fitter.fitted_vtx_uncertainty().cyy()));
-       cand.addUserFloat("vtx_ez", sqrt(fitter.fitted_vtx_uncertainty().czz()));
+        cand.addUserFloat("vtx_x", cand.vx());
+        cand.addUserFloat("vtx_y", cand.vy());
+        cand.addUserFloat("vtx_z", cand.vz());
+
+        const auto& covMatrix = fitter.fitted_vtx_uncertainty();
+        cand.addUserFloat("vtx_cxx", covMatrix.cxx());
+        cand.addUserFloat("vtx_cyy", covMatrix.cyy());
+        cand.addUserFloat("vtx_czz", covMatrix.czz());
+        cand.addUserFloat("vtx_cxy", covMatrix.cyx());
+        cand.addUserFloat("vtx_cxz", covMatrix.czx());
+        cand.addUserFloat("vtx_cyz", covMatrix.czy());
+
        cand.addUserFloat("prefit_mass", v0->mass());
        int trk1=0;
        int trk2=1;
