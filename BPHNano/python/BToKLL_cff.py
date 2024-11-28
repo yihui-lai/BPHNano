@@ -48,9 +48,9 @@ BToKmumuTable = cms.EDProducer(
         vtx_cxx = ufloat('vtx_cxx'),
         vtx_cyy = ufloat('vtx_cyy'),
         vtx_czz = ufloat('vtx_czz'),
-        vtx_cxy = ufloat('vtx_cxy'),
-        vtx_cxz = ufloat('vtx_cxz'),
-        vtx_cyz = ufloat('vtx_cyz'),
+        vtx_cyx = ufloat('vtx_cyx'),
+        vtx_czx = ufloat('vtx_czx'),
+        vtx_czy = ufloat('vtx_czy'),
         # Mll
         mll_fullfit = ufloat('fitted_mll'),
         # Cos(theta)

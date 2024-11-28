@@ -154,9 +154,9 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     cand.addUserFloat("vtx_cxx", covMatrix.cxx());
     cand.addUserFloat("vtx_cyy", covMatrix.cyy());
     cand.addUserFloat("vtx_czz", covMatrix.czz());
-    cand.addUserFloat("vtx_cxy", covMatrix.cyx());
-    cand.addUserFloat("vtx_cxz", covMatrix.czx());
-    cand.addUserFloat("vtx_cyz", covMatrix.czy());
+    cand.addUserFloat("vtx_cyx", covMatrix.cyx());
+    cand.addUserFloat("vtx_czx", covMatrix.czx());
+    cand.addUserFloat("vtx_czy", covMatrix.czy());
 
     cand.addUserFloat("prefit_mass", v0->mass());
     int trk1=0;
