@@ -6,11 +6,13 @@ from PhysicsTools.BPHNano.common_cff import *
 KshortToPiPi = cms.EDProducer(
     'V0ReBuilder',
     V0s = cms.InputTag('slimmedKshortVertices'),
-    V0Selection = cms.string( '0.3<mass && mass<0.7' ),
-    postVtxSelection = cms.string( '0.3<mass && mass<0.7 && userFloat("sv_prob")>0.0001' ),
+    V0Selection = cms.string('0.3 < mass && mass < 0.7'),
+    postVtxSelection = cms.string('0.3 < mass && mass < 0.7'
+                                  '&& userFloat("sv_prob") > 0.0001'),
     beamSpot = cms.InputTag("offlineBeamSpot"),
 )
 
+########################### Tables ###########################
 
 KshortToPiPiTable = cms.EDProducer(
     'SimpleCompositeCandidateFlatTableProducer',

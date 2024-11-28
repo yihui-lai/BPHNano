@@ -7,12 +7,12 @@ JpsiToMuMu = cms.EDProducer(
     transientTracksSrc = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
     lep1Selection = cms.string(''),
     lep2Selection = cms.string(''),
-    preVtxSelection = cms.string('abs(userCand("l1").vz - userCand("l2").vz) <= 1.'
-                                 ' && 2.8 < mass() && mass() <3.4 && charge() == 0'
-                                 ' && userFloat("lep_deltaR") > 0.03'),
-    postVtxSelection =  cms.string('2.9<userFloat("fitted_mass")'
-                                   ' && userFloat("fitted_mass") < 3.3'
-                                   ' && userFloat("sv_prob")>0.001')
+    preVtxSelection  = cms.string('abs(userCand("l1").vz - userCand("l2").vz) <= 1.'
+                                  '&& 2.8 < mass() && mass() < 3.4 '
+                                  '&& charge() == 0'
+                                  '&& userFloat("lep_deltaR") > 0.03'),
+    postVtxSelection = cms.string('2.9 < userFloat("fitted_mass") && userFloat("fitted_mass") < 3.3'
+                                  '&& userFloat("sv_prob") > 0.001')
 )
 
 CountDiMuonBPH = cms.EDFilter("PATCandViewCountFilter",
