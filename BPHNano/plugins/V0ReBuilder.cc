@@ -96,92 +96,86 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   size_t v0_idx = 0;
   for (reco::VertexCompositePtrCandidateCollection::const_iterator v0 = V0s->begin(); v0 != V0s->end(); v0++){
 
-      reco::VertexCompositePtrCandidate V0= V0s->at(v0_idx);
-      v0_idx++;
-            
-      // selection on V0s
-      if (v0->numberOfDaughters() != 2) 
-          continue;
-      if (!pre_vtx_selection_(V0)) 
-          continue;
-       pat::PackedCandidate v0daughter1 = *(dynamic_cast<const pat::PackedCandidate *>(v0->daughter(0)));
-       pat::PackedCandidate v0daughter2 = *(dynamic_cast<const pat::PackedCandidate *>(v0->daughter(1)));
+    reco::VertexCompositePtrCandidate V0= V0s->at(v0_idx);
+    v0_idx++;
+          
+    // selection on V0s
+    if (v0->numberOfDaughters() != 2) continue;
+    if (!pre_vtx_selection_(V0)) continue;
 
-      if (!v0daughter1.hasTrackDetails()) 
-         continue;
-      if (!v0daughter2.hasTrackDetails())
-         continue;
-      if (fabs(v0daughter1.pdgId())!=211)
-         continue;
-      if (fabs(v0daughter2.pdgId())!=211)
-         continue;
-     
-      const reco::TransientTrack v0daughter1_ttrack = theB->build( v0daughter1.bestTrack());
-      const reco::TransientTrack v0daughter2_ttrack = theB->build(v0daughter2.bestTrack());
+    pat::PackedCandidate v0daughter1 = *(dynamic_cast<const pat::PackedCandidate *>(v0->daughter(0)));
+    pat::PackedCandidate v0daughter2 = *(dynamic_cast<const pat::PackedCandidate *>(v0->daughter(1)));
 
-      // create V0 vertex
-      KinVtxFitter fitter(
-                      {v0daughter1_ttrack, v0daughter2_ttrack},
-                      {v0daughter1.mass(), v0daughter2.mass()},
-                      {K_SIGMA, K_SIGMA} );
-      if (!fitter.success())
-         continue;
+    if (!v0daughter1.hasTrackDetails()) continue;
+    if (!v0daughter2.hasTrackDetails()) continue;
+    if (fabs(v0daughter1.pdgId())!=211) continue;
+    if (fabs(v0daughter2.pdgId())!=211) continue;
+   
+    const reco::TransientTrack v0daughter1_ttrack = theB->build( v0daughter1.bestTrack());
+    const reco::TransientTrack v0daughter2_ttrack = theB->build(v0daughter2.bestTrack());
 
-      pat::CompositeCandidate cand;
-      cand.setVertex( reco::Candidate::Point(
-                                             fitter.fitted_vtx().x(),
-                                             fitter.fitted_vtx().y(),
-                                             fitter.fitted_vtx().z()                                                         )
-                                          );
-       auto fit_p4 = fitter.fitted_p4();
-       cand.setP4(fit_p4);
+    // create V0 vertex
+    KinVtxFitter fitter(
+                    {v0daughter1_ttrack, v0daughter2_ttrack},
+                    {v0daughter1.mass(), v0daughter2.mass()},
+                    {K_SIGMA, K_SIGMA} );
 
-       cand.setCharge(v0daughter1.charge()+v0daughter2.charge());
-       cand.addUserFloat("sv_chi2", fitter.chi2());
-       cand.addUserFloat("sv_prob", fitter.prob());
-       cand.addUserFloat("massErr",
-                            sqrt(fitter.fitted_candidate().kinematicParametersError().matrix()(6, 6)));
-       cand.addUserFloat("cos_theta_2D",
-                            cos_theta_2D(fitter, *beamspot, cand.p4()));
-       cand.addUserFloat("fitted_cos_theta_2D",
-                            cos_theta_2D(fitter, *beamspot, fit_p4));
-       auto lxy = l_xy(fitter, *beamspot);
-       cand.addUserFloat("l_xy", lxy.value());
-       cand.addUserFloat("l_xy_unc", lxy.error());
+    if (!fitter.success()) continue;
 
-       if (!post_vtx_selection_(cand)) //reject bkg
-            continue;
+    pat::CompositeCandidate cand;
+    cand.setVertex( reco::Candidate::Point(
+                                           fitter.fitted_vtx().x(),
+                                           fitter.fitted_vtx().y(),
+                                           fitter.fitted_vtx().z()                                                         )
+                                        );
+    auto fit_p4 = fitter.fitted_p4();
+    cand.setP4(fit_p4);
 
-        cand.addUserFloat("vtx_x", cand.vx());
-        cand.addUserFloat("vtx_y", cand.vy());
-        cand.addUserFloat("vtx_z", cand.vz());
+    cand.setCharge(v0daughter1.charge()+v0daughter2.charge());
+    cand.addUserFloat("sv_chi2", fitter.chi2());
+    cand.addUserFloat("sv_prob", fitter.prob());
+    cand.addUserFloat("massErr",
+                          sqrt(fitter.fitted_candidate().kinematicParametersError().matrix()(6, 6)));
+    cand.addUserFloat("cos_theta_2D",
+                          cos_theta_2D(fitter, *beamspot, cand.p4()));
+    cand.addUserFloat("fitted_cos_theta_2D",
+                          cos_theta_2D(fitter, *beamspot, fit_p4));
+    auto lxy = l_xy(fitter, *beamspot);
+    cand.addUserFloat("l_xy", lxy.value());
+    cand.addUserFloat("l_xy_unc", lxy.error());
 
-        const auto& covMatrix = fitter.fitted_vtx_uncertainty();
-        cand.addUserFloat("vtx_cxx", covMatrix.cxx());
-        cand.addUserFloat("vtx_cyy", covMatrix.cyy());
-        cand.addUserFloat("vtx_czz", covMatrix.czz());
-        cand.addUserFloat("vtx_cxy", covMatrix.cyx());
-        cand.addUserFloat("vtx_cxz", covMatrix.czx());
-        cand.addUserFloat("vtx_cyz", covMatrix.czy());
+    if (!post_vtx_selection_(cand)) continue;
 
-       cand.addUserFloat("prefit_mass", v0->mass());
-       int trk1=0;
-       int trk2=1;
-       if (fitter.daughter_p4(0).pt()<fitter.daughter_p4(1).pt()){
-          trk1=1;
-          trk2=0;
-       }
-       cand.addUserFloat("trk1_pt", fitter.daughter_p4(trk1).pt());
-       cand.addUserFloat("trk1_eta", fitter.daughter_p4(trk1).eta());
-       cand.addUserFloat("trk1_phi", fitter.daughter_p4(trk1).phi());
-       cand.addUserFloat("trk2_pt", fitter.daughter_p4(trk2).pt());
-       cand.addUserFloat("trk2_eta", fitter.daughter_p4(trk2).eta());
-       cand.addUserFloat("trk2_phi", fitter.daughter_p4(trk2).phi());
+    cand.addUserFloat("vtx_x", cand.vx());
+    cand.addUserFloat("vtx_y", cand.vy());
+    cand.addUserFloat("vtx_z", cand.vz());
 
-       // save
-       ret_val->push_back(cand);      
-       auto V0TT = fitter.fitted_candidate_ttrk(); 
-       trans_out->emplace_back(V0TT);
+    const auto& covMatrix = fitter.fitted_vtx_uncertainty();
+    cand.addUserFloat("vtx_cxx", covMatrix.cxx());
+    cand.addUserFloat("vtx_cyy", covMatrix.cyy());
+    cand.addUserFloat("vtx_czz", covMatrix.czz());
+    cand.addUserFloat("vtx_cxy", covMatrix.cyx());
+    cand.addUserFloat("vtx_cxz", covMatrix.czx());
+    cand.addUserFloat("vtx_cyz", covMatrix.czy());
+
+    cand.addUserFloat("prefit_mass", v0->mass());
+    int trk1=0;
+    int trk2=1;
+    if (fitter.daughter_p4(0).pt()<fitter.daughter_p4(1).pt()){
+      trk1=1;
+      trk2=0;
+    }
+    cand.addUserFloat("trk1_pt", fitter.daughter_p4(trk1).pt());
+    cand.addUserFloat("trk1_eta", fitter.daughter_p4(trk1).eta());
+    cand.addUserFloat("trk1_phi", fitter.daughter_p4(trk1).phi());
+    cand.addUserFloat("trk2_pt", fitter.daughter_p4(trk2).pt());
+    cand.addUserFloat("trk2_eta", fitter.daughter_p4(trk2).eta());
+    cand.addUserFloat("trk2_phi", fitter.daughter_p4(trk2).phi());
+
+    // save
+    ret_val->push_back(cand);      
+    auto V0TT = fitter.fitted_candidate_ttrk(); 
+    trans_out->emplace_back(V0TT);
   }
 
   evt.put(std::move(ret_val),"SelectedV0Collection");
@@ -191,4 +185,3 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(V0ReBuilder);
-
