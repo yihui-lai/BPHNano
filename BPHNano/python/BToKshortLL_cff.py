@@ -53,9 +53,12 @@ BToKshortMuMuTable = cms.EDProducer(
         vtx_x = ufloat('vtx_x'),
         vtx_y = ufloat('vtx_y'),
         vtx_z = ufloat('vtx_z'),
-        vtx_ex = ufloat('vtx_ex'), ## only saving diagonal elements of the cov matrix
-        vtx_ey = ufloat('vtx_ey'),
-        vtx_ez = ufloat('vtx_ez'),
+        vtx_cxx = ufloat('vtx_cxx'),
+        vtx_cyy = ufloat('vtx_cyy'),
+        vtx_czz = ufloat('vtx_czz'),
+        vtx_cyx = ufloat('vtx_cyx'),
+        vtx_czx = ufloat('vtx_czx'),
+        vtx_czy = ufloat('vtx_czy'),
         # post fit properties
         mll_fullfit = ufloat('fitted_mll'),     
         mkshort_fullfit = ufloat('fitted_v0_mass'),
