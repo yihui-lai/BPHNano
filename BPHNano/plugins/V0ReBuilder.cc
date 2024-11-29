@@ -42,9 +42,6 @@
 #include "KinVtxFitter.h"
 #include "helper.h"
 
-
-
-
 class V0ReBuilder : public edm::global::EDProducer<> {
 
   // perhaps we need better structure here (begin run etc)
@@ -54,6 +51,7 @@ public:
 
   explicit V0ReBuilder(const edm::ParameterSet &cfg):
     theB_(esConsumes(edm::ESInputTag{"", "TransientTrackBuilder"})),
+    trk_selection_{cfg.getParameter<std::string>("trkSelection")},
     pre_vtx_selection_{cfg.getParameter<std::string>("V0Selection")},
     post_vtx_selection_{cfg.getParameter<std::string>("postVtxSelection")},
     v0s_{consumes<V0Collection>( cfg.getParameter<edm::InputTag>("V0s") )},
@@ -71,13 +69,12 @@ public:
   
 private:
   const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> theB_;
+  const StringCutObjectSelector<pat::PackedCandidate> trk_selection_;
   const StringCutObjectSelector<reco::VertexCompositePtrCandidate> pre_vtx_selection_;
   const StringCutObjectSelector<pat::CompositeCandidate> post_vtx_selection_;
   const edm::EDGetTokenT<V0Collection> v0s_;
   const edm::EDGetTokenT<reco::BeamSpot> beamspot_;  
 };
-
-
 
 void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const &iSetup) const {
 
@@ -87,7 +84,6 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   evt.getByToken(v0s_, V0s);
   edm::Handle<reco::BeamSpot> beamspot;
   evt.getByToken(beamspot_, beamspot);  
-
 
   // output
   std::unique_ptr<pat::CompositeCandidateCollection> ret_val(new pat::CompositeCandidateCollection());
@@ -110,8 +106,10 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     if (!v0daughter2.hasTrackDetails()) continue;
     if (fabs(v0daughter1.pdgId())!=211) continue;
     if (fabs(v0daughter2.pdgId())!=211) continue;
+
+    if (!trk_selection_(v0daughter1) || !trk_selection_(v0daughter2)) continue;
    
-    const reco::TransientTrack v0daughter1_ttrack = theB->build( v0daughter1.bestTrack());
+    const reco::TransientTrack v0daughter1_ttrack = theB->build(v0daughter1.bestTrack());
     const reco::TransientTrack v0daughter2_ttrack = theB->build(v0daughter2.bestTrack());
 
     // create V0 vertex
@@ -181,7 +179,6 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   evt.put(std::move(ret_val),"SelectedV0Collection");
   evt.put(std::move(trans_out), "SelectedV0TransientCollection");
 }
-
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(V0ReBuilder);

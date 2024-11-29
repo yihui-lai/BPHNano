@@ -1,11 +1,8 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.BPHNano.common_cff import *
 
+########################### B-> K* ll ###########################
 
-
-
-
-########################### B-> K* ll ##########################
 BToKstarMuMu = cms.EDProducer(
     'BToTrkTrkLLBuilder',
     dileptons = cms.InputTag("JpsiToMuMu:SelectedDiLeptons"),
@@ -14,17 +11,16 @@ BToKstarMuMu = cms.EDProducer(
     transientTracks = cms.InputTag('tracksBPH', 'SelectedTransientTracks'),
     PUtracks = cms.InputTag('tracksBPH', 'SelectedTracks'),
     beamSpot = cms.InputTag("offlineBeamSpot"),
-    preVtxSelection = cms.string('pt > 5. && userFloat("min_dr") > 0.03 '
-                                 '&& 4.5<mass && mass <6. '),
-    postVtxSelection = cms.string(
-                 '5.<userFloat("fitted_mass") && userFloat("fitted_mass") < 6. '
-                 '&& userFloat("sv_prob")>0.001 && userFloat("fitted_cos_theta_2D")>0.9'),
-    dileptonMassContraint = cms.double(3.097)
+    preVtxSelection  = cms.string('pt > 5.'
+                                  '&& 4.5 < mass && mass < 6.'
+                                  '&& userFloat("min_dr") > 0.03'),
+    postVtxSelection = cms.string('5. < userFloat("fitted_mass") && userFloat("fitted_mass") < 6.'
+                                  '&& userFloat("sv_prob") > 0.001'
+                                  '&& userFloat("fitted_cos_theta_2D") > 0.9'),
+    dileptonMassContraint = cms.double(3.0969)
 )
 
-
-################################### Tables #####################################
-
+########################### Tables ###########################
 
 BToKstarMuMuTable = cms.EDProducer(
     'SimpleCompositeCandidateFlatTableProducer',

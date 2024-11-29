@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.BPHNano.common_cff import *
 
-
+########################### B-> K ll ###########################
 
 BToKmumu = cms.EDProducer(
     'BToTrkLLBuilder',
@@ -13,14 +13,16 @@ BToKmumu = cms.EDProducer(
     trackMass = cms.double(493.677),
     beamSpot = cms.InputTag("offlineBeamSpot"),
     PUtracks = cms.InputTag('tracksBPH', 'SelectedTracks'),
-    preVtxSelection = cms.string( 'pt > 5.0 && 4.5 < mass && mass <6. '
-                                  '&& userFloat("min_dr")>0.03'),
-    postVtxSelection = cms.string(
-         '5.<userFloat("fitted_mass") && userFloat("fitted_mass") < 6. ' 
-         '&& userFloat("sv_prob")>0.001 && userFloat("fitted_cos_theta_2D")>0.9'),
-    dileptonMassContraint = cms.double(3.097)
+    preVtxSelection  = cms.string('pt > 5.0'
+                                  '&& 4.5 < mass && mass < 6.'
+                                  '&& userFloat("min_dr") > 0.03'),
+    postVtxSelection = cms.string('5. < userFloat("fitted_mass") && userFloat("fitted_mass") < 6.' 
+                                  '&& userFloat("sv_prob") > 0.001'
+                                  '&& userFloat("fitted_cos_theta_2D") > 0.9'),
+    dileptonMassContraint = cms.double(3.0969)
 )
 
+########################### Tables ###########################
 
 BToKmumuTable = cms.EDProducer(
     'SimpleCompositeCandidateFlatTableProducer',

@@ -1,16 +1,19 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.BPHNano.common_cff import *
 
-
+########################### Selections ###########################
 
 KshortToPiPi = cms.EDProducer(
     'V0ReBuilder',
     V0s = cms.InputTag('slimmedKshortVertices'),
-    V0Selection = cms.string( '0.3<mass && mass<0.7' ),
-    postVtxSelection = cms.string( '0.3<mass && mass<0.7 && userFloat("sv_prob")>0.0001' ),
+    trkSelection = cms.string('pt > 0.35 && abs(eta) < 2.5 && trackHighPurity()'),
+    V0Selection = cms.string('0.3 < mass && mass < 0.7'),
+    postVtxSelection = cms.string('0.3 < mass && mass < 0.7'
+                                  '&& userFloat("sv_prob") > 0.0001'),
     beamSpot = cms.InputTag("offlineBeamSpot"),
 )
 
+########################### Tables ###########################
 
 KshortToPiPiTable = cms.EDProducer(
     'SimpleCompositeCandidateFlatTableProducer',
@@ -56,14 +59,13 @@ CountKshortToPiPi = cms.EDFilter("PATCandViewCountFilter",
     src = cms.InputTag('KshortToPiPi','SelectedV0Collection')
 )
 
-
 KshortPiPiBPHMCMatch = cms.EDProducer("MCMatcher",            # cut on deltaR, deltaPt/Pt; pick best by deltaR
-    src         = KshortToPiPiTable.src,                         # final reco collection
-    matched     = cms.InputTag("finalGenParticlesBPH"),     # final mc-truth particle collection
-    mcPdgId     = cms.vint32(310),                             # one or more PDG ID (13 = mu); absolute values (see below)
+    src         = KshortToPiPiTable.src,                      # final reco collection
+    matched     = cms.InputTag("finalGenParticlesBPH"),       # final mc-truth particle collection
+    mcPdgId     = cms.vint32(310),                            # one or more PDG ID (13 = mu); absolute values (see below)
     checkCharge = cms.bool(False),                            # True = require RECO and MC objects to have the same charge
     mcStatus    = cms.vint32(2),                              # PYTHIA status code (1 = stable, 2 = shower, 3 = hard scattering)
-    maxDeltaR   = cms.double(0.3),                           # Minimum deltaR for the match
+    maxDeltaR   = cms.double(0.3),                            # Minimum deltaR for the match
     maxDPtRel   = cms.double(1.0),                            # Minimum deltaPt/Pt for the match
     resolveAmbiguities    = cms.bool(True),                   # Forbid two RECO objects to match to the same GEN object
     resolveByMatchQuality = cms.bool(True),                   # False = just match input in order; True = pick lowest deltaR pair first
@@ -84,5 +86,3 @@ KshortToPiPiSequence = cms.Sequence( KshortToPiPi )
 KshortToPiPiSequenceMC = cms.Sequence( KshortToPiPi +KshortPiPiBPHMCMatch)
 KshortToPiPiTables = cms.Sequence( KshortToPiPiTable)
 KshortToPiPiTablesMC = cms.Sequence( KshortToPiPiTable+KshortPiPiBPHMCTable)
-
-
