@@ -1,6 +1,8 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 
+########################### Selections ###########################
+
 JpsiToMuMu = cms.EDProducer(
     'DiMuonBuilder',
     src = cms.InputTag('muonBPH', 'SelectedMuons'),
@@ -21,6 +23,7 @@ CountDiMuonBPH = cms.EDFilter("PATCandViewCountFilter",
     src = cms.InputTag("JpsiToMuMu:SelectedDiLeptons")
 )  
 
+########################### Tables ###########################
 
 JpsiToMuMuTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
     src = cms.InputTag("JpsiToMuMu:SelectedDiLeptons"),
@@ -41,4 +44,3 @@ JpsiToMuMuTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
 
 JpsiToMuMuSequence = cms.Sequence(JpsiToMuMu)
 JpsiToMuMuTables = cms.Sequence(JpsiToMuMuTable)
-

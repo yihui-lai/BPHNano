@@ -42,9 +42,6 @@
 #include "KinVtxFitter.h"
 #include "helper.h"
 
-
-
-
 class V0ReBuilder : public edm::global::EDProducer<> {
 
   // perhaps we need better structure here (begin run etc)
@@ -77,8 +74,6 @@ private:
   const edm::EDGetTokenT<reco::BeamSpot> beamspot_;  
 };
 
-
-
 void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const &iSetup) const {
 
   //input
@@ -87,7 +82,6 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   evt.getByToken(v0s_, V0s);
   edm::Handle<reco::BeamSpot> beamspot;
   evt.getByToken(beamspot_, beamspot);  
-
 
   // output
   std::unique_ptr<pat::CompositeCandidateCollection> ret_val(new pat::CompositeCandidateCollection());
@@ -181,7 +175,6 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   evt.put(std::move(ret_val),"SelectedV0Collection");
   evt.put(std::move(trans_out), "SelectedV0TransientCollection");
 }
-
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(V0ReBuilder);
