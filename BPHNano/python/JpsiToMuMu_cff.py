@@ -7,8 +7,8 @@ JpsiToMuMu = cms.EDProducer(
     'DiMuonBuilder',
     src = cms.InputTag('muonBPH', 'SelectedMuons'),
     transientTracksSrc = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
-    lep1Selection = cms.string(''),
-    lep2Selection = cms.string(''),
+    lep1Selection = cms.string('pt > 4.0 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
+    lep2Selection = cms.string('pt > 3.0 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
     preVtxSelection  = cms.string('abs(userCand("l1").vz - userCand("l2").vz) <= 1.'
                                   '&& 2.8 < mass() && mass() < 3.4 '
                                   '&& charge() == 0'
