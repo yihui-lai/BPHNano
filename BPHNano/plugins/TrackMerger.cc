@@ -202,9 +202,9 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     pcand.addUserFloat("covQopQop", trk.bestTrack()->covariance(0, 0));
     pcand.addUserFloat("covLamLam", trk.bestTrack()->covariance(1, 1));
     pcand.addUserFloat("covPhiPhi", trk.bestTrack()->covariance(2, 2));
-    pcand.addUserFloat("covQopLam", trk.bestTrack()->covariance(0 ,1));
-    pcand.addUserFloat("covQopPhi", trk.bestTrack()->covariance(0 ,2));
-    pcand.addUserFloat("covLamPhi", trk.bestTrack()->covariance(1 ,2));
+    pcand.addUserFloat("covQopLam", trk.bestTrack()->covariance(0, 1));
+    pcand.addUserFloat("covQopPhi", trk.bestTrack()->covariance(0, 2));
+    pcand.addUserFloat("covLamPhi", trk.bestTrack()->covariance(1, 2));
 
     // Additional track parameters for tagging
     pcand.addUserFloat("ptErr", trk.bestTrack()->ptError());
