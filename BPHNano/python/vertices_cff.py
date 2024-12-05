@@ -21,18 +21,18 @@ primaryVertexBPHTable = cms.EDProducer(
     singleton = cms.bool(False), # Variable number of entries
     extension = cms.bool(False), # This is the main table for primary vertices
     variables = cms.PSet(
-        vtx_x   = Var("position().x()", float, doc="x coordinate of vertex position [cm]"),
-        vtx_y   = Var("position().y()", float, doc="y coordinate of vertex position [cm]"),
-        vtx_z   = Var("position().z()", float, doc="z coordinate of vertex position [cm]"),
+        x       = Var("position().x()", float, doc="x coordinate of vertex position [cm]"),
+        y       = Var("position().y()", float, doc="y coordinate of vertex position [cm]"),
+        z       = Var("position().z()", float, doc="z coordinate of vertex position [cm]"),
         ndof    = Var("vertexNdof()", float, doc="Number of degrees of freedom of the vertex fit"),
         chi2    = Var("vertexChi2()", float, doc="Chi-squared of the vertex fit", precision=10),
         trkSize = Var("numberOfDaughters()", int, doc="Number of associated tracks"),
-        vtx_cxx = Var("vertexCovariance(0, 0)", float, doc="Covariance of x with x", precision=10),
-        vtx_cyy = Var("vertexCovariance(1, 1)", float, doc="Covariance of y with y", precision=10),
-        vtx_czz = Var("vertexCovariance(2, 2)", float, doc="Covariance of z with z", precision=10),
-        vtx_cxy = Var("vertexCovariance(0, 1)", float, doc="Covariance of x with y", precision=10),
-        vtx_cxz = Var("vertexCovariance(0, 2)", float, doc="Covariance of x with z", precision=10),
-        vtx_cyx = Var("vertexCovariance(1, 2)", float, doc="Covariance of y with z", precision=10),
+        covXX   = Var("vertexCovariance(0, 0)", float, doc="Covariance of x with x", precision=10),
+        covYY   = Var("vertexCovariance(1, 1)", float, doc="Covariance of y with y", precision=10),
+        covZZ   = Var("vertexCovariance(2, 2)", float, doc="Covariance of z with z", precision=10),
+        covXY   = Var("vertexCovariance(0, 1)", float, doc="Covariance of x with y", precision=10),
+        covXZ   = Var("vertexCovariance(0, 2)", float, doc="Covariance of x with z", precision=10),
+        covYZ   = Var("vertexCovariance(1, 2)", float, doc="Covariance of y with z", precision=10),
     ),
 )
 
