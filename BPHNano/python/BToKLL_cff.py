@@ -94,6 +94,5 @@ CountBToKmumu = cms.EDFilter("PATCandViewCountFilter",
 )    
 
 ########################### Sequencies  ############################
-
 BToKMuMuSequence = cms.Sequence(BToKmumu)
 BToKMuMuTables   = cms.Sequence(BToKmumuTable)
