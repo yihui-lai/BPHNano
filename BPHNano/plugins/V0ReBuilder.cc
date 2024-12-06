@@ -56,24 +56,24 @@ public:
     post_vtx_selection_{cfg.getParameter<std::string>("postVtxSelection")},
     v0s_{consumes<V0Collection>( cfg.getParameter<edm::InputTag>("V0s") )},
     beamspot_{consumes<reco::BeamSpot>( cfg.getParameter<edm::InputTag>("beamSpot") )}
-    {
-      produces<pat::CompositeCandidateCollection>("SelectedV0Collection");
-      produces<TransientTrackCollection>("SelectedV0TransientCollection");
-    }
+  {
+    produces<pat::CompositeCandidateCollection>("SelectedV0Collection");
+    produces<TransientTrackCollection>("SelectedV0TransientCollection");
+  }
 
   ~V0ReBuilder() override {}
-  
+
   void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
 
   static void fillDescriptions(edm::ConfigurationDescriptions &descriptions) {}
-  
+
 private:
   const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> theB_;
   const StringCutObjectSelector<pat::PackedCandidate> trk_selection_;
   const StringCutObjectSelector<reco::VertexCompositePtrCandidate> pre_vtx_selection_;
   const StringCutObjectSelector<pat::CompositeCandidate> post_vtx_selection_;
   const edm::EDGetTokenT<V0Collection> v0s_;
-  const edm::EDGetTokenT<reco::BeamSpot> beamspot_;  
+  const edm::EDGetTokenT<reco::BeamSpot> beamspot_;
 };
 
 void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const &iSetup) const {
@@ -83,18 +83,18 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   edm::Handle<V0Collection> V0s;
   evt.getByToken(v0s_, V0s);
   edm::Handle<reco::BeamSpot> beamspot;
-  evt.getByToken(beamspot_, beamspot);  
+  evt.getByToken(beamspot_, beamspot);
 
   // output
   std::unique_ptr<pat::CompositeCandidateCollection> ret_val(new pat::CompositeCandidateCollection());
   std::unique_ptr<TransientTrackCollection> trans_out( new TransientTrackCollection );
 
   size_t v0_idx = 0;
-  for (reco::VertexCompositePtrCandidateCollection::const_iterator v0 = V0s->begin(); v0 != V0s->end(); v0++){
+  for (reco::VertexCompositePtrCandidateCollection::const_iterator v0 = V0s->begin(); v0 != V0s->end(); v0++) {
 
-    reco::VertexCompositePtrCandidate V0= V0s->at(v0_idx);
+    reco::VertexCompositePtrCandidate V0 = V0s->at(v0_idx);
     v0_idx++;
-          
+
     // selection on V0s
     if (v0->numberOfDaughters() != 2) continue;
     if (!pre_vtx_selection_(V0)) continue;
@@ -104,40 +104,40 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
 
     if (!v0daughter1.hasTrackDetails()) continue;
     if (!v0daughter2.hasTrackDetails()) continue;
-    if (fabs(v0daughter1.pdgId())!=211) continue;
-    if (fabs(v0daughter2.pdgId())!=211) continue;
+    if (fabs(v0daughter1.pdgId()) != 211) continue;
+    if (fabs(v0daughter2.pdgId()) != 211) continue;
 
     if (!trk_selection_(v0daughter1) || !trk_selection_(v0daughter2)) continue;
-   
+
     const reco::TransientTrack v0daughter1_ttrack = theB->build(v0daughter1.bestTrack());
     const reco::TransientTrack v0daughter2_ttrack = theB->build(v0daughter2.bestTrack());
 
     // create V0 vertex
     KinVtxFitter fitter(
-                    {v0daughter1_ttrack, v0daughter2_ttrack},
-                    {v0daughter1.mass(), v0daughter2.mass()},
-                    {K_SIGMA, K_SIGMA} );
+    {v0daughter1_ttrack, v0daughter2_ttrack},
+    {v0daughter1.mass(), v0daughter2.mass()},
+    {K_SIGMA, K_SIGMA} );
 
     if (!fitter.success()) continue;
 
     pat::CompositeCandidate cand;
     cand.setVertex( reco::Candidate::Point(
-                                           fitter.fitted_vtx().x(),
-                                           fitter.fitted_vtx().y(),
-                                           fitter.fitted_vtx().z()                                                         )
-                                        );
+                      fitter.fitted_vtx().x(),
+                      fitter.fitted_vtx().y(),
+                      fitter.fitted_vtx().z()                                                         )
+                  );
     auto fit_p4 = fitter.fitted_p4();
     cand.setP4(fit_p4);
 
-    cand.setCharge(v0daughter1.charge()+v0daughter2.charge());
+    cand.setCharge(v0daughter1.charge() + v0daughter2.charge());
     cand.addUserFloat("sv_chi2", fitter.chi2());
     cand.addUserFloat("sv_prob", fitter.prob());
     cand.addUserFloat("massErr",
-                          sqrt(fitter.fitted_candidate().kinematicParametersError().matrix()(6, 6)));
+                      sqrt(fitter.fitted_candidate().kinematicParametersError().matrix()(6, 6)));
     cand.addUserFloat("cos_theta_2D",
-                          cos_theta_2D(fitter, *beamspot, cand.p4()));
+                      cos_theta_2D(fitter, *beamspot, cand.p4()));
     cand.addUserFloat("fitted_cos_theta_2D",
-                          cos_theta_2D(fitter, *beamspot, fit_p4));
+                      cos_theta_2D(fitter, *beamspot, fit_p4));
     auto lxy = l_xy(fitter, *beamspot);
     cand.addUserFloat("l_xy", lxy.value());
     cand.addUserFloat("l_xy_unc", lxy.error());
@@ -157,11 +157,11 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     cand.addUserFloat("vtx_czy", covMatrix.czy());
 
     cand.addUserFloat("prefit_mass", v0->mass());
-    int trk1=0;
-    int trk2=1;
-    if (fitter.daughter_p4(0).pt()<fitter.daughter_p4(1).pt()){
-      trk1=1;
-      trk2=0;
+    int trk1 = 0;
+    int trk2 = 1;
+    if (fitter.daughter_p4(0).pt() < fitter.daughter_p4(1).pt()) {
+      trk1 = 1;
+      trk2 = 0;
     }
     cand.addUserFloat("trk1_pt", fitter.daughter_p4(trk1).pt());
     cand.addUserFloat("trk1_eta", fitter.daughter_p4(trk1).eta());
@@ -171,12 +171,12 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     cand.addUserFloat("trk2_phi", fitter.daughter_p4(trk2).phi());
 
     // save
-    ret_val->push_back(cand);      
-    auto V0TT = fitter.fitted_candidate_ttrk(); 
+    ret_val->push_back(cand);
+    auto V0TT = fitter.fitted_candidate_ttrk();
     trans_out->emplace_back(V0TT);
   }
 
-  evt.put(std::move(ret_val),"SelectedV0Collection");
+  evt.put(std::move(ret_val), "SelectedV0Collection");
   evt.put(std::move(trans_out), "SelectedV0TransientCollection");
 }
 

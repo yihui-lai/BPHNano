@@ -25,21 +25,21 @@ trackBPHTable = cms.EDProducer(
     extension = cms.bool(False), 
     variables = cms.PSet(
         CandVars,
-        vx = Var("vx()", float, doc="x coordinate of vtx position [cm]", precision=10),
-        vy = Var("vy()", float, doc="y coordinate of vtx position [cm]", precision=10),
-        vz = Var("vz()", float, doc="z coordinate of vtx position [cm]", precision=10),
+        vx = Var("vx()", float, doc="x coordinate of vtx position [cm]"),
+        vy = Var("vy()", float, doc="y coordinate of vtx position [cm]"),
+        vz = Var("vz()", float, doc="z coordinate of vtx position [cm]"),
         # User variables defined in plugins/TrackMerger.cc
         isPacked  = Var("userInt('isPacked')", bool, doc="track from packedCandidate collection"),
         isLostTrk = Var("userInt('isLostTrk')", bool, doc="track from lostTrack collection"),
-        dz      = Var("userFloat('dz')", float, doc="dz signed wrt first PV [cm]", precision=10),
-        dxy     = Var("userFloat('dxy')", float, doc="dxy (with sign) wrt first PV [cm]", precision=10),
-        dzS     = Var("userFloat('dzS')", float, doc="dz/err (with sign) wrt first PV [cm]", precision=10),
-        dxyS    = Var("userFloat('dxyS')", float, doc="dxy/err (with sign) wrt first PV [cm]", precision=10),
-        DCASig  = Var("userFloat('DCASig')", float, doc="significance of xy-distance of closest approach wrt beamspot", precision=10),
-        dzTrg   = Var("userFloat('dzTrg')", float, doc="dz from the corresponding trigger muon [cm]", precision=10),
+        dz      = Var("userFloat('dz')", float, doc="dz signed wrt first PV [cm]"),
+        dxy     = Var("userFloat('dxy')", float, doc="dxy (with sign) wrt first PV [cm]"),
+        dzS     = Var("userFloat('dzS')", float, doc="dz/err (with sign) wrt first PV [cm]"),
+        dxyS    = Var("userFloat('dxyS')", float, doc="dxy/err (with sign) wrt first PV [cm]"),
+        DCASig  = Var("userFloat('DCASig')", float, doc="significance of xy-distance of closest approach wrt beamspot"),
+        dzTrg   = Var("userFloat('dzTrg')", float, doc="dz from the corresponding trigger muon [cm]"),
         isMatchedToMuon = Var("userInt('isMatchedToMuon')", bool, doc="track was used to build a muon"),
         isMatchedToEle  = Var("userInt('isMatchedToEle')", bool, doc="track was used to build a PF ele"),
-        nValidHits      = Var("userInt('nValidHits')", int, doc="Number of valid hits", precision=10),
+        nValidHits      = Var("userInt('nValidHits')", int, doc="Number of valid hits"),
         # Covariance matrix elements for helix parameters for decay time uncertainty
         covQopQop = Var("userFloat('covQopQop')", float, doc="Cov. of q/p with q/p", precision=10),
         covQopLam = Var("userFloat('covQopLam')", float, doc="Cov. of q/p with lambda", precision=10),
@@ -50,7 +50,7 @@ trackBPHTable = cms.EDProducer(
         # Additional track parameters for tagging
         ptErr      = Var("userFloat('ptErr')", float, doc="Pt uncertainty", precision=10),
         normChi2   = Var("userFloat('normChi2')", float, doc="Track fit chi-squared divided by n.d.o.f.", precision=10),
-        nValidPixelHits = Var("userInt('nValidPixelHits')", float, doc="Number of pixel hits", precision=10),
+        nValidPixelHits = Var("userInt('nValidPixelHits')", float, doc="Number of pixel hits"),
         # TODO: check impact parameters
         ),
 )

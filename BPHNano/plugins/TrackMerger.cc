@@ -1,6 +1,6 @@
 /////////////////////////// TrackMerger ////////////////////////////////
 // Original author: G. Karathanasis, CERN, gkaratha@cern
-// Takes Lost tracks and packed candidates filters them removes overlap and appl// -ies dz cut wrt to a dilepton vertex. Also applies selection cuts 
+// Takes Lost tracks and packed candidates filters them removes overlap and appl// -ies dz cut wrt to a dilepton vertex. Also applies selection cuts
 
 #include "FWCore/Framework/interface/global/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -27,9 +27,7 @@
 #include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 #include "helper.h"
 
-
 class TrackMerger : public edm::global::EDProducer<> {
-
 
 public:
 
@@ -151,7 +149,7 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     for (const pat::Muon &imutmp : *muons) {
       for (unsigned int i = 0; i < imutmp.numberOfSourceCandidatePtrs(); ++i) {
         if (! ((imutmp.sourceCandidatePtr(i)).isNonnull() &&
-        (imutmp.sourceCandidatePtr(i)).isAvailable())
+               (imutmp.sourceCandidatePtr(i)).isAvailable())
            )   continue;
 
         const edm::Ptr<reco::Candidate> & source = imutmp.sourceCandidatePtr(i);
@@ -168,7 +166,7 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
       for (unsigned int i = 0; i < ietmp.numberOfSourceCandidatePtrs(); ++i) {
 
         if (! ((ietmp.sourceCandidatePtr(i)).isNonnull() &&
-        (ietmp.sourceCandidatePtr(i)).isAvailable())
+               (ietmp.sourceCandidatePtr(i)).isAvailable())
            )   continue;
         const edm::Ptr<reco::Candidate> & source = ietmp.sourceCandidatePtr(i);
         if (source.id() == tracks.id() && source.key() == iTrk) {
@@ -222,9 +220,9 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   }
 
   // sort to be uniform with leptons
-  std::sort( vectrk_ttrk.begin(), vectrk_ttrk.end(), 
-             [] ( auto & trk1, auto & trk2) -> 
-                  bool {return (trk1.first).pt() > (trk2.first).pt();} 
+  std::sort( vectrk_ttrk.begin(), vectrk_ttrk.end(),
+             [] ( auto & trk1, auto & trk2) ->
+             bool {return (trk1.first).pt() > (trk2.first).pt();}
            );
 
   // finnaly save ttrks and trks to the correct _out vectors
