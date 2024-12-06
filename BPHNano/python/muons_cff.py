@@ -9,7 +9,7 @@ muonBPH = cms.EDProducer("MuonTriggerSelector",
                          prescales      = cms.InputTag("patTrigger"),
                          objects        = cms.InputTag("slimmedPatTrigger"),
                          maxdR_matching = cms.double(0.3), ##for the output trigger matched collection
-                         muonSelection  = cms.string("pt > 3 && abs(eta) < 2.4"), ## on the fly selection
+                         muonSelection  = cms.string("pt > 2 && abs(eta) < 2.4"), ## on the fly selection
                          HLTPaths       = cms.vstring(Path), ### comma to the softMuonsOnly
                         )
 
