@@ -77,15 +77,16 @@ BToKshortMuMuTable = cms.EDProducer(
         fit_kshort_eta = ufloat('fitted_v0_eta'),
         fit_kshort_phi = ufloat('fitted_v0_phi'),
         # isolation and ipd2d
-        kshort_svip2d = ufloat('v0_svip2d'),
+        kshort_svip2d     = ufloat('v0_svip2d'),
         kshort_svip2d_err = ufloat('v0_svip2d_err'),
         l1_iso04 = ufloat('l1_iso04'),
         l2_iso04 = ufloat('l2_iso04'),
         kshort_iso04 = ufloat('v0_iso04'),
-        #constraint properties
-        constraint_sv_prob = ufloat('constraint_sv_prob'),
-        constraint_mass = ufloat('constraint_mass'),
-        constraint_mll = ufloat('constraint_mll') 
+        # constraint properties
+        constraint_sv_prob  = ufloat('constraint_sv_prob'),
+        constraint_mass     = ufloat('constraint_mass'),
+        constraint_massErr  = ufloat('constraint_massErr'),
+        constraint_mll      = ufloat('constraint_mll') 
     )
 )
 

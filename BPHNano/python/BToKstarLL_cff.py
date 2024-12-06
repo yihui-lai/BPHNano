@@ -89,9 +89,12 @@ BToKstarMuMuTable = cms.EDProducer(
         l2_iso04 = ufloat('l2_iso04'),
         trk1_iso04 = ufloat('trk1_iso04'),
         trk2_iso04 = ufloat('trk2_iso04'),
-        constraint_sv_prob = ufloat('constraint_sv_prob'),
-        constraint_mass = ufloat('constraint_mass'),
-        constraint_mll = ufloat('constraint_mll'),
+        # constraint properties
+        constraint_sv_prob  = ufloat('constraint_sv_prob'),
+        constraint_mass     = ufloat('constraint_mass'),
+        constraint_massErr  = ufloat('constraint_massErr'),
+        constraint_mll      = ufloat('constraint_mll'),
+
         trk1_svip2d = ufloat('trk1_svip2d'),
         trk1_svip2d_err = ufloat('trk1_svip2d_err'),
         trk2_svip2d = ufloat('trk2_svip2d'),

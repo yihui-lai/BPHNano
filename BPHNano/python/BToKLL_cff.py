@@ -78,9 +78,11 @@ BToKmumuTable = cms.EDProducer(
         l1_iso04 = ufloat('l1_iso04'),
         l2_iso04 = ufloat('l2_iso04'),
         k_iso04  = ufloat('trk_iso04'),
-        constraint_sv_prob = ufloat('constraint_sv_prob'),
-        constraint_mass = ufloat('constraint_mass'),
-        constraint_mll = ufloat('constraint_mll')
+        # constraint properties
+        constraint_sv_prob  = ufloat('constraint_sv_prob'),
+        constraint_mass     = ufloat('constraint_mass'),
+        constraint_massErr  = ufloat('constraint_massErr'),
+        constraint_mll      = ufloat('constraint_mll')
     )
 )
 
