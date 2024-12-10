@@ -55,6 +55,9 @@ BToKshortMuMuTable = cms.EDProducer(
         vtx_cyx   = ufloat('vtx_cyx'),
         vtx_czx   = ufloat('vtx_czx'),
         vtx_czy   = ufloat('vtx_czy'),
+        beamspot_x  = ufloat('beamspot_x'),
+        beamspot_y  = ufloat('beamspot_y'),
+        beamspot_z  = ufloat('beamspot_z'),
         # post fit properties
         mll_fullfit     = ufloat('fitted_mll'),     
         mkshort_fullfit = ufloat('fitted_v0_mass'),

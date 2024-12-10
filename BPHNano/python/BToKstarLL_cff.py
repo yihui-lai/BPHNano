@@ -67,6 +67,9 @@ BToKstarMuMuTable = cms.EDProducer(
         vtx_cyx = ufloat('vtx_cyx'),
         vtx_czx = ufloat('vtx_czx'),
         vtx_czy = ufloat('vtx_czy'),
+        beamspot_x  = ufloat('beamspot_x'),
+        beamspot_y  = ufloat('beamspot_y'),
+        beamspot_z  = ufloat('beamspot_z'),
         # post-fit tracks/leptons
         #l1
         fit_l1_pt  = ufloat('fitted_l1_pt'),
