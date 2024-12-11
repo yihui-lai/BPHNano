@@ -11,35 +11,46 @@ samples:
   data_Run2022C_part%d:    
     dataset: /ParkingDoubleMuonLowMass%d/Run2022C-10Dec2022-v2/MINIAOD
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json
-    decay: all 
+    decay: KshortLL
+    globaltag: 124X_dataRun3_v15 
     isMC: False
     parts: 
       - 0
-      - 1
       - 2
       - 3
       - 4
       - 5
       - 6
       - 7
+
   data_Run2022D_part%d:
     dataset: /ParkingDoubleMuonLowMass%d/Run2022D-10Dec2022-v2/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json 
-    decay: all 
+    decay: KshortLL 
+    globaltag: 124X_dataRun3_v15 
     isMC: False
     parts: 
       - 0
-      - 1
       - 2
       - 3
       - 4
       - 5
       - 6
       - 7
+
+  data_Run2022D_part%d:
+    dataset: /ParkingDoubleMuonLowMass%d/Run2022D-10Dec2022-v3/MINIAOD 
+    goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json 
+    decay: KshortLL 
+    globaltag: 124X_dataRun3_v15 
+    isMC: False
+    parts: 
+      - 1
+       
   data_Run2022E_part%d:
     dataset: /ParkingDoubleMuonLowMass%d/Run2022E-10Dec2022-v2/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json 
-    decay: all 
+    decay: KshortLL 
     isMC: False
     parts: 
       - 0
@@ -50,10 +61,11 @@ samples:
       - 5
       - 6
       - 7
-  ata_Run2022F_part%d:
+
+  data_Run2022F_part%d:
     dataset: /ParkingDoubleMuonLowMass%d/Run2022F-22Sep2023-v1/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json 
-    decay: all 
+    decay: KshortLL 
     isMC: False
     parts: 
       - 0
@@ -66,9 +78,9 @@ samples:
       - 7
  
   data_Run2022G_part%d:
-    dataset: /ParkingDoubleMuonLowMass%d/Run2022F-22Sep2023-v1/MINIAOD 
+    dataset: /ParkingDoubleMuonLowMass%d/Run2022G-22Sep2023-v1/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json 
-    decay: all 
+    decay: KshortLL 
     isMC: False
     parts: 
       - 0
@@ -83,22 +95,28 @@ samples:
   data_Run2023B_part%d:
     dataset: /ParkingDoubleMuonLowMass%d/Run2023B-22Sep2023-v1/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions23/Cert_Collisions2023_366442_370790_Golden.json 
-    decay: all 
+    decay: KshortLL 
     isMC: False
     parts: 
       - 0
       - 1
       - 2
       - 3
-      - 4
       - 5
       - 6
       - 7
+  data_Run2023B_part%d:
+    dataset: /ParkingDoubleMuonLowMass%d/Run2023B-22Sep2023-v2/MINIAOD 
+    goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions23/Cert_Collisions2023_366442_370790_Golden.json 
+    decay: KshortLL 
+    isMC: False
+    parts: 
+      - 4
  
   data_Run2023C_v1_part%d:
     dataset: /ParkingDoubleMuonLowMass%d/Run2023C-22Sep2023_v1-v1/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions23/Cert_Collisions2023_366442_370790_Golden.json 
-    decay: all 
+    decay: KshortLL 
     isMC: False
     parts: 
       - 0
@@ -112,7 +130,7 @@ samples:
   data_Run2023C_v2_part%d:
     dataset: /ParkingDoubleMuonLowMass%d/Run2023C-22Sep2023_v2-v1/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions23/Cert_Collisions2023_366442_370790_Golden.json 
-    decay: all 
+    decay: KshortLL 
     isMC: False
     parts: 
       - 0
@@ -127,7 +145,7 @@ samples:
   data_Run2023C_v3_part%d:
     dataset: /ParkingDoubleMuonLowMass%d/Run2023C-22Sep2023_v3-v1/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions23/Cert_Collisions2023_366442_370790_Golden.json 
-    decay: all 
+    decay: KshortLL 
     isMC: False
     parts: 
       - 0
@@ -142,7 +160,7 @@ samples:
   data_Run2023C_v4_part%d:
     dataset: /ParkingDoubleMuonLowMass%d/Run2023C-22Sep2023_v4-v1/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions23/Cert_Collisions2023_366442_370790_Golden.json 
-    decay: all 
+    decay: KshortLL 
     isMC: False
     parts: 
       - 0
@@ -157,7 +175,7 @@ samples:
   data_Run2023D_v1_part%d:
     dataset: /ParkingDoubleMuonLowMass%d/Run2023D-22Sep2023_v1-v1/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions23/Cert_Collisions2023_366442_370790_Golden.json 
-    decay: all 
+    decay: KshortLL 
     isMC: False
     parts: 
       - 0
@@ -172,7 +190,7 @@ samples:
   data_Run2023D_v2_part%d:
     dataset: /ParkingDoubleMuonLowMass%d/Run2023D-22Sep2023_v2-v1/MINIAOD 
     goldenjson: /eos/user/c/cmsdqm/www/CAF/certification/Collisions23/Cert_Collisions2023_366442_370790_Golden.json 
-    decay: all 
+    decay: KshortLL 
     isMC: False
     parts: 
       - 0
