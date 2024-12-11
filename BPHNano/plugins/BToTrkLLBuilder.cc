@@ -197,10 +197,6 @@ void BToTrkLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup co
       cand.addUserFloat("vtx_czx", covMatrix.czx());
       cand.addUserFloat("vtx_czy", covMatrix.czy());
 
-      // Beamspot Position
-      cand.addUserFloat("beamspot_x", beamspot->x0());
-      cand.addUserFloat("beamspot_y", beamspot->y0());
-      cand.addUserFloat("beamspot_z", beamspot->z0());
 
       // refitted daughters (leptons/tracks)
       std::vector<std::string> dnames{ "l1", "l2", "trk" };
