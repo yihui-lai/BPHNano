@@ -30,15 +30,15 @@ public:
   explicit MatchEmbedder(const edm::ParameterSet &cfg):
     src_{consumes<PATOBJCollection>(cfg.getParameter<edm::InputTag>("src"))},
     matching_{consumes< edm::Association<reco::GenParticleCollection> >( cfg.getParameter<edm::InputTag>("matching") )} {
-       produces<PATOBJCollection>();
-    }
+    produces<PATOBJCollection>();
+  }
 
   ~MatchEmbedder() override {}
-  
+
   void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
 
   static void fillDescriptions(edm::ConfigurationDescriptions &descriptions) {}
-  
+
 private:
   typedef std::vector<PATOBJ> PATOBJCollection;
   const edm::EDGetTokenT<PATOBJCollection> src_;
@@ -60,16 +60,16 @@ void MatchEmbedder<PATOBJ>::produce(edm::StreamID, edm::Event &evt, edm::EventSe
   std::unique_ptr<PATOBJCollection>  out(new PATOBJCollection() );
   out->reserve(nsrc);
 
-  for(unsigned int i = 0; i < nsrc; ++i) {
+  for (unsigned int i = 0; i < nsrc; ++i) {
     edm::Ptr<PATOBJ> ptr(src, i);
     reco::GenParticleRef match = (*matching)[ptr];
     out->emplace_back(src->at(i));
     out->back().addUserInt(
-      "mcMatch", 
+      "mcMatch",
       match.isNonnull() ? match->pdgId() : 0
-      );
+    );
   }
-  
+
   //adding label to be consistent with the muon and track naming
   evt.put(std::move(out));
 }

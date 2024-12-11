@@ -9,7 +9,7 @@ muonBPH = cms.EDProducer("MuonTriggerSelector",
                          prescales      = cms.InputTag("patTrigger"),
                          objects        = cms.InputTag("slimmedPatTrigger"),
                          maxdR_matching = cms.double(0.3), ##for the output trigger matched collection
-                         muonSelection  = cms.string("pt > 3 && abs(eta) < 2.4"), ## on the fly selection
+                         muonSelection  = cms.string("pt > 2 && abs(eta) < 2.4"), ## on the fly selection
                          HLTPaths       = cms.vstring(Path), ### comma to the softMuonsOnly
                         )
 
@@ -36,20 +36,21 @@ muonBPHTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         covQopLam = Var("bestTrack().covariance(0, 1)", float, doc="Cov of q/p with lambda", precision=10),
         covQopPhi = Var("bestTrack().covariance(0, 2)", float, doc="Cov of q/p with phi", precision=10),
         covLamPhi = Var("bestTrack().covariance(1, 2)", float, doc="Cov of lambda with phi", precision=10),
-        dz      = Var("dB('PVDZ')", float, doc="dz (with sign) wrt first PV [cm]", precision=10),
+        dz      = Var("dB('PVDZ')", float, doc="dz (with sign) wrt first PV [cm]"),
         dzErr   = Var("abs(edB('PVDZ'))", float, doc="dz uncertainty [cm]", precision=10),
-        dxy     = Var("dB('PV2D')", float, doc="dxy (with sign) wrt first PV [cm]", precision=10),
+        dxy     = Var("dB('PV2D')", float, doc="dxy (with sign) wrt first PV [cm]"),
         dxyErr  = Var("edB('PV2D')", float, doc="dxy uncertainty [cm]", precision=10),
-        vx      = Var("vx()", float, doc="x coordinate of vertex position [cm]", precision=10),
-        vy      = Var("vy()", float, doc="y coordinate of vertex position [cm]", precision=10),
-        vz      = Var("vz()", float, doc="z coordinate of vertex position [cm]", precision=10),
-        ip3d    = Var("abs(dB('PV3D'))", float, doc="3D impact parameter wrt first PV [cm]", precision=10),
-        sip3d   = Var("abs(dB('PV3D')/edB('PV3D'))", float, doc="3D impact parameter significance wrt first PV", precision=10),
+        vx      = Var("vx()", float, doc="x coordinate of vertex position [cm]"),
+        vy      = Var("vy()", float, doc="y coordinate of vertex position [cm]"),
+        vz      = Var("vz()", float, doc="z coordinate of vertex position [cm]"),
+        ip3d    = Var("abs(dB('PV3D'))", float, doc="3D impact parameter wrt first PV [cm]"),
+        sip3d   = Var("abs(dB('PV3D')/edB('PV3D'))", float, doc="3D impact parameter significance wrt first PV"),
         pfRelIso03_all = Var("(pfIsolationR03().sumChargedHadronPt + max(pfIsolationR03().sumNeutralHadronEt + pfIsolationR03().sumPhotonEt - pfIsolationR03().sumPUPt/2,0.0))/pt", float, doc="PF relative isolation dR=0.3, total (deltaBeta corrections)"),
         pfRelIso04_all = Var("(pfIsolationR04().sumChargedHadronPt + max(pfIsolationR04().sumNeutralHadronEt + pfIsolationR04().sumPhotonEt - pfIsolationR04().sumPUPt/2,0.0))/pt", float, doc="PF relative isolation dR=0.4, total (deltaBeta corrections)"),
         isPFcand    = Var("isPFMuon", bool, doc="muon is PF candidate"),
         isGlobal    = Var("isGlobalMuon", bool, doc="muon is global muon"),
         isTracker   = Var("isTrackerMuon", bool, doc="muon is tracker muon"),
+        looseId     = Var("passed('CutBasedIdLoose')", bool, doc="cut-based ID, medium WP"),
         mediumId    = Var("passed('CutBasedIdMedium')", bool, doc="cut-based ID, medium WP"),
         tightId     = Var("passed('CutBasedIdTight')", bool, doc="cut-based ID, tight WP"),
         softId      = Var("passed('SoftCutBasedId')", bool, doc="soft cut-based ID"),
@@ -95,9 +96,9 @@ allMuonTable = muonBPHTable.clone(
     doc  = cms.string("HLT Muons matched with reco muons"), #reco muon matched to triggering muon"),
     variables = cms.PSet(
         CandVars,
-        vx = Var("vx()", float, doc="x coordinate of vertex position [cm]", precision=10),
-        vy = Var("vy()", float, doc="y coordinate of vertex position [cm]", precision=10),
-        vz = Var("vz()", float, doc="z coordinate of vertex position [cm]", precision=10)
+        vx = Var("vx()", float, doc="x coordinate of vertex position [cm]"),
+        vy = Var("vy()", float, doc="y coordinate of vertex position [cm]"),
+        vz = Var("vz()", float, doc="z coordinate of vertex position [cm]")
    )
 )
 

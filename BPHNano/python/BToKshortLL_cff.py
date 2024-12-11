@@ -25,44 +25,47 @@ BToKshortMuMu = cms.EDProducer(
 
 BToKshortMuMuTable = cms.EDProducer(
     'SimpleCompositeCandidateFlatTableProducer',
-    src = cms.InputTag("BToKshortMuMu"),
-    cut = cms.string(""),
-    name = cms.string("BToKshortMuMu"),
-    doc = cms.string("BToKshortMuMu Variables"),
-    singleton=cms.bool(False),
-    extension=cms.bool(False),
-    variables=cms.PSet(
+    src       = cms.InputTag("BToKshortMuMu"),
+    cut       = cms.string(""),
+    name      = cms.string("BToKshortMuMu"),
+    doc       = cms.string("BToKshortMuMu Variables"),
+    singleton = cms.bool(False),
+    extension = cms.bool(False),
+    variables = cms.PSet(
         # pre-fit quantities
         CandVars,
-        l1_idx = uint('l1_idx'),
-        l2_idx = uint('l2_idx'),
-        kshort_idx = uint('v0_idx'),
-        min_dr = ufloat('min_dr'),
-        max_dr = ufloat('max_dr'),
+        l1_idx      = uint('l1_idx'),
+        l2_idx      = uint('l2_idx'),
+        kshort_idx  = uint('v0_idx'),
+        min_dr      = ufloat('min_dr'),
+        max_dr      = ufloat('max_dr'),
         # fit and vtx info
-        chi2 = ufloat('sv_chi2'),
-        svprob = ufloat('sv_prob'),
-        l_xy = ufloat('l_xy'),
-        l_xy_unc = ufloat('l_xy_unc'),
-        cos2D = ufloat('cos_theta_2D'),
+        chi2      = ufloat('sv_chi2'),
+        svprob    = ufloat('sv_prob'),
+        l_xy      = ufloat('l_xy'),
+        l_xy_unc  = ufloat('l_xy_unc'),
+        cos2D     = ufloat('cos_theta_2D'),
         fit_cos2D = ufloat('fitted_cos_theta_2D'),
-        vtx_x = ufloat('vtx_x'),
-        vtx_y = ufloat('vtx_y'),
-        vtx_z = ufloat('vtx_z'),
-        vtx_cxx = ufloat('vtx_cxx'),
-        vtx_cyy = ufloat('vtx_cyy'),
-        vtx_czz = ufloat('vtx_czz'),
-        vtx_cyx = ufloat('vtx_cyx'),
-        vtx_czx = ufloat('vtx_czx'),
-        vtx_czy = ufloat('vtx_czy'),
+        vtx_x     = ufloat('vtx_x'),
+        vtx_y     = ufloat('vtx_y'),
+        vtx_z     = ufloat('vtx_z'),
+        vtx_cxx   = ufloat('vtx_cxx'),
+        vtx_cyy   = ufloat('vtx_cyy'),
+        vtx_czz   = ufloat('vtx_czz'),
+        vtx_cyx   = ufloat('vtx_cyx'),
+        vtx_czx   = ufloat('vtx_czx'),
+        vtx_czy   = ufloat('vtx_czy'),
+        beamspot_x  = ufloat('beamspot_x'),
+        beamspot_y  = ufloat('beamspot_y'),
+        beamspot_z  = ufloat('beamspot_z'),
         # post fit properties
-        mll_fullfit = ufloat('fitted_mll'),     
+        mll_fullfit     = ufloat('fitted_mll'),     
         mkshort_fullfit = ufloat('fitted_v0_mass'),
-        fit_mass = ufloat('fitted_mass'),
-        fit_massErr = ufloat('fitted_massErr'),
-        fit_pt = ufloat('fitted_pt'),
-        fit_eta = ufloat('fitted_eta'),
-        fit_phi = ufloat('fitted_phi'),
+        fit_mass        = ufloat('fitted_mass'),
+        fit_massErr     = ufloat('fitted_massErr'),
+        fit_pt          = ufloat('fitted_pt'),
+        fit_eta         = ufloat('fitted_eta'),
+        fit_phi         = ufloat('fitted_phi'),
         # post-fit tracks/leptons
         #l1
         fit_l1_pt  = ufloat('fitted_l1_pt'),
@@ -77,27 +80,25 @@ BToKshortMuMuTable = cms.EDProducer(
         fit_kshort_eta = ufloat('fitted_v0_eta'),
         fit_kshort_phi = ufloat('fitted_v0_phi'),
         # isolation and ipd2d
-        kshort_svip2d = ufloat('v0_svip2d'),
+        kshort_svip2d     = ufloat('v0_svip2d'),
         kshort_svip2d_err = ufloat('v0_svip2d_err'),
-        l1_iso04 = ufloat('l1_iso04'),
-        l2_iso04 = ufloat('l2_iso04'),
-        kshort_iso04 = ufloat('v0_iso04'),
-        #constraint properties
-        constraint_sv_prob = ufloat('constraint_sv_prob'),
-        constraint_mass = ufloat('constraint_mass'),
-        constraint_mll = ufloat('constraint_mll') 
+        l1_iso04          = ufloat('l1_iso04'),
+        l2_iso04          = ufloat('l2_iso04'),
+        kshort_iso04      = ufloat('v0_iso04'),
+        # constraint properties
+        constraint_sv_prob  = ufloat('constraint_sv_prob'),
+        constraint_mass     = ufloat('constraint_mass'),
+        constraint_massErr  = ufloat('constraint_massErr'),
+        constraint_mll      = ufloat('constraint_mll') 
     )
 )
-
 
 CountBToKshortMuMu = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(1),
     maxNumber = cms.uint32(999999),
-    src = cms.InputTag("BToKshortMuMu")
+    src       = cms.InputTag("BToKshortMuMu")
 )
-
 
 ########################### Sequencies  ############################
 BToKshortMuMuSequence = cms.Sequence( BToKshortMuMu )
 BToKshortMuMuTables   = cms.Sequence( BToKshortMuMuTable )
-
