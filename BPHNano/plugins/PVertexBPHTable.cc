@@ -128,8 +128,7 @@ void PVertexBPHTable::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     i++;
    
   }
-
-  auto table = std::make_unique<nanoaod::FlatTable>(pvscore.size(), pvName_, true);
+  auto table = std::make_unique<nanoaod::FlatTable>(pvscore.size(), pvName_, false,false);
   table->addColumn<float>("score", pvscore, "", 10);
   table->addColumn<float>("vx", vx, "", 10);
   table->addColumn<float>("vy", vy, "", 10);
@@ -150,7 +149,6 @@ void PVertexBPHTable::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
   iEvent.put(std::move(table), "pv");
-  //iEvent.put(std::move(selCandPv));
 }
 
 // ------------ method called once each stream before processing any runs, lumis or events  ------------
