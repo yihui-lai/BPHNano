@@ -55,7 +55,8 @@ public:
     pre_vtx_selection_{cfg.getParameter<std::string>("V0Selection")},
     post_vtx_selection_{cfg.getParameter<std::string>("postVtxSelection")},
     v0s_{consumes<V0Collection>( cfg.getParameter<edm::InputTag>("V0s") )},
-    beamspot_{consumes<reco::BeamSpot>( cfg.getParameter<edm::InputTag>("beamSpot") )}
+    beamspot_{consumes<reco::BeamSpot>( cfg.getParameter<edm::InputTag>("beamSpot") )},
+    track_match_{consumes<edm::Association<pat::CompositeCandidateCollection>>( cfg.getParameter<edm::InputTag>("track_match") )}
   {
     produces<pat::CompositeCandidateCollection>("SelectedV0Collection");
     produces<TransientTrackCollection>("SelectedV0TransientCollection");
@@ -74,6 +75,7 @@ private:
   const StringCutObjectSelector<pat::CompositeCandidate> post_vtx_selection_;
   const edm::EDGetTokenT<V0Collection> v0s_;
   const edm::EDGetTokenT<reco::BeamSpot> beamspot_;
+  const edm::EDGetTokenT<edm::Association<pat::CompositeCandidateCollection>> track_match_;
 };
 
 void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const &iSetup) const {
@@ -84,6 +86,8 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   evt.getByToken(v0s_, V0s);
   edm::Handle<reco::BeamSpot> beamspot;
   evt.getByToken(beamspot_, beamspot);
+
+  auto& track_match = evt.get(track_match_);
 
   // output
   std::unique_ptr<pat::CompositeCandidateCollection> ret_val(new pat::CompositeCandidateCollection());
@@ -169,6 +173,15 @@ void V0ReBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     cand.addUserFloat("trk2_pt", fitter.daughter_p4(trk2).pt());
     cand.addUserFloat("trk2_eta", fitter.daughter_p4(trk2).eta());
     cand.addUserFloat("trk2_phi", fitter.daughter_p4(trk2).phi());
+
+    // track match
+    auto trk1_ptr = v0->daughterPtr(trk1);
+    auto trk1_matched_ref = track_match.get(trk1_ptr.id(), trk1_ptr.key());
+    auto trk2_ptr = v0->daughterPtr(trk2);
+    auto trk2_matched_ref = track_match.get(trk2_ptr.id(), trk2_ptr.key());
+
+    cand.addUserInt("trk1_idx", trk1_matched_ref.key());
+    cand.addUserInt("trk2_idx", trk2_matched_ref.key());
 
     // save
     ret_val->push_back(cand);
