@@ -46,6 +46,7 @@ public:
   {
     produces<pat::CompositeCandidateCollection>("SelectedTracks");
     produces<TransientTrackCollection>("SelectedTransientTracks");
+    produces<edm::Association<pat::CompositeCandidateCollection>>("SelectedTracks");
   }
 
   ~TrackMerger() override {}
@@ -110,6 +111,8 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
    std::vector<pat::PackedCandidate> totalTracks(*tracks);
    totalTracks.insert(totalTracks.end(),lostTracks->begin(),lostTracks->end());
   */
+
+  std::vector<int> match_indices(totalTracks, -1);
   // for loop is better to be range based - especially for large ensembles
   for ( unsigned int iTrk = 0; iTrk < totalTracks; ++iTrk ) {
     const pat::PackedCandidate & trk = (iTrk < nTracks) ? (*tracks)[iTrk] : (*lostTracks)[iTrk - nTracks];
@@ -216,23 +219,61 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
       pcand.addUserCand( "cand", edm::Ptr<pat::PackedCandidate> ( lostTracks, iTrk - nTracks ));
 
     //in order to avoid revoking the sxpensive ttrack builder many times and still have everything sorted, we add them to vector of pairs
+    match_indices[iTrk] = vectrk_ttrk.size();
     vectrk_ttrk.emplace_back( std::make_pair(pcand, trackTT ) );
   }
 
-  // sort to be uniform with leptons
-  std::sort( vectrk_ttrk.begin(), vectrk_ttrk.end(),
-             [] ( auto & trk1, auto & trk2) ->
-             bool {return (trk1.first).pt() > (trk2.first).pt();}
-           );
+  std::vector<int> sort_indices(vectrk_ttrk.size());
+  std::iota(sort_indices.begin(), sort_indices.end(), 0);
 
-  // finnaly save ttrks and trks to the correct _out vectors
-  for ( auto & trk : vectrk_ttrk) {
+  // sort to be uniform with leptons
+  // sort by index since we want to update the match too
+  std::sort( sort_indices.begin(), sort_indices.end(),
+             [&vectrk_ttrk] ( auto & iTrk1, auto & iTrk2) ->
+             bool {return (vectrk_ttrk[iTrk1].first).pt() > (vectrk_ttrk[iTrk2].first).pt();}
+  );
+  // std::sort( vectrk_ttrk.begin(), vectrk_ttrk.end(),
+  //            [] ( auto & trk1, auto & trk2) ->
+  //            bool {return (trk1.first).pt() > (trk2.first).pt();}
+  //          );
+
+  // finally save ttrks and trks to the correct _out vectors
+  // also fill the reverse matching
+  std::vector<int> reverse_sort_indices(vectrk_ttrk.size());
+  for ( size_t iSort = 0; iSort < sort_indices.size(); iSort++) {
+    auto iUnsortedTrack = sort_indices[iSort];
+    auto&& trk = vectrk_ttrk[iUnsortedTrack];
     tracks_out -> emplace_back( trk.first);
     trans_tracks_out -> emplace_back(trk.second);
+    reverse_sort_indices[iUnsortedTrack] = iSort;
   }
 
+  // Now point the match indices to the sorted output collection
+  std::transform(match_indices.begin(), match_indices.end(), match_indices.begin(), [&reverse_sort_indices](int iUnsortedTrack) {
+    if (iUnsortedTrack < 0) return -1;
+    return reverse_sort_indices[iUnsortedTrack];
+  });
+
+  int unassoc = 0;
+  for (auto iTrkAssoc: match_indices) {
+    unassoc += iTrkAssoc < 0;
+  }
+  // std::clog << "There are " << unassoc << " unassociated tracks" << std::endl;
+  // std::clog << "Total tracks: " << totalTracks << " output tracks: " <<  tracks_out->size() << std::endl;
+
+  auto tracks_orphan_handle =
   evt.put(std::move(tracks_out),       "SelectedTracks");
   evt.put(std::move(trans_tracks_out), "SelectedTransientTracks");
+
+  // Associate PackedCandidates to the merged Track collection
+  auto tracks_out_match = std::make_unique<edm::Association<pat::CompositeCandidateCollection>>(tracks_orphan_handle);
+  edm::Association<pat::CompositeCandidateCollection>::Filler filler(*tracks_out_match);
+
+  filler.insert(tracks, match_indices.begin(), match_indices.begin() + nTracks);
+  filler.insert(lostTracks, match_indices.begin() + nTracks, match_indices.end());
+  filler.fill();
+
+  evt.put(std::move(tracks_out_match), "SelectedTracks");
 }
 
 
