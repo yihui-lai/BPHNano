@@ -11,6 +11,7 @@ KshortToPiPi = cms.EDProducer(
     postVtxSelection = cms.string('0.3 < mass && mass < 0.7'
                                   '&& userFloat("sv_prob") > 0.0001'),
     beamSpot = cms.InputTag("offlineBeamSpot"),
+    track_match = cms.InputTag('tracksBPH', 'SelectedTracks')
 )
 
 ########################### Tables ###########################
@@ -50,6 +51,9 @@ KshortToPiPiTable = cms.EDProducer(
         fit_trk2_pt = ufloat('trk2_pt'),
         fit_trk2_eta = ufloat('trk2_eta'),
         fit_trk2_phi = ufloat('trk2_phi'),
+        # track match
+        trk1_idx = uint('trk1_idx'),
+        trk2_idx = uint('trk2_idx'),
     )
 )
 

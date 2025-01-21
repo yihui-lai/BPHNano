@@ -1,7 +1,9 @@
 #ifndef BPHNANO_CLASSES_H
 #define BPHNANO_CLASSES_H
 
+#include "DataFormats/Common/interface/Association.h"
 #include "DataFormats/Common/interface/Wrapper.h"
+#include "DataFormats/PatCandidates/interface/CompositeCandidate.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "PhysicsTools/BPHNano/plugins/KinVtxFitter.h"
 #include <vector>
