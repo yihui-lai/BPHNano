@@ -25,7 +25,7 @@ primaryVertexBPHTable = cms.EDProducer(
         y       = Var("position().y()", float, doc="y coordinate of vertex position [cm]"),
         z       = Var("position().z()", float, doc="z coordinate of vertex position [cm]"),
         ndof    = Var("vertexNdof()", float, doc="Number of degrees of freedom of the vertex fit"),
-        chi2    = Var("vertexChi2()", float, doc="Chi-squared of the vertex fit", precision=10),
+        chi2    = Var("vertexChi2()", float, doc="Chi-squared of the vertex fit"),
         trkSize = Var("numberOfDaughters()", int, doc="Number of associated tracks"),
         covXX   = Var("vertexCovariance(0, 0)", float, doc="Covariance of x with x", precision=10),
         covYY   = Var("vertexCovariance(1, 1)", float, doc="Covariance of y with y", precision=10),

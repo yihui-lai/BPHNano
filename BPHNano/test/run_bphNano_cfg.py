@@ -35,7 +35,7 @@ options.register('globalTag', '130X_dataRun3_Prompt_v3',
     "Global tag"
 )
 
-options.register('isMC', False,
+options.register('isMC', True,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "Adds gen info/matching"
@@ -66,14 +66,14 @@ options.register('skip', 0,
     "Skip first N events"
 )
 
-options.register('decay', 'all',
+options.register('decay', 'KshortLL',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Options: all KLL KshortLL KstarLL"
 )
 
 
-options.setDefault('maxEvents', -1)
+options.setDefault('maxEvents', 1000000)
 options.setDefault('tag', 'test')
 
 print(options)
