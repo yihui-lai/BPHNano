@@ -9,10 +9,10 @@ KstarToPiK = cms.EDProducer(
     trk2Selection   = cms.string(''),
     trk1Mass = cms.double(0.139),
     trk2Mass = cms.double(0.494),
-    preVtxSelection = cms.string('abs(userCand("l1").vz - userCand("l2").vz) <= 1.0 '
-                                 '&& mass() > 0.65 && mass() < 1.15'
+    preVtxSelection = cms.string('abs(userCand("l1").vz - userCand("l2").vz) <= 0.5 '
+                                 '&& mass() > 0.889 && mass() < 0.895'
                                  '&& charge() == 0'),
-    postVtxSelection =  cms.string('userFloat("fitted_mass") > 0.750 && userFloat("fitted_mass") < 1.05'
+    postVtxSelection =  cms.string('userFloat("fitted_mass") > 0.889 && userFloat("fitted_mass") < 0.895'
                                    '&& userFloat("sv_prob") > 0.01')
 )
 

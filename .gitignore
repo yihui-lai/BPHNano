@@ -20,4 +20,6 @@ __init__.py
 #*#
 *.hdf
 */#*.*#
+*.sw*
+.__afs*
 production/mc/crab*
