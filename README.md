@@ -1,6 +1,6 @@
 # nanoAOD producer customized for BPH analysis 
 
-The focus is on B -> J/Psi X analyses.
+The focus is on B -> mumu X analyses.
 
 ## Getting started
 
@@ -10,12 +10,12 @@ cd CMSSW_13_3_0/src
 cmsenv
 git cms-init
 ```
-Architecture should be el8_amd64_gcc12
+Architecture should be el8 or el9
 
 ## Add the BPHNano package and build everything
 
 ```shell
-git clone ssh://git@gitlab.cern.ch:7999/btojpsikshort-cpv/reconstruction/BPHNano.git ./PhysicsTools
+git clone this
 git cms-addpkg PhysicsTools/NanoAOD
 scram b
 ```

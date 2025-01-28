@@ -4,7 +4,7 @@ from PhysicsTools.NanoAOD.common_cff import *
 tracksBPH = cms.EDProducer(
     "TrackMerger",
     beamSpot        = cms.InputTag("offlineBeamSpot"),
-    dileptons       = cms.InputTag("JpsiToMuMu:SelectedDiLeptons"),
+    dileptons       = cms.InputTag("MuMu:SelectedDiLeptons"),
     tracks          = cms.InputTag("packedPFCandidates"),
     lostTracks      = cms.InputTag("lostTracks"),
     trackSelection  = cms.string("pt>0.0 && abs(eta)<3.0"),  # We need all tracks for tagging, no cuts here for now

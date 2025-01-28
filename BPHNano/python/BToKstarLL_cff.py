@@ -5,7 +5,7 @@ from PhysicsTools.BPHNano.common_cff import *
 
 BToKstarMuMu = cms.EDProducer(
     'BToTrkTrkLLBuilder',
-    dileptons = cms.InputTag("JpsiToMuMu:SelectedDiLeptons"),
+    dileptons = cms.InputTag("MuMu:SelectedDiLeptons"),
     leptonTransientTracks = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
     ditracks = cms.InputTag('KstarToPiK'),
     transientTracks = cms.InputTag('tracksBPH', 'SelectedTransientTracks'),
@@ -17,7 +17,7 @@ BToKstarMuMu = cms.EDProducer(
     postVtxSelection = cms.string('5. < userFloat("fitted_mass") && userFloat("fitted_mass") < 6.'
                                   '&& userFloat("sv_prob") > 0.001'
                                   '&& userFloat("fitted_cos_theta_2D") > 0.9'),
-    dileptonMassContraint = cms.double(3.0969)
+    dileptonMassContraint = cms.double(-1)
 )
 
 ########################### Tables ###########################
@@ -67,9 +67,6 @@ BToKstarMuMuTable = cms.EDProducer(
         vtx_cyx = ufloat('vtx_cyx'),
         vtx_czx = ufloat('vtx_czx'),
         vtx_czy = ufloat('vtx_czy'),
-        beamspot_x  = ufloat('beamspot_x'),
-        beamspot_y  = ufloat('beamspot_y'),
-        beamspot_z  = ufloat('beamspot_z'),
         # post-fit tracks/leptons
         #l1
         fit_l1_pt  = ufloat('fitted_l1_pt'),
@@ -92,11 +89,6 @@ BToKstarMuMuTable = cms.EDProducer(
         l2_iso04   = ufloat('l2_iso04'),
         trk1_iso04 = ufloat('trk1_iso04'),
         trk2_iso04 = ufloat('trk2_iso04'),
-        # constraint properties
-        constraint_sv_prob  = ufloat('constraint_sv_prob'),
-        constraint_mass     = ufloat('constraint_mass'),
-        constraint_massErr  = ufloat('constraint_massErr'),
-        constraint_mll      = ufloat('constraint_mll'),
 
         trk1_svip2d     = ufloat('trk1_svip2d'),
         trk1_svip2d_err = ufloat('trk1_svip2d_err'),

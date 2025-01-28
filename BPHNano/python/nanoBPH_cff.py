@@ -12,11 +12,10 @@ from PhysicsTools.NanoAOD.triggerObjects_cff import *
 from PhysicsTools.BPHNano.pverticesBPH_cff import *
 from PhysicsTools.BPHNano.genparticlesBPH_cff import *
 from PhysicsTools.BPHNano.particlelevelBPH_cff import *
-from PhysicsTools.BPHNano.triggerObjectsBPark_cff import *
 
 ## BPH collections
 from PhysicsTools.BPHNano.muons_cff import *
-from PhysicsTools.BPHNano.JpsiToMuMu_cff import *
+from PhysicsTools.BPHNano.MuMu_cff import *
 from PhysicsTools.BPHNano.tracks_cff import *
 from PhysicsTools.BPHNano.KstarToKPi_cff import *
 from PhysicsTools.BPHNano.KshortToPiPi_cff import *
@@ -24,7 +23,6 @@ from PhysicsTools.BPHNano.BToKLL_cff import *
 from PhysicsTools.BPHNano.BToKstarLL_cff import *
 from PhysicsTools.BPHNano.BToKshortLL_cff import *
 
-nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectBParkTables + l1bits)
 
 vertexTable.svSrc = cms.InputTag("slimmedSecondaryVertices")
 
@@ -34,8 +32,6 @@ nanoSequence = cms.Sequence(nanoMetadata +
                             cms.Sequence(vertexTask) +
                             cms.Sequence(globalTablesTask)+ 
                             cms.Sequence(vertexTablesTask) +
-                            triggerObjectBParkTables + 
-                            l1bits+
                             cms.Sequence(pVertexTable) 
                           )
 
@@ -58,9 +54,9 @@ def nanoAOD_customizeMuonBPH(process,isMC):
 
 def nanoAOD_customizeDiMuonBPH(process, isMC):
     if isMC:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + JpsiToMuMuSequence + JpsiToMuMuTables )
+       process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuSequence + MuMuTables )
     else:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + JpsiToMuMuSequence + CountDiMuonBPH + JpsiToMuMuTables)
+       process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuSequence + CountDiMuonBPH + MuMuTables)
     return process
 
 
@@ -102,5 +98,12 @@ def nanoAOD_customizeBToKshortLL(process, isMC):
 
 
 
+
+def nanoAOD_customizeBToXLL(process,isMC):
+    if isMC:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + BToKMuMuSequence + BToKMuMuTables + KshortToPiPiSequenceMC + KshortToPiPiTablesMC + BToKshortMuMuSequence + BToKshortMuMuTables  )
+    else:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + BToKMuMuSequence + BToKMuMuTables + KshortToPiPiSequence + KshortToPiPiTables + BToKshortMuMuSequence +BToKshortMuMuTables )
+    return process
 
 

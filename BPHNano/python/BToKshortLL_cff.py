@@ -5,7 +5,7 @@ from PhysicsTools.BPHNano.common_cff import *
 
 BToKshortMuMu = cms.EDProducer(
     'BToV0LLBuilder',
-    dileptons = cms.InputTag("JpsiToMuMu:SelectedDiLeptons"),
+    dileptons = cms.InputTag("MuMu:SelectedDiLeptons"),
     leptonTransientTracks = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
     v0s = cms.InputTag('KshortToPiPi','SelectedV0Collection'),
     v0TransientTracks = cms.InputTag('KshortToPiPi', 'SelectedV0TransientCollection'),
@@ -18,7 +18,7 @@ BToKshortMuMu = cms.EDProducer(
     postVtxSelection = cms.string('5. < userFloat("fitted_mass") && userFloat("fitted_mass") < 6. '
                                   '&& userFloat("sv_prob") > 0.001 '
                                   '&& userFloat("fitted_cos_theta_2D") > 0.9'),
-    dileptonMassContraint = cms.double(3.0969)
+    dileptonMassContraint = cms.double(-1)
 )
 
 ########################### Tables ###########################
@@ -55,9 +55,6 @@ BToKshortMuMuTable = cms.EDProducer(
         vtx_cyx   = ufloat('vtx_cyx'),
         vtx_czx   = ufloat('vtx_czx'),
         vtx_czy   = ufloat('vtx_czy'),
-        beamspot_x  = ufloat('beamspot_x'),
-        beamspot_y  = ufloat('beamspot_y'),
-        beamspot_z  = ufloat('beamspot_z'),
         # post fit properties
         mll_fullfit     = ufloat('fitted_mll'),     
         mkshort_fullfit = ufloat('fitted_v0_mass'),
@@ -85,11 +82,6 @@ BToKshortMuMuTable = cms.EDProducer(
         l1_iso04          = ufloat('l1_iso04'),
         l2_iso04          = ufloat('l2_iso04'),
         kshort_iso04      = ufloat('v0_iso04'),
-        # constraint properties
-        constraint_sv_prob  = ufloat('constraint_sv_prob'),
-        constraint_mass     = ufloat('constraint_mass'),
-        constraint_massErr  = ufloat('constraint_massErr'),
-        constraint_mll      = ufloat('constraint_mll') 
     )
 )
 

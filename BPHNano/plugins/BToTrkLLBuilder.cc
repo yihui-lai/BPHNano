@@ -40,7 +40,6 @@ public:
     pre_vtx_selection_{cfg.getParameter<std::string>("preVtxSelection")},
     post_vtx_selection_{cfg.getParameter<std::string>("postVtxSelection")},
     dileptons_{consumes<pat::CompositeCandidateCollection>( cfg.getParameter<edm::InputTag>("dileptons") )},
-//    dileptons_kinVtxs_{consumes<std::vector<KinVtxFitter> >( cfg.getParameter<edm::InputTag>("dileptonKinVtxs") )},
     leptons_ttracks_{consumes<TransientTrackCollection>( cfg.getParameter<edm::InputTag>("leptonTransientTracks") )},
     kaons_{consumes<pat::CompositeCandidateCollection>( cfg.getParameter<edm::InputTag>("kaons") )},
     kaons_ttracks_{consumes<TransientTrackCollection>( cfg.getParameter<edm::InputTag>("kaonsTransientTracks") )},
@@ -68,7 +67,6 @@ private:
 
   // inputs
   const edm::EDGetTokenT<pat::CompositeCandidateCollection> dileptons_;
-  //const edm::EDGetTokenT<std::vector<KinVtxFitter> > dileptons_kinVtxs_;
   const edm::EDGetTokenT<TransientTrackCollection> leptons_ttracks_;
   const edm::EDGetTokenT<pat::CompositeCandidateCollection> kaons_;
   const edm::EDGetTokenT<TransientTrackCollection> kaons_ttracks_;
@@ -83,8 +81,6 @@ void BToTrkLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup co
   //input
   edm::Handle<pat::CompositeCandidateCollection> dileptons;
   evt.getByToken(dileptons_, dileptons);
-  //edm::Handle<std::vector<KinVtxFitter> > dileptons_kinVtxs;
-  //evt.getByToken(dileptons_kinVtxs_, dileptons_kinVtxs);
   edm::Handle<TransientTrackCollection> leptons_ttracks;
   evt.getByToken(leptons_ttracks_, leptons_ttracks);
 
@@ -197,10 +193,6 @@ void BToTrkLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup co
       cand.addUserFloat("vtx_czx", covMatrix.czx());
       cand.addUserFloat("vtx_czy", covMatrix.czy());
 
-      // Beamspot Position
-      cand.addUserFloat("beamspot_x", beamspot->x0());
-      cand.addUserFloat("beamspot_y", beamspot->y0());
-      cand.addUserFloat("beamspot_z", beamspot->z0());
 
       // refitted daughters (leptons/tracks)
       std::vector<std::string> dnames{ "l1", "l2", "trk" };
