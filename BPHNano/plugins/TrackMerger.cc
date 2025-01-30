@@ -1,5 +1,5 @@
 /////////////////////////// TrackMerger ////////////////////////////////
-// Original author: G. Karathanasis, CERN, gkaratha@cern
+/// original authors: G Karathanasis (CERN),  G Melachroinos (NKUA)
 // Takes Lost tracks and packed candidates filters them removes overlap and appl// -ies dz cut wrt to a dilepton vertex. Also applies selection cuts
 
 #include "FWCore/Framework/interface/global/EDProducer.h"

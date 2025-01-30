@@ -1,5 +1,5 @@
 /////////////////////////////// MuonTriggerSelector //////////////////////////
-// original author: G.Karathanasis, CERN, gkaratha@cern.ch
+/// original authors: G Karathanasis (CERN),  G Melachroinos (NKUA)
 // filters muons and produces 3 collections: all muons that pass the selection
 // triggering muons and transient tracks of triggering muons
 

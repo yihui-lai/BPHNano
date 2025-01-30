@@ -1,6 +1,7 @@
 # nanoAOD producer customized for BPH analysis 
 
 The focus is on B -> mumu X analyses.
+Based on the code of RK 2018 (BParkingNano)
 
 ## Getting started
 

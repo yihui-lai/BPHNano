@@ -1,5 +1,5 @@
 /////////////////////////////// BToTrkLLBuilder ///////////////////////////////
-/// original author: G Karathanasis, CERN
+/// original authors: G Karathanasis (CERN),  G Melachroinos (NKUA)
 // takes selected track collection and a dilepton collection and produces B moth// - ers using a three-track vertex
 
 #include "FWCore/Framework/interface/global/EDProducer.h"

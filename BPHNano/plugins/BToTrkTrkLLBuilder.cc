@@ -1,5 +1,5 @@
 ////////////////////////////// BToTrkTrkLLBuilder //////////////////////////////
-/// original author: G Karathanasis, CERN
+/// original authors: G Karathanasis (CERN),  G Melachroinos (NKUA)
 // takes the ditrack collection and a dilepton collection and produces B moth
 // - ers using a four-track vertex
 

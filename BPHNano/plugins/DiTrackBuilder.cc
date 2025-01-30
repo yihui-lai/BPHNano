@@ -1,5 +1,5 @@
 /////////////////////////////// DiTrackBuilder ///////////////////////////////
-/// original author: G Karathanasis, CERN
+/// original authors: G Karathanasis (CERN),  G Melachroinos (NKUA)
 // takes selected track collection and a mass hypothesis and produces ditrack ca
 // -ndidates
 
@@ -120,7 +120,7 @@ void DiTrackBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup con
         kstar_cand.addUserCand("trk2", trk2_ptr );
         // selection before fit
         if ( !pre_vtx_selection_(kstar_cand) ) continue;
-
+        //std::cout<<"trk1 "<<trk1_idx<<" trk2 "<<trk2_idx<<" dr "<< reco::deltaR(*trk1_ptr, *trk2_ptr)<<" pt1 "<<trk1_p4.pt()<<" pt2 "<<trk2_p4.pt()<<" mass "<<(trk1_p4+trk2_p4).mass()<<std::endl;
         KinVtxFitter fitter(
               {ttracks->at(trk1_idx), ttracks->at(trk2_idx)},
             { masses.first, masses.second },

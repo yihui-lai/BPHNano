@@ -1,5 +1,5 @@
 /////////////////////////////// BToV0LLBuilder ///////////////////////////////
-/// original author: G Karathanasis, CERN
+/// original authors: G Karathanasis (CERN),  G Melachroinos (NKUA)
 /// takes rebuilt V0 cands and a dilepton collection and produces B mothers
 
 #include "FWCore/Framework/interface/global/EDProducer.h"

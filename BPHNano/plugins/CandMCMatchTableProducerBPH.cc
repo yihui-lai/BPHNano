@@ -1,4 +1,5 @@
 /////////////////////// Candidate MC table ///////////////////////////////////
+// original author: RK18 team
 /////// Takes as inputs genparts and reco objects and embeds the idxs
 
 #include "FWCore/Framework/interface/global/EDProducer.h"

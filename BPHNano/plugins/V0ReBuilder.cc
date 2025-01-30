@@ -1,5 +1,5 @@
 /////////////////////////////// BToV0LLBuilder ///////////////////////////////
-/// original author: G Karathanasis, CERN
+/// original authors: G Karathanasis (CERN),  G Melachroinos (NKUA)
 // takes V0 cabds from CMSSW and creates useful V0
 
 #include "FWCore/Framework/interface/global/EDProducer.h"
