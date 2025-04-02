@@ -22,7 +22,7 @@ from PhysicsTools.BPHNano.KshortToPiPi_cff import *
 from PhysicsTools.BPHNano.BToKLL_cff import *
 from PhysicsTools.BPHNano.BToKstarLL_cff import *
 from PhysicsTools.BPHNano.BToKshortLL_cff import *
-
+from PhysicsTools.BPHNano.BDPi_cff import *
 
 vertexTable.svSrc = cms.InputTag("slimmedSecondaryVertices")
 
@@ -97,7 +97,10 @@ def nanoAOD_customizeBToKshortLL(process, isMC):
     return process
 
 
-
+def nanoAOD_customizeBDPi(process, isMC):
+    if isMC:
+       process.nanoSequence = cms.Sequence( process.nanoSequence+ BDPiSequence + BDPiSequenceTable )
+       return process
 
 def nanoAOD_customizeBToXLL(process,isMC):
     if isMC:
