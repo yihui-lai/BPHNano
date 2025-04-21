@@ -63,7 +63,7 @@ options.register('decay', 'all',
 )
 
 
-options.setDefault('maxEvents', 1000)
+options.setDefault('maxEvents', 5)
 options.setDefault('tag', 'test')
 
 #print(options)
@@ -178,7 +178,7 @@ from PhysicsTools.BPHNano.nanoBPH_cff import *
 if options.isMC:
    process = nanoAOD_customizeMC(process)
 
-process = nanoAOD_customizeBDPi(process,options.isMC)
+process = nanoAOD_customizeBDh(process, options.isMC)
 
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
 

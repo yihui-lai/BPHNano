@@ -76,10 +76,10 @@ int FindGlobalIndex(const reco::Candidate *cand, const edm::Handle<reco::GenPart
     return -1;
 }
 
-class BDPiFitter : public edm::global::EDProducer<> {
+class BDhFitter : public edm::global::EDProducer<> {
 
 public:
-  explicit BDPiFitter(const edm::ParameterSet &theParameters):
+  explicit BDhFitter(const edm::ParameterSet &theParameters):
       bFieldToken_(esConsumes<MagneticField, IdealMagneticFieldRecord>()),
       token_beamSpot(consumes<reco::BeamSpot>(theParameters.getParameter<edm::InputTag>("beamSpot"))),
       token_vertices(consumes<std::vector<reco::Vertex>>(theParameters.getParameter<edm::InputTag>("vertices"))),
@@ -115,7 +115,7 @@ public:
 	  produces<pat::CompositeCandidateCollection>("D0");
   }
 
-  ~BDPiFitter() override {}
+  ~BDhFitter() override {}
 
   void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
   
@@ -149,9 +149,10 @@ private:
   const double cosThetaXYCut_;
   const double cosThetaXYZCut_;
   const double kShortMassCut_;
-  const bool isSignal=true;
-  const bool onlymatched=true;
-  const bool onlygen=false;
+  const bool isSignalMC=true;
+  const bool onlyRecoMatchedPions=false;
+  const bool onlyKeepGen=false;
+  const int verbose=0;
 };
 
 std::tuple<int, float, float, float> computeIsoAndMatch(
@@ -165,7 +166,8 @@ std::tuple<int, float, float, float> computeIsoAndMatch(
     if (genCand->pt()==0) return std::make_tuple(matchedIndex, thematch_pt, thematch_iso, thematch_dr);
     for (unsigned int iSort = 0; iSort < vectrk_ttrk.size(); ++iSort) {
         const auto& track = vectrk_ttrk[iSort].first;
-        float dr = deltaR(genCand->eta(), genCand->phi(), track.eta(), track.phi());
+        if(genCand->pdgId()*track.charge()<=0) continue;
+	float dr = deltaR(genCand->eta(), genCand->phi(), track.eta(), track.phi());
         if (dr > 0 && dr < 0.3) {
             thematch_iso += track.pt();
             float relPtDiff = std::abs(track.pt() - genCand->pt()) / genCand->pt();
@@ -384,14 +386,14 @@ std::vector<int> FindBDecays(const edm::Handle<reco::GenParticleCollection> &gen
 }
 
 
-void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup const &iSetup) const {
+void BDhFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup const &iSetup) const {
 
   using std::vector;
 
   edm::Handle<reco::BeamSpot> theBeamSpotHandle;
   iEvent.getByToken(token_beamSpot, theBeamSpotHandle);
   if (!theBeamSpotHandle.isValid()) {
-    edm::LogError("BDPiFitter") << "No BeamSpot found!";
+    edm::LogError("BDhFitter") << "No BeamSpot found!";
     return;
   }
   const reco::BeamSpot* theBeamSpot = theBeamSpotHandle.product();
@@ -410,14 +412,14 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
   edm::Handle<edm::View<pat::PackedCandidate>> lostTracks;
   iEvent.getByToken(lostTracksToken_, lostTracks);
   if (!tracks.isValid() || !lostTracks.isValid()) {
-    edm::LogError("BDPiFitter") << "Track collections not found!";
+    edm::LogError("BDhFitter") << "Track collections not found!";
     return;
   }
 
   edm::Handle<reco::GenParticleCollection> genParticleHandle_;
   iEvent.getByToken(genParticleToken_, genParticleHandle_);
   if (!genParticleHandle_.isValid()) {
-    edm::LogError("BDPiFitter") << "GenParticles not found!";
+    edm::LogError("BDhFitter") << "GenParticles not found!";
     return;
   }
 
@@ -494,11 +496,24 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
   std::unique_ptr<pat::CompositeCandidateCollection> D0_out(new pat::CompositeCandidateCollection());
 
   // Gen Study
-  auto genpion_index = FindBDecays(genParticleHandle_, Genmatch_out.get(), vectrk_ttrk);
+  std::vector<int> genpion_index;
+  if(isSignalMC){
+      genpion_index = FindBDecays(genParticleHandle_, Genmatch_out.get(), vectrk_ttrk);
+      if(genpion_index.size()<4 || (genpion_index.size()>=4 && genpion_index.at(3)==-1)){
+      //vector::_M_range_check: __n (which is 2) >= this->size() (which is 0)
+          iEvent.put(std::move(Genmatch_out), "Genmatch");
+          iEvent.put(std::move(tracks_earlyout),       "SelectedTracks");
+	  iEvent.put(std::move(LooseKshorts_out), "LooseKshort");
+	  iEvent.put(std::move(ret_val), "SelectedV0Collection");
+	  iEvent.put(std::move(trans_out), "SelectedV0TransientCollection");
+	  iEvent.put(std::move(D0_out), "D0");
+          return;
+      }
+  }
 
   // If early stop
-  if(onlygen){
-      if(isSignal)  iEvent.put(std::move(Genmatch_out), "Genmatch");
+  if(onlyKeepGen){
+      if(isSignalMC)  iEvent.put(std::move(Genmatch_out), "Genmatch");
       iEvent.put(std::move(tracks_earlyout),       "SelectedTracks");
       iEvent.put(std::move(LooseKshorts_out), "LooseKshort");
       iEvent.put(std::move(ret_val), "SelectedV0Collection");
@@ -507,64 +522,74 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
       return;
   }
 
-  // Get extra 2 pions
-  //std::cout<<"main loop to find two pion from D0 "<< tracks->size()<<" "<< pu_tracks->size()<<" "<< ttracks->size() <<std::endl;
+  // Get 2 pions from the same vertex
   std::vector<std::pair<unsigned int, unsigned int>> vectrk_pions;
   // Loop over track pairs
   for (unsigned int trkidx3 = 0; trkidx3 < vectrk_ttrk.size(); ++trkidx3) {
     const auto& Trk3 = vectrk_ttrk[trkidx3].first;
     const auto& tTrk3 = vectrk_ttrk[trkidx3].second;
-    if(onlymatched){
+    if(onlyRecoMatchedPions){
         if(int(trkidx3)!= genpion_index.at(2) && int(trkidx3)!= genpion_index.at(3)){
-          //std::cout<<"p3 "<<trkidx3<<" "<<genpion_index.at(2)<<" "<<genpion_index.at(3)<<std::endl;
           continue;
         }
     }
     for (unsigned int trkidx4 = trkidx3 + 1; trkidx4 < vectrk_ttrk.size(); ++trkidx4) {
       const auto& Trk4 = vectrk_ttrk[trkidx4].first;
       const auto& tTrk4 = vectrk_ttrk[trkidx4].second;
-      if(onlymatched){
+      if(onlyRecoMatchedPions){
           if(int(trkidx4)!= genpion_index.at(2) && int(trkidx4)!= genpion_index.at(3)){
-            //std::cout<<trkidx4<<" "<<genpion_index.at(2)<<" "<<genpion_index.at(3)<<std::endl;
             continue;
           }
       }
       // Opposite charge requirement
       if (Trk3.charge() * Trk4.charge() >= 0) continue;
-  
       const auto& tPosTrk = (Trk3.charge() > 0) ? tTrk3 : tTrk4;
       const auto& tNegTrk = (Trk3.charge() < 0) ? tTrk3 : tTrk4;
-  
-      //double dz_diff = std::abs(tPosTrk.track().dz(*theBeamSpot) - tNegTrk.track().dz(*theBeamSpot));
-      //if (dz_diff > dzCut_) continue;
-      //double dxy_sign = tPosTrk.track().dxy(*theBeamSpot) * tNegTrk.track().dxy(*theBeamSpot);
-      //if (dxy_sign > 0) continue;
-  
+      unsigned int Postrkidx3 = (Trk3.charge() > 0) ? trkidx3 : trkidx4;
+      unsigned int Negtrkidx4 = (Trk3.charge() < 0) ? trkidx3 : trkidx4;
+
+              const auto& posImpact_pion = tPosTrk.impactPointTSCP();
+              const auto& negImpact_pion = tNegTrk.impactPointTSCP();
+              if (!posImpact_pion.isValid() || !negImpact_pion.isValid()) continue;
+              FreeTrajectoryState const& posState_pion = posImpact_pion.theState();
+              FreeTrajectoryState const& negState_pion = negImpact_pion.theState();
+              ClosestApproachInRPhi cApp_pion;
+              cApp_pion.calculate(posState_pion, negState_pion);
+              if (!cApp_pion.status()) continue;
+              //  the distance between the two trajectories at their closest approach in R-phi
+              float dca_pion = std::abs(cApp_pion.distance());
+              // the POCA should at least be in the sensitive volume
+              GlobalPoint cxPt_pion = cApp_pion.crossingPoint();
+              const double cxPtR2_pion = cxPt_pion.x() * cxPt_pion.x() + cxPt_pion.y() * cxPt_pion.y();
+              if (cxPtR2_pion > 120. * 120. || std::abs(cxPt_pion.z()) > 300.) continue;
+              TrajectoryStateClosestToPoint posTSCP_pion = tPosTrk.trajectoryStateClosestToPoint(cxPt_pion);
+              TrajectoryStateClosestToPoint negTSCP_pion = tNegTrk.trajectoryStateClosestToPoint(cxPt_pion);
+              if (!posTSCP_pion.isValid() || !negTSCP_pion.isValid())          continue;
+              float trk3_dot_trk4 = posTSCP_pion.momentum().dot(negTSCP_pion.momentum());
+              if (trk3_dot_trk4<0.1) continue;
+
+
       // Run the vertex fitter
       KinVtxFitter D0pipi_fitter(
         {tPosTrk, tNegTrk},      // transient tracks
         {piMass, piMass},        // masses
         {K_SIGMA, K_SIGMA}       // sigma (uncertainty)
       );
-  
       if (!D0pipi_fitter.success()) continue;
       if (D0pipi_fitter.chi2() < 0 || D0pipi_fitter.dof() < 0) continue;
       if (D0pipi_fitter.prob() < 0.01) continue;
-  
-      // Store the indices of the tracks for later combinations
-      vectrk_pions.push_back(std::make_pair(trkidx3, trkidx4));
+      vectrk_pions.push_back(std::make_pair(Postrkidx3, Negtrkidx4));
     }
   }
 
 
-  //std::cout<<"vectrk_ttrk.size() "<< vectrk_ttrk.size()<<" vectrk_pions.size() "<< vectrk_pions.size()<<std::endl;
+  if(verbose>=1) std::cout<<"vectrk_ttrk.size() "<< vectrk_ttrk.size()<<" vectrk_pions.size() "<< vectrk_pions.size()<<std::endl;
   // Reco V0
   int v0_idx=-1;
   for (unsigned int trkidx1 = 0; trkidx1 < vectrk_ttrk.size(); ++trkidx1) {
     for (unsigned int trkidx2 = trkidx1 + 1; trkidx2 < vectrk_ttrk.size(); ++trkidx2) {
-	if(onlymatched){
+	if(onlyRecoMatchedPions){
             if( (int(trkidx1)!= genpion_index.at(0) && int(trkidx1)!= genpion_index.at(1)) || (int(trkidx2)!= genpion_index.at(0) && int(trkidx2)!= genpion_index.at(1))){
-              //std::cout<<"V0 "<<trkidx1<<" "<<genpion_index.at(0)<<" "<<genpion_index.at(1)<<std::endl;
               continue;
             }
         }
@@ -572,6 +597,8 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
         const auto Trk2 = (vectrk_ttrk[trkidx1].first.charge() < 0) ? vectrk_ttrk[trkidx1].first : vectrk_ttrk[trkidx2].first;
         const auto& tTrk1 = (vectrk_ttrk[trkidx1].first.charge() > 0) ? vectrk_ttrk[trkidx1].second : vectrk_ttrk[trkidx2].second;
         const auto& tTrk2 = (vectrk_ttrk[trkidx1].first.charge() < 0) ? vectrk_ttrk[trkidx1].second : vectrk_ttrk[trkidx2].second;
+        unsigned int Postrkidx1 = (vectrk_ttrk[trkidx1].first.charge() > 0) ? trkidx1 : trkidx2;
+        unsigned int Negtrkidx2 = (vectrk_ttrk[trkidx1].first.charge() < 0) ? trkidx1 : trkidx2;
         if (Trk1.charge() * Trk2.charge() >= 0) continue;
         ////std::cout<<"OS tracks:"<<trkidx1<<" "<<trkidx2<<std::endl;
 
@@ -589,7 +616,9 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
         // the POCA should at least be in the sensitive volume
         GlobalPoint cxPt = cApp.crossingPoint();
         const double cxPtR2 = cxPt.x() * cxPt.x() + cxPt.y() * cxPt.y();
-        //if (cxPtR2 > 120. * 120. || std::abs(cxPt.z()) > 300.) continue;
+        if (cxPtR2 > 120. * 120. || std::abs(cxPt.z()) > 300.) continue;
+	// Ks0 should have some displacement
+	if (cxPtR2 < 0.01)  continue;
         //// allow for different DCA cuts depending on position of POCA
         //if (cxPtR2 < innerOuterTkDCAThreshold_ * innerOuterTkDCAThreshold_) {
         //  if (dca > innerTkDCACut_) continue;
@@ -601,13 +630,13 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
         TrajectoryStateClosestToPoint negTSCP = tTrk2.trajectoryStateClosestToPoint(cxPt);
         if (!posTSCP.isValid() || !negTSCP.isValid())          continue;
         float trk1_dot_trk2 = posTSCP.momentum().dot(negTSCP.momentum());
+	if (trk1_dot_trk2 < 0.1 ) continue;
+        if(verbose>=10) std::cout<<"Pass step1"<<std::endl;
 
 	// step2 seperate dca requirement
 	//distance closest approach in x,y wrt beam spot
         std::pair<double, double> DCA_trk1_beamspot = computeDCA(tTrk1, *theBeamSpot);
         std::pair<double, double> DCA_trk2_beamspot = computeDCA(tTrk2, *theBeamSpot);
-        //if (DCASig >  dcaSig_  && dcaSig_ > 0) continue;
-
   
         // step3: Pre-fit mPiPi mass cut
         double p1Mag2 = posTSCP.momentum().mag2();
@@ -616,8 +645,8 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
         double totalESq = totalE * totalE;
         double totalPSq = (posTSCP.momentum() + negTSCP.momentum()).mag2();
         double massSquared = totalESq - totalPSq;
-        //if (massSquared > mPiPiCut_ * mPiPiCut_)         continue;
-        //std::cout << "mPiPi^2 = " << massSquared << " passes pre-fit cut." << std::endl;
+        if ( massSquared > mPiPiCut_ * mPiPiCut_)         continue;
+        if(verbose>=10) std::cout<<"Pass step3"<<std::endl;
 
 	// step4: Fit! 
         // Create dummy covariance (error matrix) for the initial vertex position
@@ -628,27 +657,29 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
         theRecoVertex = theKalmanFitter.vertex(transTracks);
         if (!theRecoVertex.isValid()) continue;
         reco::Vertex theVtx_KLM = reco::Vertex(theRecoVertex);
-        // if (theVtx_KLM.normalizedChi2() > vtxChi2Cut_ || theVtx_KLM.normalizedChi2() < 0)  continue;
+        if (theVtx_KLM.normalizedChi2() > vtxChi2Cut_) continue;
         // Get fitted vertex position
         GlobalPoint vtxPos(theVtx_KLM.x(), theVtx_KLM.y(), theVtx_KLM.z());
-        //std::cout << "A valid vertex found at ("
-        //          << vtxPos.x() << ", " << vtxPos.y() << ", " << vtxPos.z() << ")"
-        //          << std::endl;
+        if(verbose>=1){
+	    std::cout << "A valid vertex found at ("
+                  << vtxPos.x() << ", " << vtxPos.y() << ", " << vtxPos.z() << ")"
+                  << std::endl;
+	}
 	        
 	// step5: check the fit vertex
         // 2D decay significance
         SMatrixSym3D totalCov = theBeamSpot->rotatedCovariance3D() + theVtx_KLM.covariance();
         SVector3 distVecXY(vtxPos.x() - theBeamSpotPos.x(), vtxPos.y() - theBeamSpotPos.y(), 0.);
         double distMagXY = ROOT::Math::Mag(distVecXY);
-        //if (distMagXY < vtxDecayXYCut_) continue;
-        double sigmaDistMagXY = sqrt(ROOT::Math::Similarity(totalCov, distVecXY)) / distMagXY;
-        //if (distMagXY < vtxDecaySigXYCut_ * sigmaDistMagXY) continue;
+        double sigmaDistMagXY = sqrt(ROOT::Math::Similarity(totalCov, distVecXY));
+        if (distMagXY < vtxDecaySigXYCut_ * sigmaDistMagXY) continue;
+	
         // 3D decay significance
         SVector3 distVecXYZ(vtxPos.x() - theBeamSpotPos.x(), vtxPos.y() - theBeamSpotPos.y(), vtxPos.z() - theBeamSpotPos.z());
         double distMagXYZ = ROOT::Math::Mag(distVecXYZ);
-        double sigmaDistMagXYZ = sqrt(ROOT::Math::Similarity(totalCov, distVecXYZ)) / distMagXYZ;
-        //if (distMagXYZ / sigmaDistMagXYZ < vtxDecaySigXYZCut_) continue;
-        //std::cout<<"Good 2D / 3D sig "<<std::endl;
+        double sigmaDistMagXYZ = sqrt(ROOT::Math::Similarity(totalCov, distVecXYZ));
+        if (distMagXYZ < vtxDecaySigXYZCut_ * sigmaDistMagXYZ) continue;
+        if(verbose>=1) std::cout<<"Good 2D / 3D sig "<<std::endl;
 
         std::unique_ptr<TrajectoryStateClosestToPoint> trajPlus;
         std::unique_ptr<TrajectoryStateClosestToPoint> trajMins;
@@ -694,14 +725,15 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
         double px = totalP.x();
         double py = totalP.y();
         double angleXY = (dx * px + dy * py) / (sqrt(dx * dx + dy * dy) * sqrt(px * px + py * py));
-        //if (angleXY < cosThetaXYCut_) continue;
+        if (angleXY < cosThetaXYCut_) continue;
 
         // 3D pointing angle
         double dz = theVtx_KLM.z() - theBeamSpotPos.z();
         double pz = totalP.z();
-        double angleXYZ =
-            (dx * px + dy * py + dz * pz) / (sqrt(dx * dx + dy * dy + dz * dz) * sqrt(px * px + py * py + pz * pz));
-        //if (angleXYZ < cosThetaXYZCut_) continue;
+        double angleXYZ = (dx * px + dy * py + dz * pz) / (sqrt(dx * dx + dy * dy + dz * dz) * sqrt(px * px + py * py + pz * pz));
+        if (angleXYZ < cosThetaXYZCut_) continue;
+	if(verbose>=1) std::cout<<"Good 2D / 3D pointing angle "<<std::endl;
+
 
         // step6: make kShort
         // calculate total energy of V0
@@ -717,21 +749,21 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
 
         // Create the VertexCompositeCandidate object that will be stored in the Event
 	reco::VertexCompositePtrCandidate theKshort_cand(0, kShortP4, vtx, vtxCov, vtxChi2, vtxNdof);
-	bool fromtrack1 = vectrk_idx[trkidx1].first;
-        bool fromtrack2 = vectrk_idx[trkidx2].first;
+	bool fromtrack1 = vectrk_idx[Postrkidx1].first;
+        bool fromtrack2 = vectrk_idx[Negtrkidx2].first;
         
         int posIdx, negIdx;
         bool fromPos, fromNeg;
         
         // Identify which one is positive and negative
-        if (vectrk_ttrk[trkidx1].first.charge() > 0) {
-            posIdx = vectrk_idx[trkidx1].second;
-            negIdx = vectrk_idx[trkidx2].second;
+        if (vectrk_ttrk[Postrkidx1].first.charge() > 0) {
+            posIdx = vectrk_idx[Postrkidx1].second;
+            negIdx = vectrk_idx[Negtrkidx2].second;
             fromPos = fromtrack1;
             fromNeg = fromtrack2;
         } else {
-            posIdx = vectrk_idx[trkidx2].second;
-            negIdx = vectrk_idx[trkidx1].second;
+            posIdx = vectrk_idx[Negtrkidx2].second;
+            negIdx = vectrk_idx[Postrkidx1].second;
             fromPos = fromtrack2;
             fromNeg = fromtrack1;
         }
@@ -749,8 +781,11 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
         theKshort_cand.addDaughter(positivePtr);
         theKshort_cand.addDaughter(negativePtr);
         theKshort_cand.setPdgId(310);
-        //if ( abs(theKshort_cand.mass() - kShortMass) > kShortMassCut_) continue;
+        if ( abs(theKshort_cand.mass() - kShortMass) > kShortMassCut_) continue;
+	if (abs(theKshort_cand.eta()) > 2.5) continue;
+	if (abs(theKshort_cand.pt()) < 0.35) continue;
 
+	// looks like a good Ks0, save it
 	pat::CompositeCandidate V0cand;
         V0cand.setP4(theKshort_cand.p4());
 	V0cand.setVertex( reco::Candidate::Point(theVtx_KLM.x(), theVtx_KLM.y(), theVtx_KLM.z()));
@@ -762,7 +797,7 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
         V0cand.addUserFloat("Trk1_dcaErr_beamspot", DCA_trk1_beamspot.second);
         V0cand.addUserFloat("Trk1_PixelHits", Trk1.bestTrack()->hitPattern().numberOfValidPixelHits());
         V0cand.addUserFloat("Trk1_bestTrackHits", Trk1.bestTrack()->hitPattern().numberOfValidHits());
-        V0cand.addUserFloat("Trk1_pseudoTrackHits", Trk1.pseudoTrack().numberOfValidHits());
+        //V0cand.addUserFloat("Trk1_pseudoTrackHits", Trk1.pseudoTrack().numberOfValidHits());
 	V0cand.addUserFloat("Trk1_ipsigXY", std::abs(Trk1.pseudoTrack().dxy(theBeamSpotPos) / Trk1.pseudoTrack().dxyError()));
         V0cand.addUserFloat("Trk1_ipsigZ", std::abs(Trk1.pseudoTrack().dz(theBeamSpotPos) / Trk1.pseudoTrack().dzError()));
         V0cand.addUserFloat("Trk1_normalizedChi2", Trk1.pseudoTrack().normalizedChi2());
@@ -775,14 +810,12 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
         V0cand.addUserFloat("Trk2_dcaErr_beamspot", DCA_trk2_beamspot.second);
         V0cand.addUserFloat("Trk2_PixelHits", Trk2.bestTrack()->hitPattern().numberOfValidPixelHits());
         V0cand.addUserFloat("Trk2_bestTrackHits", Trk2.bestTrack()->hitPattern().numberOfValidHits());
-        V0cand.addUserFloat("Trk2_pseudoTrackHits", Trk2.pseudoTrack().numberOfValidHits());
+        //V0cand.addUserFloat("Trk2_pseudoTrackHits", Trk2.pseudoTrack().numberOfValidHits());
         V0cand.addUserFloat("Trk2_ipsigXY", std::abs(Trk2.pseudoTrack().dxy(theBeamSpotPos) / Trk2.pseudoTrack().dxyError()));
         V0cand.addUserFloat("Trk2_ipsigZ", std::abs(Trk2.pseudoTrack().dz(theBeamSpotPos) / Trk2.pseudoTrack().dzError()));
         V0cand.addUserFloat("Trk2_normalizedChi2", Trk2.pseudoTrack().normalizedChi2());
 	// closest xing point
         V0cand.addUserFloat("trk1_dot_trk2", trk1_dot_trk2);
-        V0cand.addUserFloat("sigmaDistMagXY", sigmaDistMagXY);
-        V0cand.addUserFloat("sigmaDistMagXYZ", sigmaDistMagXYZ);
         V0cand.addUserFloat("cxPtx", cxPt.x());
         V0cand.addUserFloat("cxPty", cxPt.y());
         V0cand.addUserFloat("cxPtz", cxPt.z());
@@ -800,12 +833,12 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
 	//V0cand.addUserFloat("KLM_prob", theVtx_KLM.prob());
         V0cand.addUserFloat("KLM_cos_theta_XY", angleXY);
         V0cand.addUserFloat("KLM_cos_theta_XYZ", angleXYZ);
-	V0cand.addUserFloat("KLM_Trk1_pt",  tTrk1.track().pt());
-	V0cand.addUserFloat("KLM_Trk1_eta", tTrk1.track().eta());
-	V0cand.addUserFloat("KLM_Trk1_phi", tTrk1.track().phi());
-        V0cand.addUserFloat("KLM_Trk2_pt",  tTrk2.track().pt());
-        V0cand.addUserFloat("KLM_Trk2_eta", tTrk2.track().eta());
-        V0cand.addUserFloat("KLM_Trk2_phi", tTrk2.track().phi());
+	//V0cand.addUserFloat("KLM_Trk1_pt",  tTrk1.track().pt());
+	//V0cand.addUserFloat("KLM_Trk1_eta", tTrk1.track().eta());
+	//V0cand.addUserFloat("KLM_Trk1_phi", tTrk1.track().phi());
+        //V0cand.addUserFloat("KLM_Trk2_pt",  tTrk2.track().pt());
+        //V0cand.addUserFloat("KLM_Trk2_eta", tTrk2.track().eta());
+        //V0cand.addUserFloat("KLM_Trk2_phi", tTrk2.track().phi());
         V0cand.addUserFloat("KLM_Ks0_pt",  theKshort_cand.pt());
         V0cand.addUserFloat("KLM_Ks0_eta", theKshort_cand.eta());
         V0cand.addUserFloat("KLM_Ks0_phi", theKshort_cand.phi());
@@ -815,25 +848,29 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
 	V0cand.addUserFloat("KLM_distMagXYZ",   distMagXYZ);
 	V0cand.addUserFloat("KLM_sigmaDistMagXYZ",   sigmaDistMagXYZ);
 
-
 	// Fit again with KinVtxFitter
         KinVtxFitter theKinVtxFitter(
         {tTrk1, tTrk2},
         {piMass, piMass},
         {K_SIGMA, K_SIGMA} );
-        if (!theKinVtxFitter.success()) continue;
-        if ( theKinVtxFitter.chi2()<0 || theKinVtxFitter.dof()<0) continue;
+        if (!theKinVtxFitter.success()){
+		if(verbose>=1) std::cout<<" Not a good theKinVtxFitter"<<std::endl;
+		continue;
+	}
+        if ( theKinVtxFitter.chi2() < 0 || theKinVtxFitter.dof() < 0){
+                if(verbose>=1) std::cout<<" theKinVtxFitter.chi2, theKinVtxFitter.dof "<<theKinVtxFitter.chi2()<<" "<<theKinVtxFitter.dof()<<std::endl;       
+		continue;
+	}
         V0cand.addUserFloat("Kin_vtx_x", theKinVtxFitter.fitted_vtx().x());
         V0cand.addUserFloat("Kin_vtx_y", theKinVtxFitter.fitted_vtx().y());
         V0cand.addUserFloat("Kin_vtx_z", theKinVtxFitter.fitted_vtx().z());
-	V0cand.addUserFloat("Kin_chi2", theKinVtxFitter.chi2());
-	//V0cand.addUserFloat("Kin_normalizedChi2", theKinVtxFitter.normalizedChi2());
-	V0cand.addUserFloat("Kin_dof", theKinVtxFitter.dof());
-        V0cand.addUserFloat("Kin_prob", theKinVtxFitter.prob());
-        V0cand.addUserFloat("Kin_pt",  theKinVtxFitter.fitted_p4().pt());
-        V0cand.addUserFloat("Kin_eta", theKinVtxFitter.fitted_p4().eta());
-        V0cand.addUserFloat("Kin_phi", theKinVtxFitter.fitted_p4().phi());
-	V0cand.addUserFloat("Kin_mass", theKinVtxFitter.fitted_candidate().mass());
+	V0cand.addUserFloat("Kin_chi2",  theKinVtxFitter.chi2());
+	V0cand.addUserFloat("Kin_dof",   theKinVtxFitter.dof()); // always 1 ?
+        V0cand.addUserFloat("Kin_prob",  theKinVtxFitter.prob());
+        V0cand.addUserFloat("Kin_pt",    theKinVtxFitter.fitted_p4().pt());
+        V0cand.addUserFloat("Kin_eta",   theKinVtxFitter.fitted_p4().eta());
+        V0cand.addUserFloat("Kin_phi",   theKinVtxFitter.fitted_p4().phi());
+	V0cand.addUserFloat("Kin_mass",  theKinVtxFitter.fitted_candidate().mass());
         V0cand.addUserFloat("Kin_massErr", sqrt(theKinVtxFitter.fitted_candidate().kinematicParametersError().matrix()(6, 6)));
         V0cand.addUserFloat("Kin_cos_theta_2D", cos_theta_2D(theKinVtxFitter, *theBeamSpot, V0cand.p4()));
         V0cand.addUserFloat("Kin_fitted_cos_theta_2D", cos_theta_2D(theKinVtxFitter, *theBeamSpot, theKinVtxFitter.fitted_p4()));
@@ -853,7 +890,6 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
         V0cand.addUserFloat("Kin_trk2_pt", theKinVtxFitter.daughter_p4(1).pt());
         V0cand.addUserFloat("Kin_trk2_eta", theKinVtxFitter.daughter_p4(1).eta());
         V0cand.addUserFloat("Kin_trk2_phi", theKinVtxFitter.daughter_p4(1).phi());
-        // save
         ret_val->push_back(V0cand);  // for save
         LooseKshorts_out->emplace_back(theKshort_cand); // for next sequence
         auto V0TT = theKinVtxFitter.fitted_candidate_ttrk();
@@ -861,7 +897,7 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
 	v0_idx+=1;
 
 	// Get extra 2 pions
-        //std::cout<<"main loop to find two pion from D0 "<< tracks->size()<<" "<< pu_tracks->size()<<" "<< ttracks->size() <<std::endl;
+        if(verbose>=1) std::cout<<"main loop to find two pion from D0 "<< tracks->size() <<std::endl;
         for (unsigned int pionsidx = 0; pionsidx < vectrk_pions.size(); ++pionsidx) {
 	      unsigned int trkidx3 = vectrk_pions[pionsidx].first;
               unsigned int trkidx4 = vectrk_pions[pionsidx].second;
@@ -871,7 +907,6 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
               const auto Trk4 = vectrk_ttrk[trkidx4].first;
               const auto& tTrk3 = vectrk_ttrk[trkidx3].second;
               const auto& tTrk4 = vectrk_ttrk[trkidx4].second;
-
               const auto& posImpact_pion = tTrk3.impactPointTSCP();
               const auto& negImpact_pion = tTrk4.impactPointTSCP();
               if (!posImpact_pion.isValid() || !negImpact_pion.isValid()) continue;
@@ -880,16 +915,20 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
               ClosestApproachInRPhi cApp_pion;
               cApp_pion.calculate(posState_pion, negState_pion);
               if (!cApp_pion.status()) continue;
+
               //  the distance between the two trajectories at their closest approach in R-phi
               float dca_pion = std::abs(cApp_pion.distance());
               // the POCA should at least be in the sensitive volume
               GlobalPoint cxPt_pion = cApp_pion.crossingPoint();
               const double cxPtR2_pion = cxPt_pion.x() * cxPt_pion.x() + cxPt_pion.y() * cxPt_pion.y();
+              if (cxPtR2_pion > 120. * 120. || std::abs(cxPt_pion.z()) > 300.) continue;
+
               // require the tracks point in the same quadrant
-              TrajectoryStateClosestToPoint posTSCP_pion = tTrk3.trajectoryStateClosestToPoint(cxPt);
-              TrajectoryStateClosestToPoint negTSCP_pion = tTrk4.trajectoryStateClosestToPoint(cxPt);
+              TrajectoryStateClosestToPoint posTSCP_pion = tTrk3.trajectoryStateClosestToPoint(cxPt_pion);
+              TrajectoryStateClosestToPoint negTSCP_pion = tTrk4.trajectoryStateClosestToPoint(cxPt_pion);
               if (!posTSCP_pion.isValid() || !negTSCP_pion.isValid())          continue;
               float trk3_dot_trk4 = posTSCP_pion.momentum().dot(negTSCP_pion.momentum());
+	      if (trk3_dot_trk4<0.1) continue;
               std::pair<double, double> DCA_trk3_beamspot = computeDCA(tTrk3, *theBeamSpot);
               std::pair<double, double> DCA_trk4_beamspot = computeDCA(tTrk4, *theBeamSpot);
 
@@ -900,9 +939,10 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
                   {K_SIGMA, K_SIGMA, V0cand.userFloat("Kin_massErr")});
               if ( !D0_KinFitter.success() ) continue;
               if ( D0_KinFitter.chi2()<0 || D0_KinFitter.dof()<0) continue;
-              //if ( D0_KinFitter.prob()<0.01) continue;
+              if ( D0_KinFitter.prob()<0.01) continue;
               auto D0_Kinfit_p4 = D0_KinFitter.fitted_p4();
-              //if(abs(D0_Kinfit_p4.mass()-D0Mass)>0.2) continue;
+              if(abs(D0_Kinfit_p4.mass()-D0Mass)>0.1) continue;
+	      if(verbose>=10) std::cout<<" D0 looks good "<<std::endl;
 
               pat::CompositeCandidate D0;
               D0.addUserInt("Ks0_idx", v0_idx);
@@ -921,7 +961,7 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
               D0.addUserFloat("Trk3_dcaErr_beamspot", DCA_trk3_beamspot.second);
               D0.addUserFloat("Trk3_PixelHits", Trk3.bestTrack()->hitPattern().numberOfValidPixelHits());
               D0.addUserFloat("Trk3_bestTrackHits", Trk3.bestTrack()->hitPattern().numberOfValidHits());
-              D0.addUserFloat("Trk3_pseudoTrackHits", Trk3.pseudoTrack().numberOfValidHits());
+              //D0.addUserFloat("Trk3_pseudoTrackHits", Trk3.pseudoTrack().numberOfValidHits());
               D0.addUserFloat("Trk3_ipsigXY", std::abs(Trk3.pseudoTrack().dxy(theBeamSpotPos) / Trk3.pseudoTrack().dxyError()));
               D0.addUserFloat("Trk3_ipsigZ", std::abs(Trk3.pseudoTrack().dz(theBeamSpotPos) / Trk3.pseudoTrack().dzError()));
               D0.addUserFloat("Trk3_normalizedChi2", Trk3.pseudoTrack().normalizedChi2());
@@ -934,7 +974,7 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
               D0.addUserFloat("Trk4_dcaErr_beamspot", DCA_trk4_beamspot.second);
               D0.addUserFloat("Trk4_PixelHits", Trk4.bestTrack()->hitPattern().numberOfValidPixelHits());
               D0.addUserFloat("Trk4_bestTrackHits", Trk4.bestTrack()->hitPattern().numberOfValidHits());
-              D0.addUserFloat("Trk4_pseudoTrackHits", Trk4.pseudoTrack().numberOfValidHits());
+              //D0.addUserFloat("Trk4_pseudoTrackHits", Trk4.pseudoTrack().numberOfValidHits());
               D0.addUserFloat("Trk4_ipsigXY", std::abs(Trk4.pseudoTrack().dxy(theBeamSpotPos) / Trk4.pseudoTrack().dxyError()));
               D0.addUserFloat("Trk4_ipsigZ", std::abs(Trk4.pseudoTrack().dz(theBeamSpotPos) / Trk4.pseudoTrack().dzError()));
               D0.addUserFloat("Trk4_normalizedChi2", Trk4.pseudoTrack().normalizedChi2());
@@ -984,7 +1024,7 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
     }
   }
 
-  if(isSignal)  iEvent.put(std::move(Genmatch_out), "Genmatch");
+  if(isSignalMC)  iEvent.put(std::move(Genmatch_out), "Genmatch");
   iEvent.put(std::move(tracks_earlyout),       "SelectedTracks");    
   iEvent.put(std::move(LooseKshorts_out), "LooseKshort");
   iEvent.put(std::move(ret_val), "SelectedV0Collection");
@@ -994,5 +1034,5 @@ void BDPiFitter::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup cons
 
 }
 
-DEFINE_FWK_MODULE(BDPiFitter);
+DEFINE_FWK_MODULE(BDhFitter);
 

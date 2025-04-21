@@ -1,65 +1,43 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.BPHNano.common_cff import *
 
-BDPi = cms.EDProducer("BDPiFitter",    
+BDh = cms.EDProducer("BDhFitter",    
    # which beamSpot to reference
    beamSpot = cms.InputTag('offlineBeamSpot'),
    vertices = cms.InputTag('offlineSlimmedPrimaryVertices'),
    tracks          = cms.InputTag("packedPFCandidates"),
    lostTracks      = cms.InputTag("lostTracks"),
-   # Track normalized Chi2 <
-   tkChi2Cut = cms.double(30.),
-   # Number of valid hits on track >=
-   tkNHitsCut = cms.int32(3),
-   # Pt of track >
-   tkPtCut = cms.double(0.35),
-   # Track impact parameter significance >
+   genParticle = cms.InputTag('finalGenParticlesBPH'),
+
+   tkNHitsCut = cms.int32(3), # Number of valid hits on track
+   tkPtCut = cms.double(0.3), # Pt of track
+   tkChi2Cut = cms.double(30.), # Track normalized Chi2
+   mPiPiCut = cms.double(0.7), # invariant mass of track pair, assuming both tracks are charged pions
+   vtxChi2Cut = cms.double(20), # Vertex KLM chi2
+   vtxDecaySigXYCut = cms.double(3), # KLM XY decay distance significance
+   vtxDecaySigXYZCut = cms.double(0.1), # KLM XYZ decay distance significance
+   cosThetaXYCut = cms.double(0.9),  # cos(angleXY) between x and p of V0 candidate
+   cosThetaXYZCut = cms.double(-1), # cos(angleXYZ) between x and p of V0 candidate
+   kShortMassCut = cms.double(0.05), # V0 mass window +- pdg value
+
+   # Not used for now
    tkIPSigXYCut = cms.double(-1.),
    tkIPSigZCut = cms.double(-1.),
-   # -- cuts on the vertex --
-   # Vertex chi2 <
-   vtxChi2Cut = cms.double(300),
-   # XYZ decay distance significance >
-   vtxDecaySigXYZCut = cms.double(-1.),
-   # XY decay distance significance >
-   vtxDecaySigXYCut = cms.double(0.05),
-   # XY decay distance >
    vtxDecayXYCut = cms.double(-1.),
-   # XY decay distance for same-sign vertices >
    ssVtxDecayXYCut = cms.double(-1.),
-   # -- miscellaneous cuts --
-   # allow same-sign pairs of tracks
    allowSS = cms.bool(False),
-   # Threshold for inner/outer DCA cuts:
-   #    inner tracks = distance between POCA and z-axis <
-   #    outer tracks = distance between POCA and z-axis >=
    innerOuterTkDCAThreshold = cms.double(5.),
-   # POCA distance between inner tracks <
    innerTkDCACut = cms.double(1.),
-   # POCA distance between outer tracks <
    outerTkDCACut = cms.double(1.),
-   # allow vertices where the angle between the tracks is more than 90 degrees
    allowWideAngleVtx = cms.bool(False),
-   # invariant mass of track pair - assuming both tracks are charged pions <
-   mPiPiCut = cms.double(0.7),
-   # check if either track has a hit radially inside the vertex position minus this number times the sigma of the vertex fit
-   # note: Set this to -1 to disable this cut, which MUST be done if you want to run V0Producer on the AOD track collection!
    innerHitPosCut = cms.double(4.),
-   # cos(angleXY) between x and p of V0 candidate >
-   cosThetaXYCut = cms.double(0.1),
-   # cos(angleXYZ) between x and p of V0 candidate >
-   cosThetaXYZCut = cms.double(-2.),
-   # -- cuts on the V0 candidate mass --
-   # V0 mass window +- pdg value
-   kShortMassCut = cms.double(0.1),
-   genParticle = cms.InputTag('finalGenParticlesBPH'),
 )
 
 
 # Ks0
 Ks0CandidatesTable = cms.EDProducer(
     'SimpleCompositeCandidateFlatTableProducer',
-    src = cms.InputTag('BDPi','SelectedV0Collection'),
+    src = cms.InputTag('BDh','SelectedV0Collection'),
     cut = cms.string(""),
     name = cms.string("Kshort"),
     doc = cms.string("Kshort Variables"),
@@ -76,10 +54,11 @@ Ks0CandidatesTable = cms.EDProducer(
         Trk1_dcaErr_beamspot = ufloat("Trk1_dcaErr_beamspot"),
         Trk1_PixelHits  = ufloat('Trk1_PixelHits'),
         Trk1_bestTrackHits  = ufloat('Trk1_bestTrackHits'),
-        Trk1_pseudoTrackHits  = ufloat('Trk1_pseudoTrackHits'),
+        #Trk1_pseudoTrackHits  = ufloat('Trk1_pseudoTrackHits'),
         Trk1_ipsigXY  = ufloat('Trk1_ipsigXY'),
         Trk1_ipsigZ  = ufloat('Trk1_ipsigZ'),
         Trk1_normalizedChi2  = ufloat('Trk1_normalizedChi2'),
+
         Trk2_idx = uint('Trk2_idx'),
         Trk2_pt  = ufloat('Trk2_pt'),
         Trk2_eta  = ufloat('Trk2_eta'),
@@ -88,14 +67,12 @@ Ks0CandidatesTable = cms.EDProducer(
         Trk2_dcaErr_beamspot = ufloat("Trk2_dcaErr_beamspot"),
         Trk2_PixelHits  = ufloat('Trk2_PixelHits'),
         Trk2_bestTrackHits  = ufloat('Trk2_bestTrackHits'),
-        Trk2_pseudoTrackHits  = ufloat('Trk2_pseudoTrackHits'),
+        #Trk2_pseudoTrackHits  = ufloat('Trk2_pseudoTrackHits'),
         Trk2_ipsigXY  = ufloat('Trk2_ipsigXY'),
         Trk2_ipsigZ  = ufloat('Trk2_ipsigZ'),
         Trk2_normalizedChi2  = ufloat('Trk2_normalizedChi2'),
         # closest xing point
         trk1_dot_trk2 = ufloat('trk1_dot_trk2'),
-        sigmaDistMagXY = ufloat('sigmaDistMagXY'),
-        sigmaDistMagXYZ = ufloat('sigmaDistMagXYZ'),
         cxPtx = ufloat('cxPtx'),
         cxPty = ufloat('cxPty'),
         cxPtz = ufloat('cxPtz'),
@@ -111,12 +88,12 @@ Ks0CandidatesTable = cms.EDProducer(
         KLM_normalizedChi2 = ufloat('KLM_normalizedChi2'),
         KLM_cos_theta_XY = ufloat('KLM_cos_theta_XY'),
         KLM_cos_theta_XYZ = ufloat('KLM_cos_theta_XYZ'),
-        KLM_Trk1_pt  = ufloat('KLM_Trk1_pt'),
-        KLM_Trk1_eta  = ufloat('KLM_Trk1_eta'),
-        KLM_Trk1_phi  = ufloat('KLM_Trk1_phi'),
-        KLM_Trk2_pt  = ufloat('KLM_Trk2_pt'),
-        KLM_Trk2_eta  = ufloat('KLM_Trk2_eta'),
-        KLM_Trk2_phi  = ufloat('KLM_Trk2_phi'),
+        #KLM_Trk1_pt  = ufloat('KLM_Trk1_pt'),
+        #KLM_Trk1_eta  = ufloat('KLM_Trk1_eta'),
+        #KLM_Trk1_phi  = ufloat('KLM_Trk1_phi'),
+        #KLM_Trk2_pt  = ufloat('KLM_Trk2_pt'),
+        #KLM_Trk2_eta  = ufloat('KLM_Trk2_eta'),
+        #KLM_Trk2_phi  = ufloat('KLM_Trk2_phi'),
         KLM_Ks0_pt = ufloat('KLM_Ks0_pt'),
         KLM_Ks0_eta = ufloat('KLM_Ks0_eta'),
         KLM_Ks0_phi = ufloat('KLM_Ks0_phi'),
@@ -159,7 +136,7 @@ Ks0CandidatesTable = cms.EDProducer(
 CountKs0Candidates = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(1),
     maxNumber = cms.uint32(999999),
-    src = cms.InputTag('BDPi','SelectedV0Collection')
+    src = cms.InputTag('BDh','SelectedV0Collection')
 )
 
 Ks0CandidatesMCMatch = cms.EDProducer("MCMatcher",            # cut on deltaR, deltaPt/Pt; pick best by deltaR
@@ -190,7 +167,7 @@ Ks0CandidatesMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
 # Gen match
 genpartTable = cms.EDProducer(
     'SimpleCompositeCandidateFlatTableProducer',
-    src       = cms.InputTag("BDPi", "Genmatch"),
+    src       = cms.InputTag("BDh", "Genmatch"),
     cut       = cms.string(""),
     name      = cms.string("Genmatch"),
     doc       = cms.string("genpart Variables"),
@@ -232,14 +209,14 @@ genpartTable = cms.EDProducer(
 Countgenpart = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(1),
     maxNumber = cms.uint32(999999),
-    src       = cms.InputTag("BDPi", "Genmatch")
+    src       = cms.InputTag("BDh", "Genmatch")
 )
 
 
 # D0
 D0Table = cms.EDProducer(
     'SimpleCompositeCandidateFlatTableProducer',
-    src       = cms.InputTag("BDPi", "D0"),
+    src       = cms.InputTag("BDh", "D0"),
     cut       = cms.string(""),
     name      = cms.string("D0"),
     doc       = cms.string("D0 Variables"),
@@ -257,7 +234,7 @@ D0Table = cms.EDProducer(
         Trk3_dcaErr_beamspot = ufloat("Trk3_dcaErr_beamspot"),
         Trk3_PixelHits  = ufloat('Trk3_PixelHits'),
         Trk3_bestTrackHits  = ufloat('Trk3_bestTrackHits'),
-        Trk3_pseudoTrackHits  = ufloat('Trk3_pseudoTrackHits'),
+        #Trk3_pseudoTrackHits  = ufloat('Trk3_pseudoTrackHits'),
         Trk3_ipsigXY  = ufloat('Trk3_ipsigXY'),
         Trk3_ipsigZ  = ufloat('Trk3_ipsigZ'),
         Trk3_normalizedChi2  = ufloat('Trk3_normalizedChi2'),
@@ -269,7 +246,7 @@ D0Table = cms.EDProducer(
         Trk4_dcaErr_beamspot = ufloat("Trk4_dcaErr_beamspot"),
         Trk4_PixelHits  = ufloat('Trk4_PixelHits'),
         Trk4_bestTrackHits  = ufloat('Trk4_bestTrackHits'),
-        Trk4_pseudoTrackHits  = ufloat('Trk4_pseudoTrackHits'),
+        #Trk4_pseudoTrackHits  = ufloat('Trk4_pseudoTrackHits'),
         Trk4_ipsigXY  = ufloat('Trk4_ipsigXY'),
         Trk4_ipsigZ  = ufloat('Trk4_ipsigZ'),
         Trk4_normalizedChi2  = ufloat('Trk4_normalizedChi2'),
@@ -308,28 +285,13 @@ D0Table = cms.EDProducer(
         )
 )
 
-infoTable = cms.EDProducer(
-    'SimpleCompositeCandidateFlatTableProducer',
-    src       = cms.InputTag("BDPi", "info"),
-    cut       = cms.string(""),
-    name      = cms.string("info"),
-    doc       = cms.string("info Variables"),
-    singleton = cms.bool(False),
-    extension = cms.bool(False),
-    variables = cms.PSet(
-        CandVars,
-        cutflow = uint('cutflow'),
-        cutflow_d0 = uint('cutflow_d0'),
-        )
-    )
-
 CountD0 = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(1),
     maxNumber = cms.uint32(999999),
-    src       = cms.InputTag("BDPi", "D0")
+    src       = cms.InputTag("BDh", "D0")
 )
 
-BDPiMCMatch = cms.EDProducer("MCMatcher",            # cut on deltaR, deltaPt/Pt; pick best by deltaR
+BDhMCMatch = cms.EDProducer("MCMatcher",            # cut on deltaR, deltaPt/Pt; pick best by deltaR
     src         = D0Table.src,                      # final reco collection
     matched     = cms.InputTag("finalGenParticlesBPH"),       # final mc-truth particle collection
     mcPdgId     = cms.vint32(421),                            # one or more PDG ID (13 = mu); absolute values (see below)
@@ -342,10 +304,10 @@ BDPiMCMatch = cms.EDProducer("MCMatcher",            # cut on deltaR, deltaPt/Pt
 )
 
 
-BDPiMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
+BDhMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
     recoObjects = D0Table.src,
     genParts = cms.InputTag("finalGenParticlesBPH"),
-    mcMap = cms.InputTag("BDPiMCMatch"),
+    mcMap = cms.InputTag("BDhMCMatch"),
     objName = D0Table.name,
     objType = cms.string("Other"),
     objBranchName = cms.string("genPart"),
@@ -357,7 +319,7 @@ BDPiMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
 # Pion Tracks 
 PionTrackTable = cms.EDProducer(
     "SimpleCompositeCandidateFlatTableProducer",
-    src  = cms.InputTag("BDPi:SelectedTracks"),
+    src  = cms.InputTag("BDh:SelectedTracks"),
     cut  = cms.string(""),
     name = cms.string("Track"),
     doc  = cms.string("track collection"),
@@ -416,7 +378,7 @@ PionTrackMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
 
 
 
-BDPiSequence = cms.Sequence(BDPi + Ks0CandidatesMCMatch + BDPiMCMatch + PionTrackMCMatch)
-BDPiSequenceTable = cms.Sequence(Ks0CandidatesTable + D0Table + infoTable + Ks0CandidatesMCTable + PionTrackTable + BDPiMCTable + genpartTable + PionTrackMCTable)
+BDhSequence = cms.Sequence(BDh + Ks0CandidatesMCMatch + BDhMCMatch + PionTrackMCMatch)
+BDhSequenceTable = cms.Sequence(Ks0CandidatesTable + D0Table + Ks0CandidatesMCTable + PionTrackTable + BDhMCTable + genpartTable + PionTrackMCTable)
 
 
