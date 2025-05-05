@@ -60,6 +60,26 @@ inline double cos_theta_2D(const FITTER& fitter, const reco::BeamSpot &bs, const
   return (den != 0.) ? delta.Dot(pt) / den : -2;
 }
 
+template<typename FITTER, typename LORENTZ_VEC>
+inline double cos_theta_2D(const FITTER& fitter, float x, float y, float z, const LORENTZ_VEC& p4) {
+  if (!fitter.success()) return -2;
+  GlobalPoint point = fitter.fitted_vtx();
+  math::XYZVector delta(point.x()  - x, point.y() - y, 0.);
+  math::XYZVector pt(p4.px(), p4.py(), 0.);
+  double den = (delta.R() * pt.R());
+  return (den != 0.) ? delta.Dot(pt) / den : -2;
+}
+
+template<typename FITTER, typename LORENTZ_VEC>
+inline double cos_theta_3D(const FITTER& fitter, float x, float y, float z, const LORENTZ_VEC& p4) {
+  if (!fitter.success()) return -2;
+  GlobalPoint point = fitter.fitted_vtx();
+  math::XYZVector delta(point.x()  - x, point.y() - y, point.z() - z);
+  math::XYZVector pt(p4.px(), p4.py(), p4.pz());
+  double den = (delta.R() * pt.R());
+  return (den != 0.) ? delta.Dot(pt) / den : -2;
+}
+
 template<typename FITTER>
 inline Measurement1D l_xy(const FITTER& fitter, const reco::BeamSpot &bs) {
   if (!fitter.success()) return { -2, -2};
@@ -68,6 +88,24 @@ inline Measurement1D l_xy(const FITTER& fitter, const reco::BeamSpot &bs) {
   auto bs_pos = bs.position(point.z());
   GlobalPoint delta(point.x() - bs_pos.x(), point.y() - bs_pos.y(), 0.);
   return {delta.perp(), sqrt(err.rerr(delta))};
+}
+
+template<typename FITTER>
+inline Measurement1D l_xy(const FITTER& fitter, float x, float y, float z) {
+  if (!fitter.success()) return { -2, -2};
+  GlobalPoint point = fitter.fitted_vtx();
+  GlobalError err = fitter.fitted_vtx_uncertainty();
+  GlobalPoint delta(point.x() - x, point.y() - y, 0.);
+  return {delta.perp(), sqrt(err.rerr(delta))};
+}
+
+template<typename FITTER>
+inline Measurement1D l_xyz(const FITTER& fitter, float x, float y, float z) {
+  if (!fitter.success()) return { -2, -2};
+  GlobalPoint point = fitter.fitted_vtx();
+  GlobalError err = fitter.fitted_vtx_uncertainty();
+  GlobalPoint delta(point.x() - x, point.y() - y, point.z() - z);
+  return {delta.mag(), sqrt(err.rerr(delta))};
 }
 
 /*
@@ -103,7 +141,20 @@ inline std::pair<double, double> computeDCA(const reco::TransientTrack& trackTT,
 
   return std::make_pair(DCABS, DCABSErr);
 }
+inline std::pair<double, double> computeDCA(const reco::TransientTrack& trackTT, float x, float y, float z)
+{
+  double DCABS    = -1.;
+  double DCABSErr = -1.;
 
+  TrajectoryStateClosestToPoint theDCAXBS =
+    trackTT.trajectoryStateClosestToPoint(GlobalPoint(x, y, z));
+  if (theDCAXBS.isValid()) {
+    DCABS    = theDCAXBS.perigeeParameters().transverseImpactParameter();
+    DCABSErr = theDCAXBS.perigeeError().transverseImpactParameterError();
+  }
+
+  return std::make_pair(DCABS, DCABSErr);
+}
 
 inline bool track_to_lepton_match(edm::Ptr<reco::Candidate> l_ptr, auto iso_tracks_id, unsigned int iTrk)
 {

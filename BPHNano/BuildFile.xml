@@ -1,5 +1,7 @@
+<use   name="xgboost"/>
 <use   name="TrackingTools/TransientTrack"/>
 <use   name="rootrflx"/>
+<use   name="boost"/>
 <export>
   <lib name="1"/>
 </export>

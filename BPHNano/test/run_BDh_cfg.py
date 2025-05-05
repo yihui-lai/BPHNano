@@ -63,7 +63,7 @@ options.register('decay', 'all',
 )
 
 
-options.setDefault('maxEvents', 5)
+options.setDefault('maxEvents', 10)
 options.setDefault('tag', 'test')
 
 #print(options)

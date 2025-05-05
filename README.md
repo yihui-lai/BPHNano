@@ -18,6 +18,7 @@ Architecture should be el8 or el9
 ```shell
 git clone git@github.com:gkaratha/BPHNano.git ./PhysicsTools
 git cms-addpkg PhysicsTools/NanoAOD
+git cms-addpkg PhysicsTools/NanoAODTools
 scram b
 ```
 or https equivalent

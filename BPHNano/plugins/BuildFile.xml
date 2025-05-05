@@ -1,3 +1,4 @@
+<use   name="xgboost"/>
 <use   name="PhysicsTools/TensorFlow"/>
 <use   name="FWCore/Framework"/>
 <use   name="FWCore/Common"/>
