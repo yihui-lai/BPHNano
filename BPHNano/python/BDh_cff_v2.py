@@ -21,6 +21,7 @@ BDh = cms.EDProducer("BDhFitter_v2",
    # Tracks
    tkNHitsCut = cms.int32(3), # Number of valid hits on track
    tkPtCut    = cms.double(0.3), # Pt of track
+   BtkPtCut    = cms.double(1.0), # Pt of Btrack
    tkEtaCut   = cms.double(2.4), # Eta of track
    tkChi2Cut  = cms.double(30.), # Track normalized Chi2
    # diTracks
@@ -32,11 +33,12 @@ BDh = cms.EDProducer("BDhFitter_v2",
    cosThetaXYCut     = cms.double(0.995),  # cos(angleXY) between x and p of V0 candidate
    cosThetaXYZCut    = cms.double(-1), # cos(angleXYZ) between x and p of V0 candidate
    # reco ks0
-   kShortMassCut = cms.double(0.03), # Ks mass window +- pdg value
-   D0MassCut     = cms.double(0.06), # D0 mass window +- pdg value
-   BMassCut      = cms.double(0.12), # Bu mass window +- pdg value
-   savetrack     = cms.bool(savetrack),
-   verbose       = cms.int32(0)
+   Ks0_l_xyzSigCut = cms.double(3), # Ks flight distance from D0 significance 
+   kShortMassCut   = cms.double(0.03), # Ks mass window +- pdg value
+   D0MassCut       = cms.double(0.06), # D0 mass window +- pdg value
+   BMassCut        = cms.double(0.12), # Bu mass window +- pdg value
+   savetrack       = cms.bool(savetrack),
+   verbose         = cms.int32(0)
 )
 
 for entry in xgboost_models:
@@ -417,7 +419,6 @@ else:
     BDhSequenceTable = cms.Sequence(BTable )
     BDhSequenceMC = cms.Sequence(BDh + BMCMatch + BDhGen)
     BDhSequenceMCTable = cms.Sequence(BTable + BMCTable + GenmatchTable)
-
 
 
 

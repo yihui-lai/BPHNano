@@ -36,8 +36,6 @@ nanoSequence = cms.Sequence(nanoMetadata +
                             cms.Sequence(pVertexTable) 
                           )
 
-
-
 def nanoAOD_customizeMC(process):
     process.nanoSequence = cms.Sequence(process.nanoSequence +particleLevelBPHSequence + genParticleBPHSequence+ genParticleBPHTables )
     return process
@@ -97,6 +95,14 @@ def nanoAOD_customizeBToKshortLL(process, isMC):
        process.nanoSequence = cms.Sequence( process.nanoSequence+ KshortToPiPiSequence + CountKshortToPiPi+ KshortToPiPiTables + BToKshortMuMuSequence + CountBToKshortMuMu +BToKshortMuMuTables  )
     return process
 
+
+def nanoAOD_customizeBDh_MC(process):
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BDhSequenceMC + BDhSequenceMCTable )
+    return process
+
+def nanoAOD_customizeBDh_Data(process):
+    process.nanoSequence = cms.Sequence( process.nanoSequence+ BDhSequence + BDhSequenceTable )
+    return process
 
 def nanoAOD_customizeBDh(process, isMC):
     if isMC:

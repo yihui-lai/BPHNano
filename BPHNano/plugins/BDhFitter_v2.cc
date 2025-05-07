@@ -87,6 +87,7 @@ public:
       lostTracksToken_(consumes<edm::View<pat::PackedCandidate>>(theParameters.getParameter<edm::InputTag>("lostTracks"))),
       tkNHitsCut_( theParameters.getParameter<int>("tkNHitsCut")),
       tkPtCut_( theParameters.getParameter<double>("tkPtCut")),
+      BtkPtCut_( theParameters.getParameter<double>("BtkPtCut")),
       tkEtaCut_( theParameters.getParameter<double>("tkEtaCut")),
       tkChi2Cut_( theParameters.getParameter<double>("tkChi2Cut")),
       vtxChi2Cut_( theParameters.getParameter<double>("vtxChi2Cut")),
@@ -96,6 +97,7 @@ public:
       cosThetaXYCut_( theParameters.getParameter<double>("cosThetaXYCut")),
       cosThetaXYZCut_( theParameters.getParameter<double>("cosThetaXYZCut")),
       mPiPiCut_( theParameters.getParameter<double>("mPiPiCut")),
+      Ks0_l_xyzSigCut_( theParameters.getParameter<double>("Ks0_l_xyzSigCut")),
       kShortMassCut_( theParameters.getParameter<double>("kShortMassCut")),
       D0MassCut_( theParameters.getParameter<double>("D0MassCut")),
       BMassCut_( theParameters.getParameter<double>("BMassCut")),
@@ -139,6 +141,7 @@ private:
   
   const int tkNHitsCut_;
   const double tkPtCut_;
+  const double BtkPtCut_;
   const double tkEtaCut_;
   const double tkChi2Cut_;
 
@@ -150,6 +153,7 @@ private:
   const double cosThetaXYZCut_;
   
   const double mPiPiCut_;
+  const double Ks0_l_xyzSigCut_;
   const double kShortMassCut_;
   const double D0MassCut_;
   const double BMassCut_;
@@ -160,33 +164,6 @@ private:
   const bool onlyRecoMatchedPions=false;
   const bool onlyKeepGen=false;
 };
-
-std::tuple<int, float, float, float> MatchGenPart(
-    const reco::Candidate* genCand,
-    std::vector<std::pair<pat::PackedCandidate, reco::TransientTrack>> vec_trk_ttrk)
-{
-    int matchedIndex = -1;
-    float thematch_pt = 0;
-    float thematch_dr = 99;
-    float thematch_iso = 0;
-    if (genCand->pt()==0) return std::make_tuple(matchedIndex, thematch_pt, thematch_iso, thematch_dr);
-    for (unsigned int iSort = 0; iSort < vec_trk_ttrk.size(); ++iSort) {
-        const auto& track = vec_trk_ttrk[iSort].first;
-        if(genCand->pdgId()*track.charge()<=0) continue;
-        float dr = deltaR(genCand->eta(), genCand->phi(), track.eta(), track.phi());
-        if (dr > 0 && dr < 0.3) {
-            thematch_iso += track.pt();
-            float relPtDiff = std::abs(track.pt() - genCand->pt()) / genCand->pt();
-            if (relPtDiff < 0.5 && dr < thematch_dr) {
-                thematch_dr = dr;
-                thematch_pt = track.pt();
-                matchedIndex = int(iSort);
-            }
-        }
-    }
-
-    return std::make_tuple(matchedIndex, thematch_pt, thematch_iso, thematch_dr);
-}
 
 float BDhFitter_v2::Bmva_estimator(pat::CompositeCandidate& Bu, unsigned int i){
        BMva_.at(i).set("B_DiTrk1_dca",            Bu.userFloat("DiTrk1_dca"));
@@ -557,14 +534,15 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
           auto Ks0_d0_lxyz =  l_xyz(theKinVtxFitter, D0_KinFitter.fitted_vtx().x(), D0_KinFitter.fitted_vtx().y(), D0_KinFitter.fitted_vtx().z());
           double Ks0_Kin_d0_l_xyzSig = Ks0_d0_lxyz.error()==0? -99: abs(Ks0_d0_lxyz.value()/Ks0_d0_lxyz.error());
-	  if(Ks0_Kin_d0_l_xyzSig<3) continue;
+	  if(Ks0_Kin_d0_l_xyzSig < Ks0_l_xyzSigCut_) continue;
 
 	  // Make a B
           for (unsigned int Btrack_idx = 0; Btrack_idx < vec_trk_ttrk.size(); ++Btrack_idx) {
               if(Btrack_idx == vec_ditrk[ditrkidx2].first || Btrack_idx == vec_ditrk[ditrkidx2].second || Btrack_idx == vec_ditrk[ditrkidx1].second || Btrack_idx == vec_ditrk[ditrkidx1].first) continue;
               const auto& Btrack = vec_trk_ttrk[Btrack_idx].first;
+              if(Btrack.pt() < BtkPtCut_) continue;
               const auto& tBtrack = vec_trk_ttrk[Btrack_idx].second;
-              auto mom3 = vec_trk_ttrk[Btrack_idx].first.momentum();
+              auto mom3 = Btrack.momentum();
 
 
               // A quick Mass fit, assuming pi
@@ -576,7 +554,8 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               reco::Candidate::LorentzVector B_pre_p4kaon = total_p4 + p4kaon_3;
               float B_premass_kaon = B_pre_p4kaon.mass();
               
-	      if(abs(B_premass-BuMass)>BMassCut_*1.5 && abs(B_premass_kaon-BuMass)>BMassCut_*1.5) continue;
+	      //if(abs(B_premass-BuMass)>BMassCut_*1.5 && abs(B_premass_kaon-BuMass)>BMassCut_*1.5) continue;
+	      if(  B_premass < BuMass - 0.06 - BMassCut_*1.5  || B_premass > BuMass + BMassCut_*1.5 ) continue;
               if(verbose>=3) std::cout<< "Pass B presel" << std::endl;
 
 	      // kin fit for B, assuming pi
@@ -601,8 +580,9 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	      if(verbose>=3) std::cout<< "B prob, dmass, pt, eta: "<<B_KinFitter.prob()<<" "<<abs(B_Kinfit_p4.mass()-BuMass)<<" "<<B_Kinfit_p4.pt()<<" "<<abs(B_Kinfit_p4.eta())<<" "<<cos_theta_3D(D0_KinFitter, B_KinFitter.fitted_vtx().x(), B_KinFitter.fitted_vtx().y(), B_KinFitter.fitted_vtx().z(),  D0_KinFitter.fitted_p4())<<" "<<cos_theta_3D(B_KinFitter, referencePos.x(), referencePos.y(), referencePos.z(), B_KinFitter.fitted_p4()) << std::endl;
 
 	      if ( B_KinFitter.prob()<=0 && B_KinFitter_kaon.prob()<=0) continue;
-	      if(abs(B_Kinfit_p4.mass()-BuMass)>BMassCut_ && abs(B_Kinfit_p4kaon.mass()-BuMass)>BMassCut_) continue;
-              if(B_Kinfit_p4.pt()<1 && B_Kinfit_p4kaon.pt()<1) continue;
+	      //if(abs(B_Kinfit_p4.mass()-BuMass)>BMassCut_ && abs(B_Kinfit_p4kaon.mass()-BuMass)>BMassCut_) continue;
+              if(  B_premass < BuMass - 0.06 - BMassCut_  || B_premass > BuMass + BMassCut_ ) continue;
+	      if(B_Kinfit_p4.pt()<1 && B_Kinfit_p4kaon.pt()<1) continue;
               if(abs(B_Kinfit_p4.eta())>2.4 && abs(B_Kinfit_p4kaon.eta())>2.4) continue;
 
 	      //if((cos_theta_3D(D0_KinFitter, B_KinFitter.fitted_vtx().x(), B_KinFitter.fitted_vtx().y(), B_KinFitter.fitted_vtx().z(),  D0_KinFitter.fitted_p4()))<cosThetaXYCut_) continue;

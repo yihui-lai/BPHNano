@@ -175,13 +175,13 @@ process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, globaltag, '')
 from PhysicsTools.BPHNano.nanoBPH_cff import *
+
 if options.isMC:
    process = nanoAOD_customizeMC(process)
 
 process = nanoAOD_customizeBDh(process, options.isMC)
 
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
-
 
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.FEVTDEBUGHLToutput_step = cms.EndPath(process.FEVTDEBUGHLToutput)
