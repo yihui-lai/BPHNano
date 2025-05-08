@@ -87,6 +87,7 @@ public:
       lostTracksToken_(consumes<edm::View<pat::PackedCandidate>>(theParameters.getParameter<edm::InputTag>("lostTracks"))),
       tkNHitsCut_( theParameters.getParameter<int>("tkNHitsCut")),
       tkPtCut_( theParameters.getParameter<double>("tkPtCut")),
+      DtkPtCut_( theParameters.getParameter<double>("DtkPtCut")),
       BtkPtCut_( theParameters.getParameter<double>("BtkPtCut")),
       tkEtaCut_( theParameters.getParameter<double>("tkEtaCut")),
       tkChi2Cut_( theParameters.getParameter<double>("tkChi2Cut")),
@@ -96,8 +97,13 @@ public:
       vtxDecaySigXYZCut_( theParameters.getParameter<double>("vtxDecaySigXYZCut")),
       cosThetaXYCut_( theParameters.getParameter<double>("cosThetaXYCut")),
       cosThetaXYZCut_( theParameters.getParameter<double>("cosThetaXYZCut")),
+      diTrack2_dca_( theParameters.getParameter<double>("diTrack2_dca")),
       mPiPiCut_( theParameters.getParameter<double>("mPiPiCut")),
       Ks0_l_xyzSigCut_( theParameters.getParameter<double>("Ks0_l_xyzSigCut")),
+      D0_PtCut_( theParameters.getParameter<double>("D0_PtCut")),
+      D0vtxDecaySigXYCut_( theParameters.getParameter<double>("D0vtxDecaySigXYCut")),
+      B_PtCut_( theParameters.getParameter<double>("B_PtCut")),
+      Btrk_dcaSigCut_( theParameters.getParameter<double>("Btrk_dcaSigCut")),
       kShortMassCut_( theParameters.getParameter<double>("kShortMassCut")),
       D0MassCut_( theParameters.getParameter<double>("D0MassCut")),
       BMassCut_( theParameters.getParameter<double>("BMassCut")),
@@ -141,6 +147,7 @@ private:
   
   const int tkNHitsCut_;
   const double tkPtCut_;
+  const double DtkPtCut_;
   const double BtkPtCut_;
   const double tkEtaCut_;
   const double tkChi2Cut_;
@@ -151,9 +158,14 @@ private:
   const double vtxDecaySigXYZCut_;
   const double cosThetaXYCut_;
   const double cosThetaXYZCut_;
+  const double diTrack2_dca_;
   
   const double mPiPiCut_;
   const double Ks0_l_xyzSigCut_;
+  const double D0_PtCut_;
+  const double D0vtxDecaySigXYCut_;
+  const double B_PtCut_;
+  const double Btrk_dcaSigCut_;
   const double kShortMassCut_;
   const double D0MassCut_;
   const double BMassCut_;
@@ -494,10 +506,10 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	  if(vec_ditrk[ditrkidx1].first == vec_ditrk[ditrkidx2].first || vec_ditrk[ditrkidx1].first == vec_ditrk[ditrkidx2].second || vec_ditrk[ditrkidx1].second == vec_ditrk[ditrkidx2].first || vec_ditrk[ditrkidx1].second == vec_ditrk[ditrkidx2].second) continue;
 
 	  if(std::get<4>(vec_ditrk_properties[ditrkidx2])==0 || std::get<6>(vec_ditrk_properties[ditrkidx2])==0) continue;
-          //double cxPtR2_idx2               = std::get<0>(vec_ditrk_properties[ditrkidx2]);
-          //double dca_idx2          = std::get<7>(vec_ditrk_properties[ditrkidx2]);
-          //if(cxPtR2_idx2>6.8) continue; // layer 2 of BPIX
-          //if(dca_idx2>1) continue;
+          double dca_idx2          = std::get<7>(vec_ditrk_properties[ditrkidx2]);
+          if(dca_idx2 > diTrack2_dca_) continue;
+          if (vec_trk_ttrk[vec_ditrk[ditrkidx2].first].first.pt() < DtkPtCut_) continue;
+          if (vec_trk_ttrk[vec_ditrk[ditrkidx2].second].first.pt() < DtkPtCut_) continue;
 
 	  // A quick Mass fit
           const auto& tTrk3 = vec_trk_ttrk[vec_ditrk[ditrkidx2].first].second;
@@ -509,7 +521,7 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
           reco::Candidate::LorentzVector total_p4 = p4_1 + p4_2 + theKinVtxFitter_p4;
           float D0_premass = total_p4.mass();
           if(abs(D0_premass-D0Mass)>D0MassCut_*1.5) continue;
-          if(total_p4.pt()<1) continue;
+          if(total_p4.pt()<D0_PtCut_) continue;
           if(abs(total_p4.eta())>2.4) continue;
           if(verbose>=3) std::cout<< "Pass D0 presel" << std::endl;
 
@@ -525,6 +537,10 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
           if ( D0_KinFitter.prob()<0.001) continue;
           auto D0_Kinfit_p4 = D0_KinFitter.fitted_p4();
           if(abs(D0_Kinfit_p4.mass()-D0Mass)>D0MassCut_) continue;    
+	  if(D0_Kinfit_p4.pt() < D0_PtCut_) continue;
+          auto D0_pv_lxy  =  l_xy(D0_KinFitter, referencePos.x(), referencePos.y(), referencePos.z());
+          if (D0_pv_lxy.error()!=0 && abs(D0_pv_lxy.value()/D0_pv_lxy.error()) < D0vtxDecaySigXYCut_ ) continue;
+
 	  if(verbose>=2) std::cout<<" D0 looks good "<<std::endl;
 	  if((cos_theta_3D(theKinVtxFitter, D0_KinFitter.fitted_vtx().x(), D0_KinFitter.fitted_vtx().y(), D0_KinFitter.fitted_vtx().z(), theKinVtxFitter.fitted_p4()))<cosThetaXYCut_) continue;
 
@@ -543,19 +559,22 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               if(Btrack.pt() < BtkPtCut_) continue;
               const auto& tBtrack = vec_trk_ttrk[Btrack_idx].second;
               auto mom3 = Btrack.momentum();
-
+              std::pair<double, double> DCA_Btrack_pv = computeDCA(tBtrack, referencePos.x(), referencePos.y(), referencePos.z());
+              double B_Kin_trk_pv_dcaSig = DCA_Btrack_pv.second==0? -99: abs(DCA_Btrack_pv.first/DCA_Btrack_pv.second);
+              if( B_Kin_trk_pv_dcaSig < Btrk_dcaSigCut_) continue;
 
               // A quick Mass fit, assuming pi
               reco::Candidate::LorentzVector p4_3(mom3.x(), mom3.y(), mom3.z(), sqrt(mom3.mag2() + piMass * piMass));
               reco::Candidate::LorentzVector B_pre_p4 = total_p4 + p4_3;
               float B_premass = B_pre_p4.mass();
+	      if (B_pre_p4.pt() < B_PtCut_) continue;
 	      // A quick Mass fit, assuming kaon
 	      reco::Candidate::LorentzVector p4kaon_3(mom3.x(), mom3.y(), mom3.z(), sqrt(mom3.mag2() + kplusMass * kplusMass));
               reco::Candidate::LorentzVector B_pre_p4kaon = total_p4 + p4kaon_3;
               float B_premass_kaon = B_pre_p4kaon.mass();
               
 	      //if(abs(B_premass-BuMass)>BMassCut_*1.5 && abs(B_premass_kaon-BuMass)>BMassCut_*1.5) continue;
-	      if(  B_premass < BuMass - 0.06 - BMassCut_*1.5  || B_premass > BuMass + BMassCut_*1.5 ) continue;
+	      if(  B_premass < BuMass - 0.12 - BMassCut_*1.5  || B_premass > BuMass + BMassCut_*1.5 ) continue;
               if(verbose>=3) std::cout<< "Pass B presel" << std::endl;
 
 	      // kin fit for B, assuming pi
@@ -576,12 +595,13 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	                    
 	      auto B_Kinfit_p4 = B_KinFitter.fitted_p4();
               auto B_Kinfit_p4kaon = B_KinFitter_kaon.fitted_p4();
+              if (B_Kinfit_p4.pt() < B_PtCut_) continue;
 
 	      if(verbose>=3) std::cout<< "B prob, dmass, pt, eta: "<<B_KinFitter.prob()<<" "<<abs(B_Kinfit_p4.mass()-BuMass)<<" "<<B_Kinfit_p4.pt()<<" "<<abs(B_Kinfit_p4.eta())<<" "<<cos_theta_3D(D0_KinFitter, B_KinFitter.fitted_vtx().x(), B_KinFitter.fitted_vtx().y(), B_KinFitter.fitted_vtx().z(),  D0_KinFitter.fitted_p4())<<" "<<cos_theta_3D(B_KinFitter, referencePos.x(), referencePos.y(), referencePos.z(), B_KinFitter.fitted_p4()) << std::endl;
 
 	      if ( B_KinFitter.prob()<=0 && B_KinFitter_kaon.prob()<=0) continue;
 	      //if(abs(B_Kinfit_p4.mass()-BuMass)>BMassCut_ && abs(B_Kinfit_p4kaon.mass()-BuMass)>BMassCut_) continue;
-              if(  B_premass < BuMass - 0.06 - BMassCut_  || B_premass > BuMass + BMassCut_ ) continue;
+              if(  B_premass < BuMass - 0.12 - BMassCut_  || B_premass > BuMass + BMassCut_ ) continue;
 	      if(B_Kinfit_p4.pt()<1 && B_Kinfit_p4kaon.pt()<1) continue;
               if(abs(B_Kinfit_p4.eta())>2.4 && abs(B_Kinfit_p4kaon.eta())>2.4) continue;
 
@@ -811,13 +831,11 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	      double B_Kin_trk_bs_dcaSig = DCA_Btrack_beamspot.second==0? -99: abs(DCA_Btrack_beamspot.first/DCA_Btrack_beamspot.second);
 	      Bu.addUserFloat("B_Kin_trk_bs_dca", abs(DCA_Btrack_beamspot.first));
 	      Bu.addUserFloat("B_Kin_trk_bs_dcaSig", B_Kin_trk_bs_dcaSig);
-	      std::pair<double, double> DCA_Btrack_pv = computeDCA(tBtrack, referencePos.x(), referencePos.y(), referencePos.z());
-	      double B_Kin_trk_pv_dcaSig = DCA_Btrack_pv.second==0? -99: abs(DCA_Btrack_pv.first/DCA_Btrack_pv.second);
               Bu.addUserFloat("B_Kin_trk_pv_dca", abs(DCA_Btrack_pv.first));
 	      Bu.addUserFloat("B_Kin_trk_pv_dcaSig", B_Kin_trk_pv_dcaSig);
               std::pair<double, double> DCA_Btrack_b = computeDCA(tBtrack, B_KinFitter.fitted_vtx().x(), B_KinFitter.fitted_vtx().y(), B_KinFitter.fitted_vtx().z());
               double B_Kin_trk_b_dcaSig = DCA_Btrack_b.second==0? -99: abs(DCA_Btrack_b.first/DCA_Btrack_b.second);
-              Bu.addUserFloat("B_Kin_trk_b_dca", abs(DCA_Btrack_b.first));
+	      Bu.addUserFloat("B_Kin_trk_b_dca", abs(DCA_Btrack_b.first));
               Bu.addUserFloat("B_Kin_trk_b_dcaSig", B_Kin_trk_b_dcaSig);
 	      Bu.setCharge(Btrack.charge());
 	      Bu.setP4(B_Kinfit_p4);

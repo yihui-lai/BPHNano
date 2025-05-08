@@ -267,6 +267,7 @@ def fill_histograms_Data(root_file, branchtoread, TOBEFILL, histos, plot_options
 def fill_histograms_MC_v2(root_file, branchtoread, TOBEFILL, histos, cuts, plot2D):
 
     for fname in root_file:
+        if "Skim" in fname: continue
         print(fname)
         with uproot.open(fname) as file:
             tree = file["Events"]  # Replace with the actual tree name
@@ -429,7 +430,7 @@ def define_hist_setting(TOBEFILL):
         default_logx=False
         default_logy=True
         default_xlabel=it
-        if "Ks0_Kin_pt" in it:
+        if "Ks0_Kin_pt" in it or "D0_Kin_ks0_pt" in it:
             binlist[it]=(0.1, 50)
             #rangelist[it]=np.linspace(0, 15, 100)
             rangelist[it] = np.logspace(np.log10(0.1), np.log10(50), 100)
@@ -441,7 +442,7 @@ def define_hist_setting(TOBEFILL):
             #rangelist[it]=np.linspace(0, 15, 100)
             rangelist[it] = np.logspace(np.log10(0.1), np.log10(50), 100)
             default_logx=True
-            default_logy=True
+#            default_logy=True
             default_xlabel="Ks0 (trk1) KinFit pT [GeV]"
         elif "Ks0_Kin_trk2_pt" in it:
             binlist[it]=(0.1, 50)
@@ -450,7 +451,19 @@ def define_hist_setting(TOBEFILL):
             default_logx=True
             default_logy=True
             default_xlabel="Ks0 (trk2) KinFit pT [GeV]"
-        elif "B_B_Kin_D0_pt" in it:
+        elif "D0_Kin_trk3" in it:
+            binlist[it]=(0.1, 50)
+            rangelist[it] = np.logspace(np.log10(0.1), np.log10(50), 100)
+            default_logx=True
+            default_logy=True
+            default_xlabel="trk3 KinFit pT [GeV]"
+        elif "D0_Kin_trk4" in it:
+            binlist[it]=(0.1, 50)
+            rangelist[it] = np.logspace(np.log10(0.1), np.log10(50), 100)
+            default_logx=True
+            default_logy=True
+            default_xlabel="trk4 KinFit pT [GeV]"
+        elif "B_B_Kin_D0_pt" in it or "D0_Kin_pt" in it:
             binlist[it]=(0.3, 50)
             rangelist[it] = np.logspace(np.log10(0.3), np.log10(50), 100)
             default_logx=True
@@ -462,6 +475,12 @@ def define_hist_setting(TOBEFILL):
             default_logx=True
             default_logy=True
             default_xlabel="B KinFit pT [GeV]"
+        elif "B_Kin_trk_pt" in it:
+            binlist[it]=(0.3, 100)
+            rangelist[it] = np.logspace(np.log10(0.3), np.log10(100), 100)
+            default_logx=True
+            default_logy=True
+            default_xlabel="pT(trk5) [GeV]"
         elif "_pt" in it:
             binlist[it]=(0.01, 500)
             #rangelist[it]=np.linspace(0, 15, 100)
@@ -501,8 +520,8 @@ def define_hist_setting(TOBEFILL):
             elif "_pv" in it:
                 default_xlabel="B l_{xy}(PV)/#sigma(l_{xy}(PV))"
         elif "B_B_Kin_trk_bs_dca" == it or  "B_B_Kin_trk_pv_dca" == it or  "B_B_Kin_trk_b_dca" == it:
-            binlist[it]=(0, 5)
-            rangelist[it]=np.linspace(0, 5, 100)
+            binlist[it]=(-0.1, 0.5)
+            rangelist[it]=np.linspace(-0.1, 0.5, 100)
             if "_bs_" in it:
                 default_xlabel="trk5 #delta_{2D}(beamspot)  [cm]"
             elif "_pv_" in it:
@@ -510,8 +529,8 @@ def define_hist_setting(TOBEFILL):
             elif "_b_" in it:
                 default_xlabel="trk5 #delta_{2D}(B)  [cm]"
         elif "B_B_Kin_trk_bs_dcaSig" == it or  "B_B_Kin_trk_pv_dcaSig" == it or  "B_B_Kin_trk_b_dcaSig" == it:
-            binlist[it]=(0.01, 200)
-            rangelist[it] = np.logspace(np.log10(0.01), np.log10(200), 100)
+            binlist[it]=(0.001, 200)
+            rangelist[it] = np.logspace(np.log10(0.001), np.log10(200), 100)
             default_logx=True
             if "_bs_" in it:
                 default_xlabel="trk5 #delta_{2D}(beamspot)/#sigma(#delta_{2D}(beamspot))"
@@ -525,15 +544,15 @@ def define_hist_setting(TOBEFILL):
             binlist[it]=(0.995, 1)
             rangelist[it]=np.linspace(0.995, 1, 100)
             if "_bs_" in it:
-                default_xlabel="B #alpha_{2D}(beamspot)"
+                default_xlabel="B cos(#alpha_{2D})(beamspot)"
             elif "_pv_alpha_2D" in it:
-                default_xlabel="B #alpha_{2D}(PV)"
+                default_xlabel="B cos(#alpha_{2D})(PV)"
             elif "_pv_alpha_3D" in it:
-                default_xlabel="B #alpha_{3D}(PV)"
+                default_xlabel="B cos(#alpha_{3D})(PV)"
             default_logx=False
         elif "B_D0_Kin_bs_l_xy" == it or  "B_D0_Kin_pv_l_xy" == it or  "B_D0_Kin_pv_l_xyz" == it or "B_D0_Kin_b_l_xy" == it or "B_D0_Kin_b_l_xyz" == it:
-            binlist[it]=(0, 5)
-            rangelist[it]=np.linspace(0, 5, 100)
+            binlist[it]=(0, 2)
+            rangelist[it]=np.linspace(0, 2, 100)
             if "_bs_" in it:
                 default_xlabel="D0 l_{xy}(beamspot) [cm]"
             elif "_pv" in it and "xyz" in it:
@@ -545,12 +564,14 @@ def define_hist_setting(TOBEFILL):
             elif "_b_" in it:
                 default_xlabel="D0 l_{xy}(B) [cm]"
         elif "B_D0_Kin_bs_l_xySig" == it or  "B_D0_Kin_pv_l_xySig" == it or  "B_D0_Kin_pv_l_xyzSig" == it or "B_D0_Kin_b_l_xySig" == it or "B_D0_Kin_b_l_xyzSig" == it:
-            binlist[it]=(0.01, 200)
-            rangelist[it] = np.logspace(np.log10(0.01), np.log10(200), 100)
+            binlist[it]=(0.01, 400)
+            rangelist[it] = np.logspace(np.log10(0.01), np.log10(400), 100)
             default_logx=True
             if "_bs_" in it:
                 default_xlabel="D0 l_{xy}(beamspot)/#sigma(l_{xy}(beamspot))"
             elif "_pv" in it and "xyz" in it:
+                binlist[it]=(0.01, 1000)
+                rangelist[it] = np.logspace(np.log10(0.01), np.log10(1000), 100)
                 default_xlabel="D0 l_{xyz}(PV)/#sigma(l_{xyz}(PV))"
             elif "_pv" in it:
                 default_xlabel="D0 l_{xy}(PV)/#sigma(l_{xy}(PV))"
@@ -577,15 +598,15 @@ def define_hist_setting(TOBEFILL):
             binlist[it]=(0.995, 1)
             rangelist[it]=np.linspace(0.995, 1, 100)
             if "_bs_" in it:
-                default_xlabel="D0 #alpha_{2D}(beamspot)"
+                default_xlabel="D0 cos(#alpha_{2D})(beamspot)"
             elif "_pv_alpha_2D" in it:
-                default_xlabel="D0 #alpha_{2D}(PV)"
+                default_xlabel="D0 cos(#alpha_{2D})(PV)"
             elif "_pv_alpha_3D" in it:
-                default_xlabel="D0 #alpha_{3D}(PV)"
+                default_xlabel="D0 cos(#alpha_{3D})(PV)"
             elif "_b_alpha_2D" in it:
-                default_xlabel="D0 #alpha_{2D}(B)"
+                default_xlabel="D0 cos(#alpha_{2D})(B)"
             elif "_b_alpha_3D" in it:
-                default_xlabel="D0 #alpha_{3D}(B)"
+                default_xlabel="D0 cos(#alpha_{3D})(B)"
         elif "B_Ks0_Kin_bs_l_xy" == it or  "B_Ks0_Kin_pv_l_xy" == it or  "B_Ks0_Kin_pv_l_xyz" == it or "B_Ks0_Kin_d0_l_xy" == it or "B_Ks0_Kin_d0_l_xyz" == it:
             binlist[it]=(0, 5)
             rangelist[it]=np.linspace(0, 5, 100)
@@ -614,8 +635,8 @@ def define_hist_setting(TOBEFILL):
             elif "_d0_" in it:
                 default_xlabel="Ks0 l_{xy}(D0)/#sigma(l_{xy}(D0))"
         elif "B_Ks0_Kin_d0_dca" == it:
-            binlist[it]=(0, 3)
-            rangelist[it]=np.linspace(0, 3, 100)
+            binlist[it]=(-0.1, 1)
+            rangelist[it]=np.linspace(-0.1, 1, 100)
             default_xlabel="Ks0 #delta_{2D}(D0) [cm]"
         elif "B_Ks0_Kin_d0_dcaSig" == it:
             binlist[it]=(0.01, 200)
@@ -628,27 +649,15 @@ def define_hist_setting(TOBEFILL):
             binlist[it]=(0.995, 1)
             rangelist[it]=np.linspace(0.995, 1, 100)
             if "_bs_" in it:
-                default_xlabel="Ks0 #alpha_{2D}(beamspot)"
+                default_xlabel="Ks0 cos(#alpha_{2D})(beamspot)"
             elif "_pv_alpha_2D" in it:
-                default_xlabel="Ks0 #alpha_{2D}(PV)"
+                default_xlabel="Ks0 cos(#alpha_{2D})(PV)"
             elif "_pv_alpha_3D" in it:
-                default_xlabel="Ks0 #alpha_{3D}(PV)"
+                default_xlabel="Ks0 cos(#alpha_{3D})(PV)"
             elif "_d0_alpha_2D" in it:
-                default_xlabel="Ks0 #alpha_{2D}(D0)"
+                default_xlabel="Ks0 cos(#alpha_{2D})(D0)"
             elif "_d0_alpha_3D" in it:
-                default_xlabel="Ks0 #alpha_{3D}(D0)"
-        elif "B_DiTrk2_trk1_bs_dcaSig" == it or "B_DiTrk2_trk2_bs_dcaSig" == it or "B_DiTrk2_trk1_pv_dcaSig" == it or "B_DiTrk2_trk2_pv_dcaSig" == it:
-            binlist[it]=(0.01, 200)
-            rangelist[it] = np.logspace(np.log10(0.01), np.log10(200), 100)
-            default_logx=True
-            if "B_DiTrk2_trk1_bs_dcaSig" == it:
-                default_xlabel="trk3 #delta_{2D}(BeamSpot)/#sigma(#delta_{2D}(BeamSpot))"
-            if "B_DiTrk2_trk2_bs_dcaSig" == it:
-                default_xlabel="trk4 #delta_{2D}(BeamSpot)/#sigma(#delta_{2D}(BeamSpot))"
-            if "B_DiTrk2_trk1_pv_dcaSig" == it:
-                default_xlabel="trk3 #delta_{2D}(PV)/#sigma(#delta_{2D}(PV))"
-            if "B_DiTrk2_trk2_pv_dcaSig" == it:
-                default_xlabel="trk4 #delta_{2D}(PV)/#sigma(#delta_{2D}(PV))"
+                default_xlabel="Ks0 cos(#alpha_{3D})(D0)"
         elif "B_DiTrk1_trk1_bs_dcaSig" == it or "B_DiTrk1_trk2_bs_dcaSig" == it or "B_DiTrk1_trk1_pv_dcaSig" == it or "B_DiTrk1_trk2_pv_dcaSig" == it:
             binlist[it]=(0.01, 200)
             rangelist[it] = np.logspace(np.log10(0.01), np.log10(200), 100)
@@ -662,8 +671,8 @@ def define_hist_setting(TOBEFILL):
             if "B_DiTrk1_trk2_pv_dcaSig" == it:
                 default_xlabel="trk2 #delta_{2D}(PV)/#sigma(#delta_{2D}(PV))"
         elif "B_DiTrk1_trk1_bs_dca" == it or "B_DiTrk1_trk2_bs_dca" == it or "B_DiTrk1_trk1_pv_dca" == it or "B_DiTrk1_trk2_pv_dca" == it:
-            binlist[it]=(0, 10)
-            rangelist[it]=np.linspace(0, 10, 100)
+            binlist[it]=(-0.1, 4)
+            rangelist[it]=np.linspace(-0.1, 4, 100)
             if "B_DiTrk1_trk1_bs_dca" == it:
                 default_xlabel="trk1 #delta_{2D}(BeamSpot)"
             if "B_DiTrk1_trk2_bs_dca" == it:
@@ -672,24 +681,13 @@ def define_hist_setting(TOBEFILL):
                 default_xlabel="trk1 #delta_{2D}(PV)"
             if "B_DiTrk1_trk2_pv_dca" == it:
                 default_xlabel="trk2 #delta_{2D}(PV)"
-        elif "B_DiTrk2_trk1_bs_dca" == it or "B_DiTrk2_trk2_bs_dca" == it or "B_DiTrk2_trk1_pv_dca" == it or "B_DiTrk2_trk2_pv_dca" == it:
-            binlist[it]=(0, 10)
-            rangelist[it]=np.linspace(0, 10, 100)
-            if "B_DiTrk2_trk1_bs_dca" == it:
-                default_xlabel="trk3 #delta_{2D}(BeamSpot)"
-            if "B_DiTrk2_trk2_bs_dca" == it:
-                default_xlabel="trk4 #delta_{2D}(BeamSpot)"
-            if "B_DiTrk2_trk1_pv_dca" == it:
-                default_xlabel="trk3 #delta_{2D}(PV)"
-            if "B_DiTrk2_trk2_pv_dca" == it:
-                default_xlabel="trk4 #delta_{2D}(PV)"
         elif "B_DiTrk1_cxPtR2" in it or "B_DiTrk1_KLM_vtx_r" in it:
-            binlist[it]=(0.001, 100)
-            rangelist[it] = np.logspace(np.log10(0.001), np.log10(100), 100)
+            binlist[it]=(0.005, 1000)
+            rangelist[it] = np.logspace(np.log10(0.005), np.log10(1000), 100)
             default_logx=True
             default_logy=True
             if "B_DiTrk1_cxPtR2" in it:
-                default_xlabel="trk1+trk2 r_{cxPt} [cm]"
+                default_xlabel="trk1+trk2 r^{2}_{cxPt} [cm]"
             if "B_DiTrk1_KLM_vtx_r" in it:
                 default_xlabel="trk1+trk2 r_{KLM vertex} [cm]"
         elif "B_DiTrk1_cxPtz" in it or "B_DiTrk1_KLM_vtx_z" in it or "B_Ks0_Kin_vtx_z" in it:
@@ -704,10 +702,64 @@ def define_hist_setting(TOBEFILL):
             if "B_Ks0_Kin_vtx_z" in it:
                 default_xlabel="Ks0 z_{KinFit vertex} [cm]"
         elif "B_DiTrk1_dca" in it:
-            binlist[it]=(0.0001, 100)
-            rangelist[it] = np.logspace(np.log10(0.0001), np.log10(100), 100)
-            default_xlabel="trk1+trk2 dca [cm]"
+            binlist[it]=(0.00001, 100)
+            rangelist[it] = np.logspace(np.log10(0.00001), np.log10(100), 100)
+            default_xlabel="dca(trk1,trk2) [cm]"
             default_logx=True
+        elif "DiTrk1_dot" in it:
+            binlist[it]=(0.01, 1000)
+            rangelist[it] = np.logspace(np.log10(0.01), np.log10(1000), 100)
+            default_xlabel="trk1.dot(trk2)"
+            default_logx=True
+        elif "B_DiTrk1_KLM_bs_cos_theta_XY" == it or "B_DiTrk1_KLM_pv_cos_theta_XY" == it:
+            binlist[it]=(0.95, 1.05)
+            rangelist[it]=np.linspace(0.95, 1.01, 100)
+            binlist[it]=(0.995, 1.005)
+            rangelist[it]=np.linspace(0.995, 1.001, 100)
+            if "_bs_" in it:
+                default_xlabel="trk1+trk2 KLM cos(#alpha_{2D})(beamspot)"
+            if "_pv_" in it:
+                default_xlabel="trk1+trk2 KLM cos(#alpha_{2D})(PV)"
+        elif "B_DiTrk1_KLM_bs_lxy" == it or  "B_DiTrk1_KLM_pv_lxy" == it:
+            binlist[it]=(0, 5)
+            rangelist[it]=np.linspace(0, 5, 100)
+            if "_pv" in it:
+                default_xlabel="trk1+trk2 KLM l_{xy}(PV) [cm]"
+            elif "_bs_" in it:
+                default_xlabel="trk1+trk2 KLM l_{xyz}(BeamSpot) [cm]"
+        elif "B_DiTrk1_KLM_bs_lxy_DD_B_DiTrk1_KLM_bs_lxyErr" == it or  "B_DiTrk1_KLM_pv_lxy_DD_B_DiTrk1_KLM_pv_lxyErr" == it:
+            binlist[it]=(0.5, 500)
+            rangelist[it] = np.logspace(np.log10(0.5), np.log10(500), 100)
+            default_logx=True
+            if "_bs_" in it:
+                default_xlabel="trk1+trk2 KLM l_{xy}/#sigma(l_{xy})(beamspot)"
+            elif "_pv" in it and "xyz" in it:
+                default_xlabel="trk1+trk2 KLM l_{xyz}/#sigma(l_{xyz})(PV)"
+            elif "_pv" in it and "xy" in it:
+                default_xlabel="trk1+trk2 KLM l_{xy}/#sigma(l_{xy})(PV)"
+        elif "B_DiTrk2_trk1_bs_dcaSig" == it or "B_DiTrk2_trk2_bs_dcaSig" == it or "B_DiTrk2_trk1_pv_dcaSig" == it or "B_DiTrk2_trk2_pv_dcaSig" == it:
+            binlist[it]=(0.01, 200)
+            rangelist[it] = np.logspace(np.log10(0.01), np.log10(200), 100)
+            default_logx=True
+            if "B_DiTrk2_trk1_bs_dcaSig" == it:
+                default_xlabel="trk3 #delta_{2D}(BeamSpot)/#sigma(#delta_{2D}(BeamSpot))"
+            if "B_DiTrk2_trk2_bs_dcaSig" == it:
+                default_xlabel="trk4 #delta_{2D}(BeamSpot)/#sigma(#delta_{2D}(BeamSpot))"
+            if "B_DiTrk2_trk1_pv_dcaSig" == it:
+                default_xlabel="trk3 #delta_{2D}(PV)/#sigma(#delta_{2D}(PV))"
+            if "B_DiTrk2_trk2_pv_dcaSig" == it:
+                default_xlabel="trk4 #delta_{2D}(PV)/#sigma(#delta_{2D}(PV))"
+        elif "B_DiTrk2_trk1_bs_dca" == it or "B_DiTrk2_trk2_bs_dca" == it or "B_DiTrk2_trk1_pv_dca" == it or "B_DiTrk2_trk2_pv_dca" == it:
+            binlist[it]=(-0.1, 1)
+            rangelist[it]=np.linspace(-0.1, 1, 100)
+            if "B_DiTrk2_trk1_bs_dca" == it:
+                default_xlabel="trk3 #delta_{2D}(BeamSpot)"
+            if "B_DiTrk2_trk2_bs_dca" == it:
+                default_xlabel="trk4 #delta_{2D}(BeamSpot)"
+            if "B_DiTrk2_trk1_pv_dca" == it:
+                default_xlabel="trk3 #delta_{2D}(PV)"
+            if "B_DiTrk2_trk2_pv_dca" == it:
+                default_xlabel="trk4 #delta_{2D}(PV)"
         elif "B_DiTrk2_cxPtR2" in it or "B_DiTrk2_KLM_vtx_r" in it:
             binlist[it]=(0.001, 100)
             rangelist[it] = np.logspace(np.log10(0.001), np.log10(100), 100)
@@ -749,40 +801,12 @@ def define_hist_setting(TOBEFILL):
             elif "_pv" in it and "xy" in it:
                 default_xlabel="trk3+trk4 KLM l_{xy}(PV)/#sigma(l_{xy}(PV))"
         elif "B_DiTrk2_KLM_bs_cos_theta_XY" == it or "B_DiTrk2_KLM_pv_cos_theta_XY" == it:
-            binlist[it]=(0, 1)
-            rangelist[it]=np.linspace(0, 1, 100)
-            binlist[it]=(0.995, 1)
-            rangelist[it]=np.linspace(0.995, 1, 100)
+            binlist[it]=(0.995, 1.001)
+            rangelist[it]=np.linspace(0.995, 1.001, 100)
             if "_bs_" in it:
-                default_xlabel="trk3+trk4 KLM #alpha_{2D}(beamspot)"
+                default_xlabel="trk3+trk4 KLM cos(#alpha_{2D})(beamspot)"
             if "_pv_" in it:
-                default_xlabel="trk3+trk4 KLM #alpha_{2D}(PV)"
-        elif "B_DiTrk1_KLM_bs_lxy" == it or  "B_DiTrk1_KLM_pv_lxy" == it:
-            binlist[it]=(0, 5)
-            rangelist[it]=np.linspace(0, 5, 100)
-            if "_pv" in it:
-                default_xlabel="trk1+trk2 KLM l_{xy}(PV) [cm]"
-            elif "_bs_" in it:
-                default_xlabel="trk1+trk2 KLM l_{xyz}(BeamSpot) [cm]"
-        elif "B_DiTrk1_KLM_bs_lxy_DD_B_DiTrk1_KLM_bs_lxyErr" == it or  "B_DiTrk1_KLM_pv_lxy_DD_B_DiTrk1_KLM_pv_lxyErr" == it:
-            binlist[it]=(0.1, 200)
-            rangelist[it] = np.logspace(np.log10(0.1), np.log10(200), 100)
-            default_logx=True
-            if "_bs_" in it:
-                default_xlabel="trk1+trk2 KLM l_{xy}(beamspot)/#sigma(l_{xy}(beamspot))"
-            elif "_pv" in it and "xyz" in it:
-                default_xlabel="trk1+trk2 KLM l_{xyz}(PV)/#sigma(l_{xyz}(PV))"
-            elif "_pv" in it and "xy" in it:
-                default_xlabel="trk1+trk2 KLM l_{xy}(PV)/#sigma(l_{xy}(PV))"
-        elif "B_DiTrk1_KLM_bs_cos_theta_XY" == it or "B_DiTrk1_KLM_pv_cos_theta_XY" == it:
-            binlist[it]=(0.95, 1)
-            rangelist[it]=np.linspace(0.95, 1, 100)
-            binlist[it]=(0.995, 1)
-            rangelist[it]=np.linspace(0.995, 1, 100)
-            if "_bs_" in it:
-                default_xlabel="trk1+trk2 KLM #alpha_{2D}(beamspot)"
-            if "_pv_" in it:
-                default_xlabel="trk1+trk2 KLM #alpha_{2D}(PV)"
+                default_xlabel="trk3+trk4 KLM cos(#alpha_{2D})(PV)"
         elif "Kshort_massSquared" == it:
             binlist[it]=(0.15, 0.36)
             rangelist[it]=np.linspace(0.15, 0.36, 100)
@@ -836,9 +860,12 @@ def define_hist_setting(TOBEFILL):
             #rangelist[it]=np.linspace(-1, 20, 100)
             rangelist[it] = np.logspace(np.log10(0.01), np.log10(100), 100)
             default_logx=True
-        elif "_chi2" in it or "Kshort_KLM_normalizedChi2" in it:
+        elif "D0_Kin_chi2" in it:
             binlist[it]=(-1, 15)
-            rangelist[it]=np.linspace(-1, 15, 110)
+            rangelist[it]=np.linspace(-1, 15, 100)
+        elif "_chi2" in it or "Kshort_KLM_normalizedChi2" in it:
+            binlist[it]=(-1, 10)
+            rangelist[it]=np.linspace(-1, 10, 100)
         elif "_prob" in it:
             binlist[it]=(0, 1)
             rangelist[it]=np.linspace(0, 1, 110)
@@ -870,12 +897,6 @@ def define_hist_setting(TOBEFILL):
             rangelist[it] = np.logspace(np.log10(0.01), np.log10(50), 100)
             default_logx=True
             default_xlabel=it+" [cm]"
-        elif "vtx_y" in it:
-            binlist[it]=(0.01, 50)
-            #rangelist[it]=np.linspace(0, 50, 100)
-            rangelist[it] = np.logspace(np.log10(0.01), np.log10(50), 100)
-            default_logx=True
-            default_xlabel=it.split("_QQ_")[0].replace("_x","_R2")+" [cm]"
         elif "vtx_z" in it:
             binlist[it]=(0.01, 50)
             #rangelist[it]=np.linspace(0, 50, 100)
@@ -887,41 +908,9 @@ def define_hist_setting(TOBEFILL):
             rangelist[it] = np.logspace(np.log10(0.01), np.log10(100), 100)
             default_logx=True
             default_xlabel=it+" [cm]"
-        #elif "Trk1" in it and "ipsigXY" in it:
-        #    binlist[it]=(0, 20)
-        #    rangelist[it]=np.linspace(0, 20, 100)
-        #    default_xlabel="Track1 ipsigXY"
-        #elif "Trk2" in it and "ipsigXY" in it:
-        #    binlist[it]=(0, 20)
-        #    rangelist[it]=np.linspace(0, 20, 100)
-        #    default_xlabel="Track2 ipsigXY"
-        #elif "Trk3" in it and "ipsigXY" in it:
-        #    binlist[it]=(0, 20)
-        #    rangelist[it]=np.linspace(0, 20, 100)
-        #    default_xlabel="Track3 ipsigXY"
-        #elif "Trk4" in it and "ipsigXY" in it:
-        #    binlist[it]=(0, 20)
-        #    rangelist[it]=np.linspace(0, 20, 100)
-        #    default_xlabel="Track4 ipsigXY"
-        #elif "Trk1" in it and "ipsigZ" in it:
-        #    binlist[it]=(0, 20)
-        #    rangelist[it]=np.linspace(0, 20, 100)
-        #    default_xlabel="Track1 ipsigZ"
-        #elif "Trk2" in it and "ipsigZ" in it:
-        #    binlist[it]=(0, 20)
-        #    rangelist[it]=np.linspace(0, 20, 100)
-        #    default_xlabel="Track2 ipsigZ"
-        #elif "Trk3" in it and "ipsigZ" in it:
-        #    binlist[it]=(0, 20)
-        #    rangelist[it]=np.linspace(0, 20, 100)
-        #    default_xlabel="Track3 ipsigZ"
-        #elif "Trk4" in it and "ipsigZ" in it:
-        #    binlist[it]=(0, 20)
-        #    rangelist[it]=np.linspace(0, 20, 100)
-        #    default_xlabel="Track4 ipsigZ"
         elif "normalizedChi2" in it:
-            binlist[it]=(0, 20)
-            rangelist[it]=np.linspace(0, 20, 100)
+            binlist[it]=(0, 10)
+            rangelist[it]=np.linspace(0, 10, 100)
             default_xlabel=it
         elif "TrackHits" in it:
             binlist[it]=(0, 50)
@@ -975,29 +964,27 @@ def define_hist_setting(TOBEFILL):
 def main( runset ):
 
     filename_list={
-            "BDstarPi_matched":"/eos/uscms/store/user/yilai/postprocess_BPHNano_BDstarP_newbatch/BPHNano*.root",
-            #"BDstarPi_comb.bkg":"/eos/uscms/store/user/yilai/postprocess_BPHNano_BDstarP_newbatch/BPHNano*.root",
-            "BDPi_matched":"/eos/uscms/store/user/yilai/postprocess_BPHNano_newbatch/BPHNano*.root",
-            #"BDPi_comb.bkg":"/eos/uscms/store/user/yilai/postprocess_BPHNano_newbatch/BPHNano*.root",
-            "BDK_matched":"/eos/uscms/store/user/yilai/postprocess_BPHNano_BDK_newbatch/BPHNano*.root",
-            #"BDK_comb.bkg":"/eos/uscms/store/user/yilai/postprocess_BPHNano_BDK_newbatch/BPHNano*.root",
+            "BDK_matched":"/eos/uscms/store/user/yilai/BuToD0K_D0ToKs2Pi_Run3/BDh_NanoPost_2022_v1/250507_155126/0000/test_mc*.root",
+            "BDK_comb.bkg":"/eos/uscms/store/user/yilai/BuToD0K_D0ToKs2Pi_Run3/BDh_NanoPost_2022_v1/250507_155126/0000/test_mc*.root"
+            #"BDK_matched":"/eos/uscms/store/user/yilai/BuToD0K_D0ToKs2Pi_Run3/BDh_NanoPost_2022_v1/250507_015120/0000/test_mc*.root",
+            #"BDK_comb.bkg":"/eos/uscms/store/user/yilai/BuToD0K_D0ToKs2Pi_Run3/BDh_NanoPost_2022_v1/250507_015120/0000/test_mc*.root"
             }
     
     names=[
-        "BDstarPi_matched",
+        #"BDstarPi_matched",
         #"BDstarPi_comb.bkg",
-        "BDPi_matched",
+        #"BDPi_matched",
         #"BDPi_comb.bkg",
         "BDK_matched",
-        #"BDK_comb.bkg",
+        "BDK_comb.bkg",
     ]
     cuts = [
-            "matched",
+            #"matched",
+            #"comb.bkg",
+            #"matched",
             #"comb.bkg",
             "matched",
-            #"comb.bkg",
-            "matched",
-            #"comb.bkg",
+            "comb.bkg",
            ]
 
     TOBEFILL_set1=[
@@ -1009,17 +996,17 @@ def main( runset ):
         "B_DiTrk1_KLM_vtx_z",
         "B_DiTrk1_KLM_chi2",
         "B_DiTrk1_KLM_normalizedChi2",
-        "B_DiTrk1_trk1_bs_dca",
-        "B_DiTrk1_trk2_bs_dca",
+#        "B_DiTrk1_trk1_bs_dca",
+#        "B_DiTrk1_trk2_bs_dca",
         "B_DiTrk1_trk1_pv_dca",
         "B_DiTrk1_trk2_pv_dca",
-        "B_DiTrk1_trk1_bs_dcaSig",
-        "B_DiTrk1_trk2_bs_dcaSig",
+#        "B_DiTrk1_trk1_bs_dcaSig",
+#        "B_DiTrk1_trk2_bs_dcaSig",
         "B_DiTrk1_trk1_pv_dcaSig",
         "B_DiTrk1_trk2_pv_dcaSig",
-        "B_DiTrk1_KLM_bs_lxy",
-        "B_DiTrk1_KLM_bs_lxy_DD_B_DiTrk1_KLM_bs_lxyErr",
-        "B_DiTrk1_KLM_bs_cos_theta_XY",
+#        "B_DiTrk1_KLM_bs_lxy",
+#        "B_DiTrk1_KLM_bs_lxy_DD_B_DiTrk1_KLM_bs_lxyErr",
+#        "B_DiTrk1_KLM_bs_cos_theta_XY",
         "B_DiTrk1_KLM_pv_lxy",
         "B_DiTrk1_KLM_pv_lxy_DD_B_DiTrk1_KLM_pv_lxyErr",
         "B_DiTrk1_KLM_pv_cos_theta_XY",
@@ -1034,24 +1021,23 @@ def main( runset ):
         "B_DiTrk2_KLM_vtx_z",
         "B_DiTrk2_KLM_chi2",
         "B_DiTrk2_KLM_normalizedChi2",
-        "B_DiTrk2_trk1_bs_dca",
-        "B_DiTrk2_trk2_bs_dca",
+#        "B_DiTrk2_trk1_bs_dca",
+#        "B_DiTrk2_trk2_bs_dca",
         "B_DiTrk2_trk1_pv_dca",
         "B_DiTrk2_trk2_pv_dca",
-        "B_DiTrk2_trk1_bs_dcaSig",
-        "B_DiTrk2_trk2_bs_dcaSig",
+#        "B_DiTrk2_trk1_bs_dcaSig",
+#        "B_DiTrk2_trk2_bs_dcaSig",
         "B_DiTrk2_trk1_pv_dcaSig",
         "B_DiTrk2_trk2_pv_dcaSig",
-        "B_DiTrk2_KLM_bs_lxy",
-        "B_DiTrk2_KLM_bs_lxy_DD_B_DiTrk2_KLM_bs_lxyErr",
-        "B_DiTrk2_KLM_bs_cos_theta_XY",
+#        "B_DiTrk2_KLM_bs_lxy",
+#        "B_DiTrk2_KLM_bs_lxy_DD_B_DiTrk2_KLM_bs_lxyErr",
+#        "B_DiTrk2_KLM_bs_cos_theta_XY",
         "B_DiTrk2_KLM_pv_lxy",
         "B_DiTrk2_KLM_pv_lxy_DD_B_DiTrk2_KLM_pv_lxyErr",
         "B_DiTrk2_KLM_pv_cos_theta_XY",
     ]
     TOBEFILL_set3=[
-        "B_Ks0_Kin_vtx_x_QQ_B_Ks0_Kin_vtx_y",
-        "B_Ks0_Kin_vtx_z",
+        "B_Ks0_Kin_vtx_r",
         "B_Ks0_Kin_chi2",
         "B_Ks0_Kin_prob",
         "B_Ks0_Kin_pt",
@@ -1061,13 +1047,13 @@ def main( runset ):
         "B_Ks0_Kin_trk1_eta",
         "B_Ks0_Kin_trk2_pt",
         "B_Ks0_Kin_trk2_eta",
-        "B_Ks0_Kin_bs_alpha_2D",
+#        "B_Ks0_Kin_bs_alpha_2D",
         "B_Ks0_Kin_pv_alpha_2D",
         "B_Ks0_Kin_pv_alpha_3D",
         "B_Ks0_Kin_d0_alpha_2D",
         "B_Ks0_Kin_d0_alpha_3D",
-        "B_Ks0_Kin_bs_l_xy",
-        "B_Ks0_Kin_bs_l_xySig",
+#        "B_Ks0_Kin_bs_l_xy",
+#        "B_Ks0_Kin_bs_l_xySig",
         "B_Ks0_Kin_pv_l_xy",
         "B_Ks0_Kin_pv_l_xySig",
         "B_Ks0_Kin_pv_l_xyz",
@@ -1081,7 +1067,7 @@ def main( runset ):
     ]
     TOBEFILL_set4=[
         "B_D0_premass",
-        "B_D0_Kin_vtx_x_QQ_B_D0_Kin_vtx_y",
+        "B_D0_Kin_vtx_r",
         "B_D0_Kin_vtx_z",
         "B_D0_Kin_chi2",
         "B_D0_Kin_prob",
@@ -1094,13 +1080,13 @@ def main( runset ):
         "B_D0_Kin_trk4_eta",
         "B_D0_Kin_ks0_pt",
         "B_D0_Kin_ks0_eta",
-        "B_D0_Kin_bs_alpha_2D",
+#        "B_D0_Kin_bs_alpha_2D",
         "B_D0_Kin_pv_alpha_2D",
         "B_D0_Kin_pv_alpha_3D",
         "B_D0_Kin_b_alpha_2D",
         "B_D0_Kin_b_alpha_3D",
-        "B_D0_Kin_bs_l_xy",
-        "B_D0_Kin_bs_l_xySig",
+#        "B_D0_Kin_bs_l_xy",
+#        "B_D0_Kin_bs_l_xySig",
         "B_D0_Kin_pv_l_xy",
         "B_D0_Kin_pv_l_xySig",
         "B_D0_Kin_pv_l_xyz",
@@ -1114,7 +1100,7 @@ def main( runset ):
     ]
     TOBEFILL_set5=[
         "B_B_premass",
-        "B_B_Kin_vtx_x_QQ_B_B_Kin_vtx_y",
+        "B_B_Kin_vtx_r",
         "B_B_Kin_vtx_z",
         "B_B_Kin_chi2",
         "B_B_Kin_prob",
@@ -1126,170 +1112,17 @@ def main( runset ):
         "B_B_Kin_trk_eta",
         "B_B_Kin_D0_pt",
         "B_B_Kin_D0_eta",
-        "B_B_Kin_bs_alpha_2D",
+#        "B_B_Kin_bs_alpha_2D",
         "B_B_Kin_pv_alpha_2D",
         "B_B_Kin_pv_alpha_3D",
-        "B_B_Kin_bs_l_xy",
-        "B_B_Kin_bs_l_xySig",
+#        "B_B_Kin_bs_l_xy",
+#        "B_B_Kin_bs_l_xySig",
         "B_B_Kin_pv_l_xy",
         "B_B_Kin_pv_l_xySig",
         "B_B_Kin_pv_l_xyz",
         "B_B_Kin_pv_l_xyzSig",
-        "B_B_Kin_trk_bs_dca",
-        "B_B_Kin_trk_bs_dcaSig",
-        "B_B_Kin_trk_pv_dca",
-        "B_B_Kin_trk_pv_dcaSig",
-        "B_B_Kin_trk_b_dca",
-        "B_B_Kin_trk_b_dcaSig",
-    ]
-
-    branch2read_set1=[
-        "B_DiTrk1_cxPtR2",
-        "B_DiTrk1_cxPtz",
-        "B_DiTrk1_dot",
-        "B_DiTrk1_dca",
-        "B_DiTrk1_massSquared",
-        "B_DiTrk1_KLM_vtx_r",
-        "B_DiTrk1_KLM_vtx_z",
-        "B_DiTrk1_KLM_chi2",
-        "B_DiTrk1_KLM_normalizedChi2",
-        "B_DiTrk1_trk1_bs_dca",
-        "B_DiTrk1_trk2_bs_dca",
-        "B_DiTrk1_trk1_pv_dca",
-        "B_DiTrk1_trk2_pv_dca",
-        "B_DiTrk1_trk1_bs_dcaSig",
-        "B_DiTrk1_trk2_bs_dcaSig",
-        "B_DiTrk1_trk1_pv_dcaSig",
-        "B_DiTrk1_trk2_pv_dcaSig",
-        "B_DiTrk1_KLM_bs_lxy",
-        "B_DiTrk1_KLM_bs_lxyErr",
-        "B_DiTrk1_KLM_bs_cos_theta_XY",
-        "B_DiTrk1_KLM_pv_lxy",
-        "B_DiTrk1_KLM_pv_lxyErr",
-        "B_DiTrk1_KLM_pv_cos_theta_XY",
-    ]
-    branch2read_set2=[
-        "B_DiTrk2_cxPtR2",
-        "B_DiTrk2_cxPtz",
-        "B_DiTrk2_dot",
-        "B_DiTrk2_dca",
-        "B_DiTrk2_massSquared",
-        "B_DiTrk2_KLM_vtx_r",
-        "B_DiTrk2_KLM_vtx_z",
-        "B_DiTrk2_KLM_chi2",
-        "B_DiTrk2_KLM_normalizedChi2",
-        "B_DiTrk2_trk1_bs_dca",
-        "B_DiTrk2_trk2_bs_dca",
-        "B_DiTrk2_trk1_pv_dca",
-        "B_DiTrk2_trk2_pv_dca",
-        "B_DiTrk2_trk1_bs_dcaSig",
-        "B_DiTrk2_trk2_bs_dcaSig",
-        "B_DiTrk2_trk1_pv_dcaSig",
-        "B_DiTrk2_trk2_pv_dcaSig",
-        "B_DiTrk2_KLM_bs_lxy",
-        "B_DiTrk2_KLM_bs_lxyErr",
-        "B_DiTrk2_KLM_bs_cos_theta_XY",
-        "B_DiTrk2_KLM_pv_lxy",
-        "B_DiTrk2_KLM_pv_lxyErr",
-        "B_DiTrk2_KLM_pv_cos_theta_XY",
-    ]
-    branch2read_set3=[
-        "B_Ks0_Kin_vtx_x",
-        "B_Ks0_Kin_vtx_y",
-        "B_Ks0_Kin_vtx_z",
-        "B_Ks0_Kin_chi2",
-        "B_Ks0_Kin_dof",
-        "B_Ks0_Kin_prob",
-        "B_Ks0_Kin_pt",
-        "B_Ks0_Kin_eta",
-        "B_Ks0_Kin_mass",
-        "B_Ks0_Kin_massErr",
-        "B_Ks0_Kin_trk1_pt",
-        "B_Ks0_Kin_trk1_eta",
-        "B_Ks0_Kin_trk2_pt",
-        "B_Ks0_Kin_trk2_eta",
-        "B_Ks0_Kin_bs_alpha_2D",
-        "B_Ks0_Kin_pv_alpha_2D",
-        "B_Ks0_Kin_pv_alpha_3D",
-        "B_Ks0_Kin_d0_alpha_2D",
-        "B_Ks0_Kin_d0_alpha_3D",
-        "B_Ks0_Kin_bs_l_xy",
-        "B_Ks0_Kin_bs_l_xySig",
-        "B_Ks0_Kin_pv_l_xy",
-        "B_Ks0_Kin_pv_l_xySig",
-        "B_Ks0_Kin_pv_l_xyz",
-        "B_Ks0_Kin_pv_l_xyzSig",
-        "B_Ks0_Kin_d0_l_xy",
-        "B_Ks0_Kin_d0_l_xySig",
-        "B_Ks0_Kin_d0_l_xyz",
-        "B_Ks0_Kin_d0_l_xyzSig",
-        "B_Ks0_Kin_d0_dca",
-        "B_Ks0_Kin_d0_dcaSig",
-    ]
-    branch2read_set4=[
-        "B_D0_premass",
-        "B_D0_Kin_vtx_x",
-        "B_D0_Kin_vtx_y",
-        "B_D0_Kin_vtx_z",
-        "B_D0_Kin_chi2",
-        "B_D0_Kin_dof",
-        "B_D0_Kin_prob",
-        "B_D0_Kin_pt",
-        "B_D0_Kin_eta",
-        "B_D0_Kin_mass",
-        "B_D0_Kin_massErr",
-        "B_D0_Kin_trk3_pt",
-        "B_D0_Kin_trk3_eta",
-        "B_D0_Kin_trk4_pt",
-        "B_D0_Kin_trk4_eta",
-        "B_D0_Kin_ks0_pt",
-        "B_D0_Kin_ks0_eta",
-        "B_D0_Kin_bs_alpha_2D",
-        "B_D0_Kin_pv_alpha_2D",
-        "B_D0_Kin_pv_alpha_3D",
-        "B_D0_Kin_b_alpha_2D",
-        "B_D0_Kin_b_alpha_3D",
-        "B_D0_Kin_bs_l_xy",
-        "B_D0_Kin_bs_l_xySig",
-        "B_D0_Kin_pv_l_xy",
-        "B_D0_Kin_pv_l_xySig",
-        "B_D0_Kin_pv_l_xyz",
-        "B_D0_Kin_pv_l_xyzSig",
-        "B_D0_Kin_b_l_xy",
-        "B_D0_Kin_b_l_xySig",
-        "B_D0_Kin_b_l_xyz",
-        "B_D0_Kin_b_l_xyzSig",
-        "B_D0_Kin_b_dca",
-        "B_D0_Kin_b_dcaSig",
-    ]
-    branch2read_set5=[
-        "B_B_premass",
-        "B_B_Kin_vtx_x",
-        "B_B_Kin_vtx_y",
-        "B_B_Kin_vtx_z",
-        "B_B_Kin_chi2",
-        "B_B_Kin_dof",
-        "B_B_Kin_prob",
-        "B_B_Kin_pt",
-        "B_B_Kin_eta",
-        "B_B_Kin_mass",
-        "B_B_Kin_massErr",
-        "B_B_Kin_trk_pt",
-        "B_B_Kin_trk_charge",
-        "B_B_Kin_trk_eta",
-        "B_B_Kin_D0_pt",
-        "B_B_Kin_D0_eta",
-        "B_B_Kin_bs_alpha_2D",
-        "B_B_Kin_pv_alpha_2D",
-        "B_B_Kin_pv_alpha_3D",
-        "B_B_Kin_bs_l_xy",
-        "B_B_Kin_bs_l_xySig",
-        "B_B_Kin_pv_l_xy",
-        "B_B_Kin_pv_l_xySig",
-        "B_B_Kin_pv_l_xyz",
-        "B_B_Kin_pv_l_xyzSig",
-        "B_B_Kin_trk_bs_dca",
-        "B_B_Kin_trk_bs_dcaSig",
+#        "B_B_Kin_trk_bs_dca",
+#        "B_B_Kin_trk_bs_dcaSig",
         "B_B_Kin_trk_pv_dca",
         "B_B_Kin_trk_pv_dcaSig",
         "B_B_Kin_trk_b_dca",
@@ -1302,19 +1135,43 @@ def main( runset ):
     branch2read = None
     if runset=="1":
         TOBEFILL = TOBEFILL_must_have + TOBEFILL_set1
-        branch2read = branch2read_must_have + branch2read_set1
     if runset=="2":
         TOBEFILL = TOBEFILL_must_have + TOBEFILL_set2
-        branch2read = branch2read_must_have + branch2read_set2
     if runset=="3":
         TOBEFILL = TOBEFILL_must_have + TOBEFILL_set3
-        branch2read = branch2read_must_have + branch2read_set3
     if runset=="4":
         TOBEFILL = TOBEFILL_must_have + TOBEFILL_set4
-        branch2read = branch2read_must_have + branch2read_set4
     if runset=="5":
         TOBEFILL = TOBEFILL_must_have + TOBEFILL_set5
-        branch2read = branch2read_must_have + branch2read_set5
+    branch2read = branch2read_must_have
+    for bran in TOBEFILL:
+        if "_QQ_" in bran:
+            bran_0 = bran.split("_QQ_")[0]
+            bran_1 = bran.split("_QQ_")[1]
+            if bran_0 in branch2read:
+                print(bran_0, "already in")
+            else:
+                branch2read.append(bran_0)
+            if bran_1 in branch2read:
+                print(bran_1, "already in")
+            else:
+                branch2read.append(bran_1)
+        elif "_DD_" in bran:
+            bran_0 = bran.split("_DD_")[0]
+            bran_1 = bran.split("_DD_")[1]
+            if bran_0 in branch2read:
+                print(bran_0, "already in")
+            else:
+                branch2read.append(bran_0)
+            if bran_1 in branch2read:
+                print(bran_1, "already in")
+            else:
+                branch2read.append(bran_1)
+        else:
+            if bran in branch2read:
+                print(bran, "already in")
+            else:
+                branch2read.append(bran)
 
     plot_options = define_hist_setting(TOBEFILL)
 
@@ -1365,7 +1222,7 @@ def main( runset ):
     for var, opts in plot_options.items():
         histos_to_plot = {name: all_histograms[name][var] for name in renamelist}
         iseff=True
-        plot_histograms_with_options(histos_to_plot, renamelist, names, colors, opts, iseff, output_name=f"pic_recoB/{var}")
+        plot_histograms_with_options(histos_to_plot, renamelist, names, colors, opts, iseff, output_name="pic_recoB/"+var)
     # 2D, not fully working
     #for var, opts in plot_options.items():
     #    for jvar, jopts in plot_options.items():
