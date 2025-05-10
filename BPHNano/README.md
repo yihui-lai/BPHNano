@@ -37,3 +37,8 @@ process.schedule = cms.Schedule(process.nanoAOD_BPH_step,process.endjob_step,pro
 If you want to add event filtering to the commands below you just need to modify the step option the following way
 * `--step NANO,FILTER:PhysicsTools/BPHNano/BDhFilter_cff.BDhFilterSequence`
 
+## test commands
+```
+cmsRun test/run_BDh_cfg.py inputFiles="file:postprocess/condor/3d1335a2-5a61-46ec-919f-ea4c8bb01898.root" outputFiles="data.root" maxEvents=10 isMC=false skip=40
+cmsRun test/run_BDh_cfg.py inputFiles="file:postprocess/condor/MiniAODv4_237.root" outputFiles="MC.root" maxEvents=500  skip=0
+```

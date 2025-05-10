@@ -9,7 +9,7 @@ xgboost_models = [
 
 savetrack=False
 
-BDh = cms.EDProducer("BDhFitter_v2",    
+BDh = cms.EDProducer("BDhFitter_v3",    
    # which beamSpot to reference
 
    xgboost_models = cms.vstring(),
@@ -20,29 +20,29 @@ BDh = cms.EDProducer("BDhFitter_v2",
    lostTracks      = cms.InputTag("lostTracks"),
    # Tracks
    tkNHitsCut = cms.int32(3), # Number of valid hits on track
-   tkPtCut    = cms.double(0.35), # Pt of track
-   DtkPtCut    = cms.double(0.9), # Pt of track
-   BtkPtCut    = cms.double(0.9), # Pt of Btrack
+   tkPtCut    = cms.double(0.5), # Pt cut of track 1, 2
+   DtkPtCut    = cms.double(0.6), # Pt cut of track 3, 4
+   BtkPtCut    = cms.double(0.9), # Pt cut of track 5
    tkEtaCut   = cms.double(2.4), # Eta of track
    tkChi2Cut  = cms.double(30.), # Track normalized Chi2
-   tkIPSigXYCut = cms.double(0.0), # Track IP significance
+   tkIPSigXYCut = cms.double(0.5), # Track IP significance
    # diTrack 1
-   mPiPiCut          = cms.double(0.7), # invariant mass of track pair, assuming both tracks are charged pions
-   vtxChi2Cut        = cms.double(6.63), # Vertex KLM chi2
-   vtxDecaySigXYCut  = cms.double(2), # KLM XY decay distance significance
-   TrkSigXYCut       = cms.double(3), 
-   vtxDecaySigXYZCut = cms.double(-1), # KLM XYZ decay distance significance
-   cosThetaXYCut     = cms.double(0.995),  # cos(angleXY) between x and p of V0 candidate
-   cosThetaXYZCut    = cms.double(-1), # cos(angleXYZ) between x and p of V0 candidate
+   vtxChi2Cut        = cms.double(6.63),              # Vertex KLM chi2
+   vtxDecaySigXYCut  = cms.double(2),                 # KLM XY decay distance significance
+   TrkSigXYCut       = cms.double(4),    # track DCA significance
+   vtxDecaySigXYZCut = cms.double(-1),                # KLM XYZ decay distance significance
+   cosThetaXYCut     = cms.double(0.995),             # cos(angleXY) between x and p of V0 candidate
+   cosThetaXYZCut    = cms.double(-1),                # cos(angleXYZ) between x and p of V0 candidate
    # diTrack 2
-   diTrack2_dca    = cms.double(0.2), # 0.2cm is a decent cut to remove comb.bkg
+   diTrack2_dca      = cms.double(0.2),   # 0.2cm is a decent cut to remove comb.bkg
+   Trk34SigXYCut     = cms.double(0.5), # track DCA significance
    # reco ks0
    Ks0_l_xyzSigCut = cms.double(3), # Ks flight distancesignificance from D0
    # D0
    D0_PtCut            = cms.double(3), # D0 Pt cut, GeV 
    D0vtxDecaySigXYCut  = cms.double(2), # D0 XY distance significance from PV
    # B
-   B_PtCut             = cms.double(5), # B Pt cut, GeV
+   B_PtCut             = cms.double(3), # B Pt cut, GeV
    Btrk_dcaSigCut      = cms.double(1), # B trk dca Sig
    # mass
    kShortMassCut   = cms.double(0.03), # Ks mass window +- pdg value
@@ -194,11 +194,6 @@ BTable = cms.EDProducer(
         DiTrk1_dot                = ufloat('DiTrk1_dot'),
         DiTrk1_dca                = ufloat('DiTrk1_dca'),
         DiTrk1_massSquared        = ufloat('DiTrk1_massSquared'),
-        DiTrk1_KLM_vtx_r          = ufloat('DiTrk1_KLM_vtx_r'),
-        DiTrk1_KLM_vtx_z          = ufloat('DiTrk1_KLM_vtx_z'),
-        DiTrk1_KLM_chi2           = ufloat('DiTrk1_KLM_chi2'),
-        DiTrk1_KLM_ndof           = ufloat("DiTrk1_KLM_ndof"),
-        DiTrk1_KLM_normalizedChi2 = ufloat("DiTrk1_KLM_normalizedChi2"),
         DiTrk1_trk1_bs_dca     = ufloat('DiTrk1_trk1_bs_dca'),
         DiTrk1_trk2_bs_dca     = ufloat('DiTrk1_trk2_bs_dca'),
         DiTrk1_trk1_pv_dca     = ufloat('DiTrk1_trk1_pv_dca'),
@@ -207,23 +202,12 @@ BTable = cms.EDProducer(
         DiTrk1_trk2_bs_dcaSig     = ufloat('DiTrk1_trk2_bs_dcaSig'),
         DiTrk1_trk1_pv_dcaSig     = ufloat('DiTrk1_trk1_pv_dcaSig'),
         DiTrk1_trk2_pv_dcaSig     = ufloat('DiTrk1_trk2_pv_dcaSig'),
-        DiTrk1_KLM_bs_lxy         = ufloat("DiTrk1_KLM_bs_lxy"),
-        DiTrk1_KLM_bs_lxyErr      = ufloat("DiTrk1_KLM_bs_lxyErr"),
-        DiTrk1_KLM_bs_cos_theta_XY= ufloat("DiTrk1_KLM_bs_cos_theta_XY"),
-        DiTrk1_KLM_pv_lxy         = ufloat("DiTrk1_KLM_pv_lxy"),
-        DiTrk1_KLM_pv_lxyErr      = ufloat("DiTrk1_KLM_pv_lxyErr"),
-        DiTrk1_KLM_pv_cos_theta_XY= ufloat("DiTrk1_KLM_pv_cos_theta_XY"),
 
         DiTrk2_cxPtR2             = ufloat('DiTrk2_cxPtR2'),
         DiTrk2_cxPtz              = ufloat('DiTrk2_cxPtz'),
         DiTrk2_dot                = ufloat('DiTrk2_dot'),
         DiTrk2_dca                = ufloat('DiTrk2_dca'),
         DiTrk2_massSquared        = ufloat('DiTrk2_massSquared'),
-        DiTrk2_KLM_vtx_r          = ufloat('DiTrk2_KLM_vtx_r'),
-        DiTrk2_KLM_vtx_z          = ufloat('DiTrk2_KLM_vtx_z'),
-        DiTrk2_KLM_chi2           = ufloat('DiTrk2_KLM_chi2'),
-        DiTrk2_KLM_ndof           = ufloat("DiTrk2_KLM_ndof"),
-        DiTrk2_KLM_normalizedChi2 = ufloat("DiTrk2_KLM_normalizedChi2"),
         DiTrk2_trk1_bs_dca     = ufloat('DiTrk2_trk1_bs_dca'),
         DiTrk2_trk2_bs_dca     = ufloat('DiTrk2_trk2_bs_dca'),
         DiTrk2_trk1_pv_dca     = ufloat('DiTrk2_trk1_pv_dca'),
@@ -232,12 +216,6 @@ BTable = cms.EDProducer(
         DiTrk2_trk2_bs_dcaSig     = ufloat('DiTrk2_trk2_bs_dcaSig'),
         DiTrk2_trk1_pv_dcaSig     = ufloat('DiTrk2_trk1_pv_dcaSig'),
         DiTrk2_trk2_pv_dcaSig     = ufloat('DiTrk2_trk2_pv_dcaSig'),
-        DiTrk2_KLM_bs_lxy         = ufloat("DiTrk2_KLM_bs_lxy"),
-        DiTrk2_KLM_bs_lxyErr      = ufloat("DiTrk2_KLM_bs_lxyErr"),
-        DiTrk2_KLM_bs_cos_theta_XY= ufloat("DiTrk2_KLM_bs_cos_theta_XY"),
-        DiTrk2_KLM_pv_lxy         = ufloat("DiTrk2_KLM_pv_lxy"),
-        DiTrk2_KLM_pv_lxyErr      = ufloat("DiTrk2_KLM_pv_lxyErr"),
-        DiTrk2_KLM_pv_cos_theta_XY= ufloat("DiTrk2_KLM_pv_cos_theta_XY"),
 
         Ks0_Kin_vtx_x       =    ufloat("Ks0_Kin_vtx_x"),
         Ks0_Kin_vtx_y       =    ufloat("Ks0_Kin_vtx_y"),

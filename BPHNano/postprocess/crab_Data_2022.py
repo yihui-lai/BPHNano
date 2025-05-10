@@ -7,36 +7,37 @@ config = Configuration()
 #config = config()
 
 config.section_("General")
-config.General.requestName = 'BDh_NanoPost_2022_MC_v1'
-config.General.workArea = 'crab_projects2'
+config.General.requestName = 'BDh_NanoPost_2022_Data_v1'
+config.General.workArea = 'crab_projects_data_v1'
 config.General.transferLogs = True
 
 config.section_("JobType")
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = "test_mc_2022.py"
+config.JobType.psetName = "test_data_2022.py"
 #config.JobType.psetName = 'PSet.py'
-config.JobType.scriptExe = 'crab_script.sh'
+config.JobType.scriptExe = 'crab_script_data.sh'
 config.JobType.scriptArgs = ['isMC=1','era=UL2018','dataRun=X','isVjets=0']
-config.JobType.inputFiles = ['BDh_postproc.py', 'BDh_Producer.py', 'test_mc_2022.py']
-config.JobType.outputFiles = ['test_mc_Skim.root']
+config.JobType.inputFiles = ['BDh_postproc.py', 'BDh_postproc_data.py', 'BDh_Producer.py', 'test_mc_2022.py', 'test_data_2022.py']
+config.JobType.outputFiles = ['test_data_Skim.root']
 #config.JobType.sendPythonFolder = True
 config.section_("Data")
-config.Data.inputDataset = '/BuToD0K_D0ToKs2Pi_Run3/yilai-Run3Summer22_MiniAODv4-5443ed9e0a49f9c5d5f0b2fff4804347/USER'
-config.Data.inputDBS = 'phys03'
-#config.Data.inputDBS = 'global'
+config.Data.inputDataset = '/ParkingDoubleMuonLowMass0/Run2022F-22Sep2023-v1/MINIAOD'
+#config.Data.inputDBS = 'phys03'
+config.Data.inputDBS = 'global'
 config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 2
+config.Data.unitsPerJob = 3
 #config.Data.totalUnits = 5
 config.JobType.maxMemoryMB = 2000  ## 2500*4
 #config.JobType.maxJobRuntimeMin = 1315  ## 21.9 hours
 #config.JobType.numCores = 4
 #config.Data.splitting = 'EventAwareLumiBased'
 #config.Data.unitsPerJob = 20000
+config.Data.lumiMask = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Muon.json'
 
 #config.Data.outLFNDirBase = '/store/user/yilai/NanoPost'
 #config.Data.outLFNDirBase = '/store/group/phys_bph/gamma/ntuples/'
 config.Data.publication = False
-config.Data.outputDatasetTag = 'BDh_NanoPost_2022_v1'
+config.Data.outputDatasetTag = 'BDh_NanoPost_2022_Data_v1'
 config.section_("Site")
 #config.Site.storageSite = "T2_CH_CERN"
 

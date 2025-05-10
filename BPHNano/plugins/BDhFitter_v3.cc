@@ -1,3 +1,8 @@
+/// original authors: Yihui Lai (Princeton)
+// takes 5 tracks and make a B
+// v3: optimize on timing, v2 takes 3 min to process 500 events. Remove KLM from track filter.
+
+
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "Geometry/CommonDetUnit/interface/GlobalTrackingGeometry.h"
 #include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
@@ -76,11 +81,10 @@ namespace {
 typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3>> SMatrixSym3D;
 typedef ROOT::Math::SVector<double, 3> SVector3;
 
-//class BDhFitter_v2 : public edm::global::EDProducer<> {
-class BDhFitter_v2 : public edm::stream::EDProducer<> {
+class BDhFitter_v3 : public edm::stream::EDProducer<> {
 
 public:
-  explicit BDhFitter_v2(const edm::ParameterSet &theParameters):
+  explicit BDhFitter_v3(const edm::ParameterSet &theParameters):
       bFieldToken_(esConsumes<MagneticField, IdealMagneticFieldRecord>()),
       xgboost_models_( theParameters.getParameter<std::vector<std::string>>( "xgboost_models" ) ),
       xgboost_variable_names_( theParameters.getParameter<std::vector<std::string>>( "xgboost_variable_names" ) ),
@@ -102,7 +106,7 @@ public:
       cosThetaXYCut_( theParameters.getParameter<double>("cosThetaXYCut")),
       cosThetaXYZCut_( theParameters.getParameter<double>("cosThetaXYZCut")),
       diTrack2_dca_( theParameters.getParameter<double>("diTrack2_dca")),
-      mPiPiCut_( theParameters.getParameter<double>("mPiPiCut")),
+      Trk34SigXYCut_( theParameters.getParameter<double>("Trk34SigXYCut")),
       Ks0_l_xyzSigCut_( theParameters.getParameter<double>("Ks0_l_xyzSigCut")),
       D0_PtCut_( theParameters.getParameter<double>("D0_PtCut")),
       D0vtxDecaySigXYCut_( theParameters.getParameter<double>("D0vtxDecaySigXYCut")),
@@ -116,9 +120,6 @@ public:
 	{
       	  produces<pat::CompositeCandidateCollection>("SelectedTracks");
       	  produces<pat::CompositeCandidateCollection>("SelectedDiTracks");
-	  //produces<reco::VertexCompositePtrCandidateCollection>("LooseKshort");
-          //produces<pat::CompositeCandidateCollection>("SelectedV0Collection");
-          //produces<TransientTrackCollection>("SelectedV0TransientCollection");
 	  produces<pat::CompositeCandidateCollection>("B");
           for (auto model: xgboost_models_)
               BMva_.push_back(XGBooster(edm::FileInPath("PhysicsTools/BPHNano/data/BDh_mva_May4/" + model + ".model").fullPath(),
@@ -126,12 +127,9 @@ public:
 
   }
 
-  ~BDhFitter_v2() override {}
+  ~BDhFitter_v3() override {}
   
-  //void produce(edm::StreamID, edm::Event&, const edm::EventSetup&);
-  //void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
   virtual void produce(edm::Event&, const edm::EventSetup&);
-  //float Bmva_estimator(pat::CompositeCandidate& Bu, unsigned int i) const;
   float Bmva_estimator(pat::CompositeCandidate& Bu, unsigned int i);
 
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions) {}
@@ -164,8 +162,8 @@ private:
   const double cosThetaXYCut_;
   const double cosThetaXYZCut_;
   const double diTrack2_dca_;
+  const double Trk34SigXYCut_;
   
-  const double mPiPiCut_;
   const double Ks0_l_xyzSigCut_;
   const double D0_PtCut_;
   const double D0vtxDecaySigXYCut_;
@@ -182,7 +180,7 @@ private:
   const bool onlyKeepGen=false;
 };
 
-float BDhFitter_v2::Bmva_estimator(pat::CompositeCandidate& Bu, unsigned int i){
+float BDhFitter_v3::Bmva_estimator(pat::CompositeCandidate& Bu, unsigned int i){
        BMva_.at(i).set("B_DiTrk1_dca",            Bu.userFloat("DiTrk1_dca"));
        BMva_.at(i).set("B_Ks0_Kin_vtx_r",         Bu.userFloat("Ks0_Kin_vtx_r"));
        BMva_.at(i).set("B_Ks0_Kin_d0_alpha_2D",   Bu.userFloat("Ks0_Kin_d0_alpha_2D"));
@@ -211,15 +209,14 @@ float BDhFitter_v2::Bmva_estimator(pat::CompositeCandidate& Bu, unsigned int i){
        return BMva_.at(i).predict();
 }
 
-//void BDhFitter_v2::produce(edm::StreamID, edm::Event &iEvent, edm::EventSetup const &iSetup) const {
-void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void BDhFitter_v3::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   using std::vector;
 
   edm::Handle<reco::BeamSpot> theBeamSpotHandle;
   iEvent.getByToken(token_beamSpot, theBeamSpotHandle);
   if (!theBeamSpotHandle.isValid()) {
-    edm::LogError("BDhFitter_v2") << "No BeamSpot found!";
+    edm::LogError("BDhFitter_v3") << "No BeamSpot found!";
     return;
   }
   const reco::BeamSpot* theBeamSpot = theBeamSpotHandle.product();
@@ -237,11 +234,12 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   edm::Handle<edm::View<pat::PackedCandidate>> lostTracks;
   iEvent.getByToken(lostTracksToken_, lostTracks);
   if (!tracks.isValid() || !lostTracks.isValid()) {
-    edm::LogError("BDhFitter_v2") << "Track collections not found!";
+    edm::LogError("BDhFitter_v3") << "Track collections not found!";
     return;
   }
 
-  //auto start = std::chrono::high_resolution_clock::now();
+//  bool timing=true;
+//	  auto start = std::chrono::high_resolution_clock::now();
 
   // Filter track, track collection
   unsigned int nTracks = tracks->size();
@@ -263,15 +261,15 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     if (iTrk < nTracks && !trk.trackHighPurity()) continue;
     if (bestTrack->normalizedChi2() > tkChi2Cut_) continue;
     const reco::Track& tmpTrack = trk.pseudoTrack();
+    double ipsigXY_pv = std::abs(tmpTrack.dxy(referencePos) / tmpTrack.dxyError());
+    if ( ipsigXY_pv < tkIPSigXYCut_) continue;
     double ipXY_bs = std::abs(tmpTrack.dxy(theBeamSpotPos));
     double ipZ_bs = std::abs(tmpTrack.dz(theBeamSpotPos));
     double ipXY_pv  = std::abs(tmpTrack.dxy(referencePos));
     double ipZ_pv  = std::abs(tmpTrack.dz(referencePos));
     double ipsigXY_bs = std::abs(tmpTrack.dxy(theBeamSpotPos) / tmpTrack.dxyError());
     double ipsigZ_bs  = std::abs(tmpTrack.dz(theBeamSpotPos) / tmpTrack.dzError());
-    double ipsigXY_pv = std::abs(tmpTrack.dxy(referencePos) / tmpTrack.dxyError());
     double ipsigZ_pv  = std::abs(tmpTrack.dz(referencePos) / tmpTrack.dzError());
-    if ( ipsigXY_pv < tkIPSigXYCut_) continue;
     const reco::TransientTrack tmpTransient( (*trk.bestTrack()) , &theMagneticField);  
     vec_trk_ttrk.emplace_back(trk, std::move(tmpTransient));
     if (iTrk < nTracks) {
@@ -313,27 +311,37 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     }
   }
 
-  //auto timer_trk = std::chrono::high_resolution_clock::now();
+	  //auto timer_trk = std::chrono::high_resolution_clock::now();
 
   // Get general di-track collection 
-  // could from Ks, could from D0
+  // from Ks, point to vec_ditrk
+  std::vector<unsigned int> vec_ditrk_ks;
+  // from D0, point to vec_ditrk
+  std::vector<unsigned int> vec_ditrk_D0;
+
+  // both Ks, D0
   std::vector<std::pair<unsigned int, unsigned int>> vec_ditrk;
-  std::vector<std::tuple<double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>> vec_ditrk_properties;
+  std::vector<std::tuple<double, float, float, double, double, double, double, float, double, double, double, double, double>> vec_ditrk_properties;
 
   std::unique_ptr<pat::CompositeCandidateCollection> ditracks_earlyout(new pat::CompositeCandidateCollection());
-  for (unsigned int ditrkidx1 = 0; ditrkidx1 < vec_trk_ttrk.size(); ++ditrkidx1) {
-    const auto& diTrk1 = vec_trk_ttrk[ditrkidx1].first;
-    const auto& tdiTrk1 = vec_trk_ttrk[ditrkidx1].second;
-    for (unsigned int ditrkidx2 = ditrkidx1 + 1; ditrkidx2 < vec_trk_ttrk.size(); ++ditrkidx2) {
-      const auto& diTrk2 = vec_trk_ttrk[ditrkidx2].first;
-      const auto& tdiTrk2 = vec_trk_ttrk[ditrkidx2].second;
+
+  for (unsigned int ditrk_leg1 = 0; ditrk_leg1 < vec_trk_ttrk.size(); ++ditrk_leg1) {
+
+    const auto& diTrk1 = vec_trk_ttrk[ditrk_leg1].first;
+    const auto& tdiTrk1 = vec_trk_ttrk[ditrk_leg1].second;
+    
+    for (unsigned int ditrk_leg2 = ditrk_leg1 + 1; ditrk_leg2 < vec_trk_ttrk.size(); ++ditrk_leg2) {
+      
+      const auto& diTrk2 = vec_trk_ttrk[ditrk_leg2].first;
+      const auto& tdiTrk2 = vec_trk_ttrk[ditrk_leg2].second;
+
       // Opposite charge requirement
       if (diTrk1.charge() * diTrk2.charge() >= 0) continue;
       // reorder, (tPosTrk, tNegTrk)
       const auto& tPosTrk = (diTrk1.charge() > 0) ? tdiTrk1 : tdiTrk2;
       const auto& tNegTrk = (diTrk1.charge() < 0) ? tdiTrk1 : tdiTrk2;
-      unsigned int ditrkidx_pos = (diTrk1.charge() > 0) ? ditrkidx1 : ditrkidx2;
-      unsigned int ditrkidx_neg = (diTrk1.charge() < 0) ? ditrkidx1 : ditrkidx2;
+      unsigned int ditrkidx_pos = (diTrk1.charge() > 0) ? ditrk_leg1 : ditrk_leg2;
+      unsigned int ditrkidx_neg = (diTrk1.charge() < 0) ? ditrk_leg1 : ditrk_leg2;
 
       //auto timer_1 = std::chrono::high_resolution_clock::now();
 
@@ -351,7 +359,7 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
       float dca = std::abs(cApp.distance());
       // the POCA should at least be in the sensitive volume
       GlobalPoint cxPt = cApp.crossingPoint();
-      const double cxPtR2 = cxPt.x() * cxPt.x() + cxPt.y() * cxPt.y();
+      double cxPtR2 = cxPt.x() * cxPt.x() + cxPt.y() * cxPt.y();
       if (cxPtR2 > 120. * 120. || std::abs(cxPt.z()) > 300.) continue;
       TrajectoryStateClosestToPoint posTSCP = tPosTrk.trajectoryStateClosestToPoint(cxPt);
       TrajectoryStateClosestToPoint negTSCP = tNegTrk.trajectoryStateClosestToPoint(cxPt);
@@ -374,180 +382,101 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
       double totalESq = totalE * totalE;
       double totalPSq = (posTSCP.momentum() + negTSCP.momentum()).mag2();
       double massSquared = totalESq - totalPSq;
-      
-      //auto timer_3 = std::chrono::high_resolution_clock::now();
+      if(DCA_pos_beamspot.second==0 || DCA_neg_beamspot.second==0 || DCA_pos_pv.second==0 || DCA_neg_pv.second==0) continue;
 
-      // step3: Vertex Fit!
-      // Create dummy covariance (error matrix) for the initial vertex position
-      GlobalError dummyError(1.0e-3, 0.0, 1.0e-3, 0.0, 0.0, 1.0e-3);
-      std::vector<reco::TransientTrack> transTracks{tPosTrk, tNegTrk};
-      TransientVertex theRecoVertex(cxPt, dummyError, transTracks, 1.0e-3);
-      KalmanVertexFitter theKalmanFitter(true);
-      theRecoVertex = theKalmanFitter.vertex(transTracks);
-      if (!theRecoVertex.isValid()) continue;
-      reco::Vertex theVtx_KLM = reco::Vertex(theRecoVertex);
-      // Get fitted vertex position
-      GlobalPoint vtxPos(theVtx_KLM.x(), theVtx_KLM.y(), theVtx_KLM.z());
-      if(verbose>=10){
-          std::cout << "A valid vertex found at ("
-                << vtxPos.x() << ", " << vtxPos.y() << ", " << vtxPos.z() << ")"
-                << std::endl;
-      }
-      
-      //auto timer_4 = std::chrono::high_resolution_clock::now();
 
-      // step4: check the fit vertex
-      // 2D decay significance
-      // relative to beamspot
-      SMatrixSym3D totalCov = theBeamSpot->rotatedCovariance3D() + theVtx_KLM.covariance();
-      SVector3 distVecXY(vtxPos.x() - theBeamSpotPos.x(), vtxPos.y() - theBeamSpotPos.y(), 0.);
-      double distMagXY = ROOT::Math::Mag(distVecXY);
-      double distMagXYErr = sqrt(ROOT::Math::Similarity(totalCov, distVecXY));
+      bool pass_ditrk_ks = false;
+      bool pass_ditrk_D0 = false;
+      // Good for Ks 0?
+      if( abs(sqrt(massSquared)-kShortMass) < 1.5*kShortMassCut_ &&
+          abs(DCA_pos_beamspot.first/DCA_pos_beamspot.second) > TrkSigXYCut_ &&
+          abs(DCA_neg_beamspot.first/DCA_neg_beamspot.second) > TrkSigXYCut_) pass_ditrk_ks = true;
 
-      // vertex relative to PV
-      SMatrixSym3D totalCov_pv = referenceVtx->covariance() + theVtx_KLM.covariance();
-      SVector3 distVecXY_pv(vtxPos.x() - referencePos.x(), vtxPos.y() - referencePos.y(), 0.);
-      double distMagXY_pv = ROOT::Math::Mag(distVecXY_pv);
-      double distMagXYErr_pv = sqrt(ROOT::Math::Similarity(totalCov_pv, distVecXY_pv));
-      // trajectory
-      std::unique_ptr<TrajectoryStateClosestToPoint> trajPlus;
-      std::unique_ptr<TrajectoryStateClosestToPoint> trajMins;
-      std::vector<reco::TransientTrack> theRefTracks;
-      if (theRecoVertex.hasRefittedTracks()) {
-        theRefTracks = theRecoVertex.refittedTracks();
-      }
-      if (theRefTracks.size() > 1) {
-        reco::TransientTrack* thePositiveRefTrack = nullptr;
-        reco::TransientTrack* theNegativeRefTrack = nullptr;
-        for (std::vector<reco::TransientTrack>::iterator iTrack = theRefTracks.begin(); iTrack != theRefTracks.end();
-             ++iTrack) {
-          if (iTrack->track().charge() > 0.) {
-            thePositiveRefTrack = &*iTrack;
-          } else if (iTrack->track().charge() < 0.) {
-            theNegativeRefTrack = &*iTrack;
+      // Good for D0 ?
+      if( dca < diTrack2_dca_ &&
+          diTrk1.pt() > DtkPtCut_ &&
+	  diTrk2.pt() > DtkPtCut_ && 	  
+	  abs(DCA_pos_beamspot.first/DCA_pos_beamspot.second) > Trk34SigXYCut_ &&
+          abs(DCA_neg_beamspot.first/DCA_neg_beamspot.second) > Trk34SigXYCut_
+	  ) pass_ditrk_D0 = true;
+
+      if (pass_ditrk_ks || pass_ditrk_D0){
+          vec_ditrk.push_back(std::make_pair(ditrkidx_pos, ditrkidx_neg));
+          vec_ditrk_properties.emplace_back(cxPtR2, cxPt.z(), trk1_dot_trk2, DCA_pos_beamspot.first, DCA_pos_beamspot.second, DCA_neg_beamspot.first, DCA_neg_beamspot.second, dca, massSquared, DCA_pos_pv.first, DCA_pos_pv.second, DCA_neg_pv.first, DCA_neg_pv.second);
+          if(savetrack_){
+              pat::CompositeCandidate pcand;
+              pcand.addUserInt("leg1_idx",   int(ditrkidx_pos));
+              pcand.addUserInt("leg2_idx",   int(ditrkidx_neg));
+              ditracks_earlyout -> emplace_back(pcand);
           }
-        }
-        if (thePositiveRefTrack == nullptr || theNegativeRefTrack == nullptr) continue;
-        trajPlus =
-            std::make_unique<TrajectoryStateClosestToPoint>(thePositiveRefTrack->trajectoryStateClosestToPoint(vtxPos));
-        trajMins =
-            std::make_unique<TrajectoryStateClosestToPoint>(theNegativeRefTrack->trajectoryStateClosestToPoint(vtxPos));
-      } else {
-        trajPlus =
-            std::make_unique<TrajectoryStateClosestToPoint>(tdiTrk1.trajectoryStateClosestToPoint(vtxPos));
-        trajMins =
-            std::make_unique<TrajectoryStateClosestToPoint>(tdiTrk2.trajectoryStateClosestToPoint(vtxPos));
+	  if(pass_ditrk_ks)	  vec_ditrk_ks.push_back( vec_ditrk.size()-1 );
+          if(pass_ditrk_D0)       vec_ditrk_D0.push_back( vec_ditrk.size()-1 );
       }
-      if (trajPlus.get() == nullptr || trajMins.get() == nullptr || !trajPlus->isValid() || !trajMins->isValid()) continue;
-      GlobalVector positiveP(trajPlus->momentum());
-      GlobalVector negativeP(trajMins->momentum());
-      GlobalVector totalP(positiveP + negativeP);
-      // 2D pointing angle relative to BeamSpot
-      double dx = theVtx_KLM.x() - theBeamSpotPos.x();
-      double dy = theVtx_KLM.y() - theBeamSpotPos.y();
-      // 2D pointing angle relative to PV
-      double dx_pv = theVtx_KLM.x() - referencePos.x();
-      double dy_pv = theVtx_KLM.y() - referencePos.y();
-      double px = totalP.x();
-      double py = totalP.y();
-      double angleXY = ((dx * px + dy * py) / (sqrt(dx * dx + dy * dy) * sqrt(px * px + py * py)));
-      double angleXY_pv = ((dx_pv * px + dy_pv * py) / (sqrt(dx_pv * dx_pv + dy_pv * dy_pv) * sqrt(px * px + py * py)));
-      
-      //auto timer_5 = std::chrono::high_resolution_clock::now();
-
-      vec_ditrk.push_back(std::make_pair(ditrkidx_pos, ditrkidx_neg));
-      vec_ditrk_properties.emplace_back(cxPtR2, cxPt.z(), trk1_dot_trk2, DCA_pos_beamspot.first, DCA_pos_beamspot.second, DCA_neg_beamspot.first, DCA_neg_beamspot.second, dca, massSquared, theVtx_KLM.x(), theVtx_KLM.y(), theVtx_KLM.z(), theVtx_KLM.chi2(), theVtx_KLM.ndof(), theVtx_KLM.normalizedChi2(), distMagXY, distMagXYErr, angleXY, DCA_pos_pv.first, DCA_pos_pv.second, DCA_neg_pv.first, DCA_neg_pv.second, distMagXY_pv, distMagXYErr_pv, angleXY_pv);
-      if(savetrack_){
-          pat::CompositeCandidate pcand;
-          pcand.addUserInt("leg1_idx",   int(ditrkidx_pos));
-          pcand.addUserInt("leg2_idx",   int(ditrkidx_neg));
-          ditracks_earlyout -> emplace_back(pcand);
-      }
-  
       //std::chrono::duration<double> duration_1 = timer_2 - timer_1;
       //std::chrono::duration<double> duration_2 = timer_3 - timer_2;
       //std::chrono::duration<double> duration_3 = timer_4 - timer_3;
       //std::chrono::duration<double> duration_4 = timer_5 - timer_4;
       //std::cout << "duration_ditrk steps " << duration_1.count() << " "<< duration_2.count() << " " << duration_3.count() << " " << duration_4.count() << " " << std::endl;
 
-
     }
   }
   if(verbose>=5) std::cout<<"vec_trk_ttrk.size() "<< vec_trk_ttrk.size()<<" vec_ditrk.size() "<< vec_ditrk.size()<<std::endl;
+  if(verbose>=5) 
+	  std::cout<<"vec_ditrk_ks.size() "<< vec_ditrk_ks.size()<<" vec_ditrk_D0.size() "<< vec_ditrk_D0.size()<<std::endl;
 
-  //auto timer_ditrk = std::chrono::high_resolution_clock::now();
 
-  //std::chrono::duration<double> duration_trk = timer_trk - start;
-  //std::chrono::duration<double> duration_ditrk = timer_ditrk - timer_trk;
-  //std::cout << "duration_trk took " << duration_trk.count() << " seconds" << std::endl;
-  //std::cout << "duration_ditrk took " << duration_ditrk.count() << " seconds" << std::endl;
+//          auto timer_ditrk = std::chrono::high_resolution_clock::now();
+//  if(timing){
+//          std::chrono::duration<double> duration_trk = timer_trk - start;
+//          std::chrono::duration<double> duration_ditrk = timer_ditrk - timer_trk;
+//          std::cout << "duration_trk took " << duration_trk.count() << " seconds" << std::endl;
+//          std::cout << "duration_ditrk took " << duration_ditrk.count() << " seconds" << std::endl;
+//  }
 
   auto LooseKshorts_out = std::make_unique<reco::VertexCompositePtrCandidateCollection>();
   std::unique_ptr<pat::CompositeCandidateCollection> ret_val(new pat::CompositeCandidateCollection());
   std::unique_ptr<TransientTrackCollection> trans_out( new TransientTrackCollection );
   std::unique_ptr<pat::CompositeCandidateCollection> Bu_out(new pat::CompositeCandidateCollection());
 
-  // Two ditracks make one D0
-  // vec_ditrk
-  // Add one more track, make a B
-  // vec_trk_ttrk
-  for (unsigned int ditrkidx1 = 0; ditrkidx1 < vec_ditrk.size(); ++ditrkidx1) { 
-      if(std::get<4>(vec_ditrk_properties[ditrkidx1])==0 || std::get<6>(vec_ditrk_properties[ditrkidx1])==0) continue; 
-      
-      if(std::get<23>(vec_ditrk_properties[ditrkidx1])==0) continue;
-      if(std::get<21>(vec_ditrk_properties[ditrkidx1])==0) continue;
-      if(std::get<19>(vec_ditrk_properties[ditrkidx1])==0) continue;
-      double massSquared_idx1      = std::get<8>(vec_ditrk_properties[ditrkidx1]);
-      double normchi2_idx1         = std::get<14>(vec_ditrk_properties[ditrkidx1]); 
-      double vtxDecaySigXY_pv_idx1 = abs(std::get<22>(vec_ditrk_properties[ditrkidx1])/std::get<23>(vec_ditrk_properties[ditrkidx1])); 
-      double angleXY_pv_idx1       = std::get<24>(vec_ditrk_properties[ditrkidx1]);
-      double Trk1SigXY_pv_idx1     = abs(std::get<18>(vec_ditrk_properties[ditrkidx1]))/std::get<19>(vec_ditrk_properties[ditrkidx1]);
-      double Trk2SigXY_pv_idx1     = abs(std::get<20>(vec_ditrk_properties[ditrkidx1]))/std::get<21>(vec_ditrk_properties[ditrkidx1]);
 
-      if(massSquared_idx1 > mPiPiCut_*mPiPiCut_ ) continue;
-      if(normchi2_idx1>vtxChi2Cut_) continue;
-      if(vtxDecaySigXY_pv_idx1<vtxDecaySigXYCut_) continue;
-      if(Trk1SigXY_pv_idx1<TrkSigXYCut_ || Trk2SigXY_pv_idx1<TrkSigXYCut_) continue;
-      //if(vtxDecaySigXYZ_pv_idx1<vtxDecaySigXYZCut) continue;
-      if (angleXY_pv_idx1 < cosThetaXYCut_) continue;
-      //if (angleXYZ_pv_idx1 < cosThetaXYZCut_) continue;
-      if(verbose>=3) std::cout<< "Pass Ks0 presel" << std::endl;
+
+
+
+  // Two ditracks make one D0
+  // Add one more track, make a B
+  for (unsigned int ditrk_idx1 = 0; ditrk_idx1 < vec_ditrk_ks.size(); ++ditrk_idx1) { 
       
       // Kin fit for Ks0
-      const auto& tTrk1 = vec_trk_ttrk[vec_ditrk[ditrkidx1].first].second;
-      const auto& tTrk2 = vec_trk_ttrk[vec_ditrk[ditrkidx1].second].second;
+      unsigned int ditrk_trueidx1 = vec_ditrk_ks[ditrk_idx1];
+      const auto& tTrk1 = vec_trk_ttrk[vec_ditrk[ditrk_trueidx1].first].second;
+      const auto& tTrk2 = vec_trk_ttrk[vec_ditrk[ditrk_trueidx1].second].second;
+
       KinVtxFitter theKinVtxFitter(
       {tTrk1, tTrk2},
       {piMass, piMass},
       {PI_SIGMA, PI_SIGMA} );
       if ( !theKinVtxFitter.success() ) continue;
       if ( theKinVtxFitter.chi2()<0 || theKinVtxFitter.dof()<0) continue;
-      if ( theKinVtxFitter.prob()<0.001) continue;
+      if ( theKinVtxFitter.prob()<0.0001) continue;
       auto theKinVtxFitter_p4 = theKinVtxFitter.fitted_p4();
       if(abs(theKinVtxFitter_p4.mass()-kShortMass)>kShortMassCut_) continue;
       if(abs(theKinVtxFitter.fitted_p4().eta())>2.4)  continue;
       if(verbose>=2) std::cout<< "Pass Ks0 Kin fit" << std::endl;
-
       float Kin_mass = theKinVtxFitter.fitted_candidate().mass();
       float Kin_massErr = sqrt(theKinVtxFitter.fitted_candidate().kinematicParametersError().matrix()(6, 6));
       auto V0TT = theKinVtxFitter.fitted_candidate_ttrk();
 
-      for (unsigned int ditrkidx2 = 0; ditrkidx2 < vec_ditrk.size(); ++ditrkidx2) {
+      for (unsigned int ditrk_idx2 = 0; ditrk_idx2 < vec_ditrk_D0.size(); ++ditrk_idx2) {
 	  //std::cout<<"Mass before fit "<< theKinVtxFitter.fitted_candidate().mass()<<std::endl;
-	  if(ditrkidx1==ditrkidx2) continue;
-	  if(vec_ditrk[ditrkidx1].first == vec_ditrk[ditrkidx2].first || vec_ditrk[ditrkidx1].first == vec_ditrk[ditrkidx2].second || vec_ditrk[ditrkidx1].second == vec_ditrk[ditrkidx2].first || vec_ditrk[ditrkidx1].second == vec_ditrk[ditrkidx2].second) continue;
-
-	  if(std::get<4>(vec_ditrk_properties[ditrkidx2])==0 || std::get<6>(vec_ditrk_properties[ditrkidx2])==0) continue;
-          double dca_idx2          = std::get<7>(vec_ditrk_properties[ditrkidx2]);
-          if(dca_idx2 > diTrack2_dca_) continue;
-          if (vec_trk_ttrk[vec_ditrk[ditrkidx2].first].first.pt() < DtkPtCut_) continue;
-          if (vec_trk_ttrk[vec_ditrk[ditrkidx2].second].first.pt() < DtkPtCut_) continue;
+	  unsigned int ditrk_trueidx2 = vec_ditrk_D0[ditrk_idx2];
+	  if( ditrk_trueidx1 == ditrk_trueidx2 ) continue;
+          if( vec_ditrk[ditrk_trueidx1].first == vec_ditrk[ditrk_trueidx2].first || vec_ditrk[ditrk_trueidx1].first == vec_ditrk[ditrk_trueidx2].second || vec_ditrk[ditrk_trueidx1].second == vec_ditrk[ditrk_trueidx2].first || vec_ditrk[ditrk_trueidx1].second == vec_ditrk[ditrk_trueidx2].second) continue;
 
 	  // A quick Mass fit
-          const auto& tTrk3 = vec_trk_ttrk[vec_ditrk[ditrkidx2].first].second;
-          const auto& tTrk4 = vec_trk_ttrk[vec_ditrk[ditrkidx2].second].second;
-	  auto mom1 = vec_trk_ttrk[vec_ditrk[ditrkidx2].first].first.momentum();
-	  auto mom2 = vec_trk_ttrk[vec_ditrk[ditrkidx2].second].first.momentum();
+          const auto& tTrk3 = vec_trk_ttrk[vec_ditrk[ditrk_trueidx2].first].second;
+          const auto& tTrk4 = vec_trk_ttrk[vec_ditrk[ditrk_trueidx2].second].second;
+	  auto mom1 = vec_trk_ttrk[vec_ditrk[ditrk_trueidx2].first].first.momentum();
+	  auto mom2 = vec_trk_ttrk[vec_ditrk[ditrk_trueidx2].second].first.momentum();
           reco::Candidate::LorentzVector p4_1(mom1.x(), mom1.y(), mom1.z(), sqrt(mom1.mag2() + piMass * piMass));
           reco::Candidate::LorentzVector p4_2(mom2.x(), mom2.y(), mom2.z(), sqrt(mom2.mag2() + piMass * piMass));
           reco::Candidate::LorentzVector total_p4 = p4_1 + p4_2 + theKinVtxFitter_p4;
@@ -566,15 +495,14 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
           //std::cout<<"Mass after fit "<< theKinVtxFitter.fitted_candidate().mass()<<std::endl;
 	  if ( !D0_KinFitter.success() ) continue;
           if ( D0_KinFitter.chi2()<0 || D0_KinFitter.dof()<0) continue;
-          if ( D0_KinFitter.prob()<0.001) continue;
+          if ( D0_KinFitter.prob()<0.0001) continue;
           auto D0_Kinfit_p4 = D0_KinFitter.fitted_p4();
           if(abs(D0_Kinfit_p4.mass()-D0Mass)>D0MassCut_) continue;    
 	  if(D0_Kinfit_p4.pt() < D0_PtCut_) continue;
           auto D0_pv_lxy  =  l_xy(D0_KinFitter, referencePos.x(), referencePos.y(), referencePos.z());
           if (D0_pv_lxy.error()!=0 && abs(D0_pv_lxy.value()/D0_pv_lxy.error()) < D0vtxDecaySigXYCut_ ) continue;
-
+          if((cos_theta_3D(theKinVtxFitter, D0_KinFitter.fitted_vtx().x(), D0_KinFitter.fitted_vtx().y(), D0_KinFitter.fitted_vtx().z(), theKinVtxFitter.fitted_p4()))<cosThetaXYCut_) continue;
 	  if(verbose>=2) std::cout<<" D0 looks good "<<std::endl;
-	  if((cos_theta_3D(theKinVtxFitter, D0_KinFitter.fitted_vtx().x(), D0_KinFitter.fitted_vtx().y(), D0_KinFitter.fitted_vtx().z(), theKinVtxFitter.fitted_p4()))<cosThetaXYCut_) continue;
 
           auto DTT = D0_KinFitter.fitted_candidate_ttrk();
           float DKin_mass = D0_KinFitter.fitted_candidate().mass();
@@ -586,7 +514,7 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
 	  // Make a B
           for (unsigned int Btrack_idx = 0; Btrack_idx < vec_trk_ttrk.size(); ++Btrack_idx) {
-              if(Btrack_idx == vec_ditrk[ditrkidx2].first || Btrack_idx == vec_ditrk[ditrkidx2].second || Btrack_idx == vec_ditrk[ditrkidx1].second || Btrack_idx == vec_ditrk[ditrkidx1].first) continue;
+              if( Btrack_idx == vec_ditrk[ditrk_trueidx1].first || Btrack_idx == vec_ditrk[ditrk_trueidx2].first || Btrack_idx == vec_ditrk[ditrk_trueidx1].second || Btrack_idx == vec_ditrk[ditrk_trueidx2].second) continue;
               const auto& Btrack = vec_trk_ttrk[Btrack_idx].first;
               if(Btrack.pt() < BtkPtCut_) continue;
               const auto& tBtrack = vec_trk_ttrk[Btrack_idx].second;
@@ -600,12 +528,12 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               reco::Candidate::LorentzVector B_pre_p4 = total_p4 + p4_3;
               float B_premass = B_pre_p4.mass();
 	      if (B_pre_p4.pt() < B_PtCut_) continue;
+	      
 	      // A quick Mass fit, assuming kaon
 	      reco::Candidate::LorentzVector p4kaon_3(mom3.x(), mom3.y(), mom3.z(), sqrt(mom3.mag2() + kplusMass * kplusMass));
               reco::Candidate::LorentzVector B_pre_p4kaon = total_p4 + p4kaon_3;
               float B_premass_kaon = B_pre_p4kaon.mass();
               
-	      //if(abs(B_premass-BuMass)>BMassCut_*1.5 && abs(B_premass_kaon-BuMass)>BMassCut_*1.5) continue;
 	      if(  B_premass < BuMass - 0.12 - BMassCut_*1.5  || B_premass > BuMass + BMassCut_*1.5 ) continue;
               if(verbose>=3) std::cout<< "Pass B presel" << std::endl;
 
@@ -644,67 +572,44 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               // Save something
               pat::CompositeCandidate Bu;
 	      // idx
-	      Bu.addUserInt("DiTrack_idx1", int(ditrkidx1));
-              Bu.addUserInt("DiTrack_idx2", int(ditrkidx2));
-              Bu.addUserInt("Track_idx1",   int(vec_ditrk[ditrkidx1].first));
-              Bu.addUserInt("Track_idx2",   int(vec_ditrk[ditrkidx1].second));
-              Bu.addUserInt("Track_idx3",   int(vec_ditrk[ditrkidx2].first));
-              Bu.addUserInt("Track_idx4",   int(vec_ditrk[ditrkidx2].second));
+	      Bu.addUserInt("DiTrack_idx1", int(ditrk_trueidx1));
+              Bu.addUserInt("DiTrack_idx2", int(ditrk_trueidx2));
+              Bu.addUserInt("Track_idx1",   int(vec_ditrk[ditrk_trueidx1].first));
+              Bu.addUserInt("Track_idx2",   int(vec_ditrk[ditrk_trueidx1].second));
+              Bu.addUserInt("Track_idx3",   int(vec_ditrk[ditrk_trueidx2].first));
+              Bu.addUserInt("Track_idx4",   int(vec_ditrk[ditrk_trueidx2].second));
 	      // Ditrack variables
 	      // dca relative to BS or PV
-              Bu.addUserFloat("DiTrk1_cxPtR2",      std::get<0>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_cxPtz",       std::get<1>(vec_ditrk_properties[ditrkidx1]));		      
-	      Bu.addUserFloat("DiTrk1_dot",         std::get<2>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_dca",         abs(std::get<7>(vec_ditrk_properties[ditrkidx1])));
-              Bu.addUserFloat("DiTrk1_massSquared", std::get<8>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_KLM_vtx_r",   sqrt(std::get<9>(vec_ditrk_properties[ditrkidx1])*std::get<9>(vec_ditrk_properties[ditrkidx1])+std::get<10>(vec_ditrk_properties[ditrkidx1])*std::get<10>(vec_ditrk_properties[ditrkidx1]))   );
-              Bu.addUserFloat("DiTrk1_KLM_vtx_z",          std::get<11>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_KLM_chi2",           std::get<12>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_KLM_ndof",           std::get<13>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_KLM_normalizedChi2", std::get<14>(vec_ditrk_properties[ditrkidx1]));
+	      Bu.addUserFloat("DiTrk1_cxPtR2",      std::get<0>(vec_ditrk_properties[ditrk_trueidx1]));
+              Bu.addUserFloat("DiTrk1_cxPtz",       std::get<1>(vec_ditrk_properties[ditrk_trueidx1]));		      
+	      Bu.addUserFloat("DiTrk1_dot",         std::get<2>(vec_ditrk_properties[ditrk_trueidx1]));
+              Bu.addUserFloat("DiTrk1_dca",         abs(std::get<7>(vec_ditrk_properties[ditrk_trueidx1])));
+              Bu.addUserFloat("DiTrk1_massSquared", std::get<8>(vec_ditrk_properties[ditrk_trueidx1]));
 	      // dca relative to bs and pv
-              Bu.addUserFloat("DiTrk1_trk1_bs_dca", abs(std::get<3>(vec_ditrk_properties[ditrkidx1])));
-              Bu.addUserFloat("DiTrk1_trk2_bs_dca", abs(std::get<5>(vec_ditrk_properties[ditrkidx1])));
-              Bu.addUserFloat("DiTrk1_trk1_pv_dca", abs(std::get<18>(vec_ditrk_properties[ditrkidx1])));
-              Bu.addUserFloat("DiTrk1_trk2_pv_dca", abs(std::get<20>(vec_ditrk_properties[ditrkidx1])));
-	      Bu.addUserFloat("DiTrk1_trk1_bs_dcaSig", abs(std::get<3>(vec_ditrk_properties[ditrkidx1]))/std::get<4>(vec_ditrk_properties[ditrkidx1]));
-	      Bu.addUserFloat("DiTrk1_trk2_bs_dcaSig", abs(std::get<5>(vec_ditrk_properties[ditrkidx1]))/std::get<6>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_trk1_pv_dcaSig", abs(std::get<18>(vec_ditrk_properties[ditrkidx1]))/std::get<19>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_trk2_pv_dcaSig", abs(std::get<20>(vec_ditrk_properties[ditrkidx1]))/std::get<21>(vec_ditrk_properties[ditrkidx1]));
+              Bu.addUserFloat("DiTrk1_trk1_bs_dca", abs(std::get<3>(vec_ditrk_properties[ditrk_trueidx1])));
+              Bu.addUserFloat("DiTrk1_trk2_bs_dca", abs(std::get<5>(vec_ditrk_properties[ditrk_trueidx1])));
+              Bu.addUserFloat("DiTrk1_trk1_pv_dca", abs(std::get<9>(vec_ditrk_properties[ditrk_trueidx1])));
+              Bu.addUserFloat("DiTrk1_trk2_pv_dca", abs(std::get<11>(vec_ditrk_properties[ditrk_trueidx1])));
+	      Bu.addUserFloat("DiTrk1_trk1_bs_dcaSig", abs(std::get<3>(vec_ditrk_properties[ditrk_trueidx1]))/std::get<4>(vec_ditrk_properties[ditrk_trueidx1]));
+	      Bu.addUserFloat("DiTrk1_trk2_bs_dcaSig", abs(std::get<5>(vec_ditrk_properties[ditrk_trueidx1]))/std::get<6>(vec_ditrk_properties[ditrk_trueidx1]));
+              Bu.addUserFloat("DiTrk1_trk1_pv_dcaSig", abs(std::get<9>(vec_ditrk_properties[ditrk_trueidx1]))/std::get<10>(vec_ditrk_properties[ditrk_trueidx1]));
+              Bu.addUserFloat("DiTrk1_trk2_pv_dcaSig", abs(std::get<11>(vec_ditrk_properties[ditrk_trueidx1]))/std::get<12>(vec_ditrk_properties[ditrk_trueidx1]));
 	      // displacement relative to bs and pv
-              Bu.addUserFloat("DiTrk1_KLM_bs_lxy",            abs(std::get<15>(vec_ditrk_properties[ditrkidx1])));
-              Bu.addUserFloat("DiTrk1_KLM_bs_lxyErr",         std::get<16>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_KLM_bs_cos_theta_XY",   std::get<17>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_KLM_pv_lxy",            abs(std::get<22>(vec_ditrk_properties[ditrkidx1])));
-              Bu.addUserFloat("DiTrk1_KLM_pv_lxyErr",         std::get<23>(vec_ditrk_properties[ditrkidx1]));
-              Bu.addUserFloat("DiTrk1_KLM_pv_cos_theta_XY",   std::get<24>(vec_ditrk_properties[ditrkidx1]));
 
-              Bu.addUserFloat("DiTrk2_cxPtR2",      std::get<0>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_cxPtz",       std::get<1>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_dot",         std::get<2>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_dca",         abs(std::get<7>(vec_ditrk_properties[ditrkidx2])));
-              Bu.addUserFloat("DiTrk2_massSquared", std::get<8>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_KLM_vtx_r",          sqrt(std::get<9>(vec_ditrk_properties[ditrkidx2])*std::get<9>(vec_ditrk_properties[ditrkidx2])+std::get<10>(vec_ditrk_properties[ditrkidx2])*std::get<10>(vec_ditrk_properties[ditrkidx2]))   );
-              Bu.addUserFloat("DiTrk2_KLM_vtx_z",          std::get<11>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_KLM_chi2",           std::get<12>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_KLM_ndof",           std::get<13>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_KLM_normalizedChi2", std::get<14>(vec_ditrk_properties[ditrkidx2]));
+              Bu.addUserFloat("DiTrk2_cxPtR2",      std::get<0>(vec_ditrk_properties[ditrk_trueidx2]));
+              Bu.addUserFloat("DiTrk2_cxPtz",       std::get<1>(vec_ditrk_properties[ditrk_trueidx2]));
+              Bu.addUserFloat("DiTrk2_dot",         std::get<2>(vec_ditrk_properties[ditrk_trueidx2]));
+              Bu.addUserFloat("DiTrk2_dca",         abs(std::get<7>(vec_ditrk_properties[ditrk_trueidx2])));
+              Bu.addUserFloat("DiTrk2_massSquared", std::get<8>(vec_ditrk_properties[ditrk_trueidx2]));
               // dca relative to bs and pv
-              Bu.addUserFloat("DiTrk2_trk1_bs_dca", abs(std::get<3>(vec_ditrk_properties[ditrkidx2])));
-              Bu.addUserFloat("DiTrk2_trk2_bs_dca", abs(std::get<5>(vec_ditrk_properties[ditrkidx2])));
-              Bu.addUserFloat("DiTrk2_trk1_pv_dca", abs(std::get<18>(vec_ditrk_properties[ditrkidx2])));
-              Bu.addUserFloat("DiTrk2_trk2_pv_dca", abs(std::get<20>(vec_ditrk_properties[ditrkidx2])));
-	      Bu.addUserFloat("DiTrk2_trk1_bs_dcaSig", abs(std::get<3>(vec_ditrk_properties[ditrkidx2]))/std::get<4>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_trk2_bs_dcaSig", abs(std::get<5>(vec_ditrk_properties[ditrkidx2]))/std::get<6>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_trk1_pv_dcaSig", abs(std::get<18>(vec_ditrk_properties[ditrkidx2]))/std::get<19>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_trk2_pv_dcaSig", abs(std::get<20>(vec_ditrk_properties[ditrkidx2]))/std::get<21>(vec_ditrk_properties[ditrkidx2]));
-              // displacement relative to bs and pv
-              Bu.addUserFloat("DiTrk2_KLM_bs_lxy",            abs(std::get<15>(vec_ditrk_properties[ditrkidx2])));
-              Bu.addUserFloat("DiTrk2_KLM_bs_lxyErr",         std::get<16>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_KLM_bs_cos_theta_XY",   std::get<17>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_KLM_pv_lxy",            abs(std::get<22>(vec_ditrk_properties[ditrkidx2])));
-              Bu.addUserFloat("DiTrk2_KLM_pv_lxyErr",         std::get<23>(vec_ditrk_properties[ditrkidx2]));
-              Bu.addUserFloat("DiTrk2_KLM_pv_cos_theta_XY",   std::get<24>(vec_ditrk_properties[ditrkidx2]));
+              Bu.addUserFloat("DiTrk2_trk1_bs_dca", abs(std::get<3>(vec_ditrk_properties[ditrk_trueidx2])));
+              Bu.addUserFloat("DiTrk2_trk2_bs_dca", abs(std::get<5>(vec_ditrk_properties[ditrk_trueidx2])));
+              Bu.addUserFloat("DiTrk2_trk1_pv_dca", abs(std::get<9>(vec_ditrk_properties[ditrk_trueidx2])));
+              Bu.addUserFloat("DiTrk2_trk2_pv_dca", abs(std::get<11>(vec_ditrk_properties[ditrk_trueidx2])));
+	      Bu.addUserFloat("DiTrk2_trk1_bs_dcaSig", abs(std::get<3>(vec_ditrk_properties[ditrk_trueidx2]))/std::get<4>(vec_ditrk_properties[ditrk_trueidx2]));
+              Bu.addUserFloat("DiTrk2_trk2_bs_dcaSig", abs(std::get<5>(vec_ditrk_properties[ditrk_trueidx2]))/std::get<6>(vec_ditrk_properties[ditrk_trueidx2]));
+              Bu.addUserFloat("DiTrk2_trk1_pv_dcaSig", abs(std::get<9>(vec_ditrk_properties[ditrk_trueidx2]))/std::get<10>(vec_ditrk_properties[ditrk_trueidx2]));
+              Bu.addUserFloat("DiTrk2_trk2_pv_dcaSig", abs(std::get<11>(vec_ditrk_properties[ditrk_trueidx2]))/std::get<12>(vec_ditrk_properties[ditrk_trueidx2]));
 
 	      // Ks0
 	      // Basic
@@ -918,34 +823,6 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               Bu.addUserFloat("B_kaon_Kin_pv_l_xySig",  B_kaon_Kin_pv_l_xySig);
               Bu.addUserFloat("B_kaon_Kin_pv_l_xyz",    B_kaon_pv_lxyz.value());
               Bu.addUserFloat("B_kaon_Kin_pv_l_xyzSig", B_kaon_Kin_pv_l_xyzSig);
-              //for (unsigned int i=0; i < BMva_.size(); ++i) {
-              //  BMva_.at(i).set("B_DiTrk1_dca",            Bu.userFloat("DiTrk1_dca"));
-              //  BMva_.at(i).set("B_Ks0_Kin_vtx_r",         Bu.userFloat("Ks0_Kin_vtx_r"));
-              //  BMva_.at(i).set("B_Ks0_Kin_d0_alpha_2D",   Bu.userFloat("Ks0_Kin_d0_alpha_2D"));
-              //  BMva_.at(i).set("B_Ks0_Kin_d0_l_xy",       Bu.userFloat("Ks0_Kin_d0_l_xy"));
-              //  BMva_.at(i).set("B_Ks0_Kin_d0_l_xySig",    Bu.userFloat("Ks0_Kin_d0_l_xySig"));
-              //  BMva_.at(i).set("B_Ks0_Kin_d0_dca",        Bu.userFloat("Ks0_Kin_d0_dca"));
-              //  BMva_.at(i).set("B_Ks0_Kin_d0_dcaSig",     Bu.userFloat("Ks0_Kin_d0_dcaSig"));
-              //  BMva_.at(i).set("B_D0_Kin_vtx_r",          Bu.userFloat("D0_Kin_vtx_r"));
-              //  BMva_.at(i).set("B_D0_Kin_prob",           Bu.userFloat("D0_Kin_prob"));
-              //  BMva_.at(i).set("B_D0_Kin_b_alpha_2D",     Bu.userFloat("D0_Kin_b_alpha_2D"));
-              //  BMva_.at(i).set("B_D0_Kin_b_l_xy",         Bu.userFloat("D0_Kin_b_l_xy"));
-              //  BMva_.at(i).set("B_D0_Kin_b_l_xyz",        Bu.userFloat("D0_Kin_b_l_xyz"));
-              //  BMva_.at(i).set("B_D0_Kin_b_l_xySig",      Bu.userFloat("D0_Kin_b_l_xySig"));
-              //  BMva_.at(i).set("B_D0_Kin_b_l_xyzSig",     Bu.userFloat("D0_Kin_b_l_xyzSig"));
-              //  BMva_.at(i).set("B_D0_Kin_b_dcaSig",       Bu.userFloat("D0_Kin_b_dcaSig"));
-              //  BMva_.at(i).set("B_B_Kin_vtx_r",           Bu.userFloat("B_Kin_vtx_r"));
-              //  BMva_.at(i).set("B_B_Kin_prob",            Bu.userFloat("B_Kin_prob"));
-              //  BMva_.at(i).set("B_B_Kin_pv_alpha_2D",     Bu.userFloat("B_Kin_pv_alpha_2D"));
-              //  BMva_.at(i).set("B_B_Kin_pv_l_xy",         Bu.userFloat("B_Kin_pv_l_xy"));
-              //  BMva_.at(i).set("B_B_Kin_pv_l_xySig",      Bu.userFloat("B_Kin_pv_l_xySig"));
-              //  BMva_.at(i).set("B_B_Kin_trk_b_dca",       Bu.userFloat("B_Kin_trk_b_dca"));
-              //  BMva_.at(i).set("B_B_Kin_trk_b_dcaSig",    Bu.userFloat("B_Kin_trk_b_dcaSig"));
-              //  BMva_.at(i).set("B_B_Kin_pt",              Bu.userFloat("B_Kin_pt"));
-              //  BMva_.at(i).set("B_B_Kin_D0_pt",           Bu.userFloat("B_Kin_D0_pt"));
-              //  BMva_.at(i).set("B_B_Kin_trk_pt",          Bu.userFloat("B_Kin_trk_pt"));
-              //  Bu.addUserFloat("xgb_" + xgboost_variable_names_.at(i), BMva_.at(i).predict());
-              //}
 	                    
 	      if(std::isnan(abs(Bu.userFloat("Ks0_Kin_d0_l_xySig")))) continue;
 	      if(std::isnan(abs(Bu.userFloat("Ks0_Kin_d0_dcaSig")))) continue;
@@ -957,28 +834,25 @@ void BDhFitter_v2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	      for (unsigned int i=0; i < BMva_.size(); ++i) {
                   Bu.addUserFloat("xgb_" + xgboost_variable_names_.at(i), Bmva_estimator(Bu, i));
 	      }
-	      if(Bu.userFloat("xgb_" + xgboost_variable_names_.at(0))<0.2) continue;
+	      //if(Bu.userFloat("xgb_" + xgboost_variable_names_.at(0))<0.2) continue;
 	      Bu_out->push_back(Bu);
 	  }
   
       }
   }
 
-
-  //auto end = std::chrono::high_resolution_clock::now();
-  //std::chrono::duration<double> duration_loop = end - timer_ditrk;
-  //std::cout << "recoB took " << duration_loop.count() << " seconds" << std::endl;
-
+//        auto end = std::chrono::high_resolution_clock::now();
+//  if(timing){
+//      std::chrono::duration<double> duration_loop = end - timer_ditrk;
+//      std::cout << "recoB took " << duration_loop.count() << " seconds" << std::endl;
+//  }
 
   if(savetrack_) iEvent.put(std::move(tracks_earlyout),       "SelectedTracks");    
   if(savetrack_) iEvent.put(std::move(ditracks_earlyout),       "SelectedDiTracks");
-//  iEvent.put(std::move(LooseKshorts_out), "LooseKshort");
-//  iEvent.put(std::move(ret_val), "SelectedV0Collection");
-//  iEvent.put(std::move(trans_out), "SelectedV0TransientCollection");
   iEvent.put(std::move(Bu_out), "B");
   return;
 
 }
 
-DEFINE_FWK_MODULE(BDhFitter_v2);
+DEFINE_FWK_MODULE(BDhFitter_v3);
 

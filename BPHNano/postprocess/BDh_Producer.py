@@ -13,7 +13,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collect
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = True
-
+import numpy as np
 
 class BDhProducer(Module):
     def __init__(self, BSelection):
@@ -28,7 +28,7 @@ class BDhProducer(Module):
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
-        self.out.branch("EventMass", "F")
+        self.out.branch("bestB", "I")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -36,12 +36,15 @@ class BDhProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail, go to next event)"""
         Bcand = Collection(event, "B")
-        eventSum = ROOT.TLorentzVector()
-        for j in filter(self.BSel, Bcand):
-            eventSum += j.p4()
-        print(len(Bcand))
-        self.out.fillBranch("EventMass", eventSum.M())
-        if len(Bcand)>1:
+        my_array =np.array(event.B_xgb_2022)
+        max_index = np.argmax(my_array)
+        self.out.fillBranch("bestB", max_index)
+        #eventSum = ROOT.TLorentzVector()
+        #for j in filter(self.BSel, Bcand):
+        #    eventSum += j.p4()
+        #print(len(Bcand))
+        #self.out.fillBranch("EventMass", eventSum.M())
+        if len(Bcand)>0:
             return True
         else:
             return False

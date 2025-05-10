@@ -23,7 +23,7 @@ from PhysicsTools.BPHNano.BToKLL_cff import *
 from PhysicsTools.BPHNano.BToKstarLL_cff import *
 from PhysicsTools.BPHNano.BToKshortLL_cff import *
 #from PhysicsTools.BPHNano.BDh_cff import *
-from PhysicsTools.BPHNano.BDh_cff_v2 import *
+from PhysicsTools.BPHNano.BDh_cff_v3 import *
 
 vertexTable.svSrc = cms.InputTag("slimmedSecondaryVertices")
 
