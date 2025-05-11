@@ -24,12 +24,14 @@ config.section_("Data")
 config.Data.inputDataset = '/ParkingDoubleMuonLowMass0/Run2022F-22Sep2023-v1/MINIAOD'
 #config.Data.inputDBS = 'phys03'
 config.Data.inputDBS = 'global'
-config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 3
+config.Data.splitting = 'EventAwareLumiBased'
+config.Data.unitsPerJob = 80000
+#config.Data.splitting = 'FileBased'
+#config.Data.unitsPerJob = 3
 #config.Data.totalUnits = 5
 config.JobType.maxMemoryMB = 2000  ## 2500*4
 #config.JobType.maxJobRuntimeMin = 1315  ## 21.9 hours
-#config.JobType.numCores = 4
+config.JobType.numCores = 2
 #config.Data.splitting = 'EventAwareLumiBased'
 #config.Data.unitsPerJob = 20000
 config.Data.lumiMask = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Muon.json'
