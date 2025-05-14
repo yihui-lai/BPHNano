@@ -263,10 +263,10 @@ void BDhFitter_v3::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     const reco::Track& tmpTrack = trk.pseudoTrack();
     double ipsigXY_pv = std::abs(tmpTrack.dxy(referencePos) / tmpTrack.dxyError());
     if ( ipsigXY_pv < tkIPSigXYCut_) continue;
-    double ipXY_bs = std::abs(tmpTrack.dxy(theBeamSpotPos));
-    double ipZ_bs = std::abs(tmpTrack.dz(theBeamSpotPos));
-    double ipXY_pv  = std::abs(tmpTrack.dxy(referencePos));
-    double ipZ_pv  = std::abs(tmpTrack.dz(referencePos));
+    double ipXY_bs = tmpTrack.dxy(theBeamSpotPos);
+    double ipZ_bs  = tmpTrack.dz(theBeamSpotPos);
+    double ipXY_pv = tmpTrack.dxy(referencePos);
+    double ipZ_pv  = tmpTrack.dz(referencePos);
     double ipsigXY_bs = std::abs(tmpTrack.dxy(theBeamSpotPos) / tmpTrack.dxyError());
     double ipsigZ_bs  = std::abs(tmpTrack.dz(theBeamSpotPos) / tmpTrack.dzError());
     double ipsigZ_pv  = std::abs(tmpTrack.dz(referencePos) / tmpTrack.dzError());
@@ -407,7 +407,22 @@ void BDhFitter_v3::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               pat::CompositeCandidate pcand;
               pcand.addUserInt("leg1_idx",   int(ditrkidx_pos));
               pcand.addUserInt("leg2_idx",   int(ditrkidx_neg));
-              ditracks_earlyout -> emplace_back(pcand);
+	      pcand.addUserFloat("cxPtR2",         cxPtR2);
+              pcand.addUserFloat("cxPtx",          cxPt.x());
+              pcand.addUserFloat("cxPty",          cxPt.y());
+              pcand.addUserFloat("cxPtz",          cxPt.z());
+              pcand.addUserFloat("dot",            trk1_dot_trk2);
+              pcand.addUserFloat("dca",            dca);
+              pcand.addUserFloat("massSquared",    massSquared);
+              pcand.addUserFloat("trk1_bs_dca",    DCA_pos_beamspot.first);
+              pcand.addUserFloat("trk2_bs_dca",    DCA_neg_beamspot.first);
+              pcand.addUserFloat("trk1_pv_dca",    DCA_pos_pv.first);
+              pcand.addUserFloat("trk2_pv_dca",    DCA_neg_pv.first);
+              pcand.addUserFloat("trk1_bs_dcaErr", DCA_pos_beamspot.second);
+              pcand.addUserFloat("trk2_bs_dcaErr", DCA_neg_beamspot.second);
+              pcand.addUserFloat("trk1_pv_dcaErr", DCA_pos_pv.second);
+              pcand.addUserFloat("trk2_pv_dcaErr", DCA_neg_pv.second);
+	      ditracks_earlyout -> emplace_back(pcand);
           }
 	  if(pass_ditrk_ks)	  vec_ditrk_ks.push_back( vec_ditrk.size()-1 );
           if(pass_ditrk_D0)       vec_ditrk_D0.push_back( vec_ditrk.size()-1 );
@@ -586,10 +601,10 @@ void BDhFitter_v3::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               Bu.addUserFloat("DiTrk1_dca",         abs(std::get<7>(vec_ditrk_properties[ditrk_trueidx1])));
               Bu.addUserFloat("DiTrk1_massSquared", std::get<8>(vec_ditrk_properties[ditrk_trueidx1]));
 	      // dca relative to bs and pv
-              Bu.addUserFloat("DiTrk1_trk1_bs_dca", abs(std::get<3>(vec_ditrk_properties[ditrk_trueidx1])));
-              Bu.addUserFloat("DiTrk1_trk2_bs_dca", abs(std::get<5>(vec_ditrk_properties[ditrk_trueidx1])));
-              Bu.addUserFloat("DiTrk1_trk1_pv_dca", abs(std::get<9>(vec_ditrk_properties[ditrk_trueidx1])));
-              Bu.addUserFloat("DiTrk1_trk2_pv_dca", abs(std::get<11>(vec_ditrk_properties[ditrk_trueidx1])));
+              Bu.addUserFloat("DiTrk1_trk1_bs_dca", std::get<3>(vec_ditrk_properties[ditrk_trueidx1]));
+              Bu.addUserFloat("DiTrk1_trk2_bs_dca", std::get<5>(vec_ditrk_properties[ditrk_trueidx1]));
+              Bu.addUserFloat("DiTrk1_trk1_pv_dca", std::get<9>(vec_ditrk_properties[ditrk_trueidx1]));
+              Bu.addUserFloat("DiTrk1_trk2_pv_dca", std::get<11>(vec_ditrk_properties[ditrk_trueidx1]));
 	      Bu.addUserFloat("DiTrk1_trk1_bs_dcaSig", abs(std::get<3>(vec_ditrk_properties[ditrk_trueidx1]))/std::get<4>(vec_ditrk_properties[ditrk_trueidx1]));
 	      Bu.addUserFloat("DiTrk1_trk2_bs_dcaSig", abs(std::get<5>(vec_ditrk_properties[ditrk_trueidx1]))/std::get<6>(vec_ditrk_properties[ditrk_trueidx1]));
               Bu.addUserFloat("DiTrk1_trk1_pv_dcaSig", abs(std::get<9>(vec_ditrk_properties[ditrk_trueidx1]))/std::get<10>(vec_ditrk_properties[ditrk_trueidx1]));
@@ -602,10 +617,10 @@ void BDhFitter_v3::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               Bu.addUserFloat("DiTrk2_dca",         abs(std::get<7>(vec_ditrk_properties[ditrk_trueidx2])));
               Bu.addUserFloat("DiTrk2_massSquared", std::get<8>(vec_ditrk_properties[ditrk_trueidx2]));
               // dca relative to bs and pv
-              Bu.addUserFloat("DiTrk2_trk1_bs_dca", abs(std::get<3>(vec_ditrk_properties[ditrk_trueidx2])));
-              Bu.addUserFloat("DiTrk2_trk2_bs_dca", abs(std::get<5>(vec_ditrk_properties[ditrk_trueidx2])));
-              Bu.addUserFloat("DiTrk2_trk1_pv_dca", abs(std::get<9>(vec_ditrk_properties[ditrk_trueidx2])));
-              Bu.addUserFloat("DiTrk2_trk2_pv_dca", abs(std::get<11>(vec_ditrk_properties[ditrk_trueidx2])));
+              Bu.addUserFloat("DiTrk2_trk1_bs_dca", std::get<3>(vec_ditrk_properties[ditrk_trueidx2]));
+              Bu.addUserFloat("DiTrk2_trk2_bs_dca", std::get<5>(vec_ditrk_properties[ditrk_trueidx2]));
+              Bu.addUserFloat("DiTrk2_trk1_pv_dca", std::get<9>(vec_ditrk_properties[ditrk_trueidx2]));
+              Bu.addUserFloat("DiTrk2_trk2_pv_dca", std::get<11>(vec_ditrk_properties[ditrk_trueidx2]));
 	      Bu.addUserFloat("DiTrk2_trk1_bs_dcaSig", abs(std::get<3>(vec_ditrk_properties[ditrk_trueidx2]))/std::get<4>(vec_ditrk_properties[ditrk_trueidx2]));
               Bu.addUserFloat("DiTrk2_trk2_bs_dcaSig", abs(std::get<5>(vec_ditrk_properties[ditrk_trueidx2]))/std::get<6>(vec_ditrk_properties[ditrk_trueidx2]));
               Bu.addUserFloat("DiTrk2_trk1_pv_dcaSig", abs(std::get<9>(vec_ditrk_properties[ditrk_trueidx2]))/std::get<10>(vec_ditrk_properties[ditrk_trueidx2]));
@@ -662,7 +677,7 @@ void BDhFitter_v3::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               // dca relative to bs and pv
               std::pair<double, double> DCA_ks0 = computeDCA(V0TT, D0_KinFitter.fitted_vtx().x(), D0_KinFitter.fitted_vtx().y(), D0_KinFitter.fitted_vtx().z());
               double Ks0_Kin_b_dcaSig = DCA_ks0.second==0? -99: abs(DCA_ks0.first/DCA_ks0.second);
-              Bu.addUserFloat("Ks0_Kin_d0_dca", abs(DCA_ks0.first));
+              Bu.addUserFloat("Ks0_Kin_d0_dca", DCA_ks0.first);
               Bu.addUserFloat("Ks0_Kin_d0_dcaSig", Ks0_Kin_b_dcaSig);
 
 
@@ -720,7 +735,7 @@ void BDhFitter_v3::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               // dca relative to bs and pv
               std::pair<double, double> DCA_d0 = computeDCA(DTT, B_KinFitter.fitted_vtx().x(), B_KinFitter.fitted_vtx().y(), B_KinFitter.fitted_vtx().z());
               double D0_Kin_b_dcaSig = DCA_d0.second==0? -99: abs(DCA_d0.first/DCA_d0.second);
-	      Bu.addUserFloat("D0_Kin_b_dca", abs(DCA_d0.first));
+	      Bu.addUserFloat("D0_Kin_b_dca", DCA_d0.first);
               Bu.addUserFloat("D0_Kin_b_dcaSig", D0_Kin_b_dcaSig);
 
 	      // B
@@ -766,13 +781,13 @@ void BDhFitter_v3::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
               Bu.addUserFloat("B_Kin_pv_l_xyzSig", B_Kin_pv_l_xyzSig);
               std::pair<double, double> DCA_Btrack_beamspot = computeDCA(tBtrack, *theBeamSpot);
 	      double B_Kin_trk_bs_dcaSig = DCA_Btrack_beamspot.second==0? -99: abs(DCA_Btrack_beamspot.first/DCA_Btrack_beamspot.second);
-	      Bu.addUserFloat("B_Kin_trk_bs_dca", abs(DCA_Btrack_beamspot.first));
+	      Bu.addUserFloat("B_Kin_trk_bs_dca",    DCA_Btrack_beamspot.first);
 	      Bu.addUserFloat("B_Kin_trk_bs_dcaSig", B_Kin_trk_bs_dcaSig);
-              Bu.addUserFloat("B_Kin_trk_pv_dca", abs(DCA_Btrack_pv.first));
+              Bu.addUserFloat("B_Kin_trk_pv_dca",    DCA_Btrack_pv.first);
 	      Bu.addUserFloat("B_Kin_trk_pv_dcaSig", B_Kin_trk_pv_dcaSig);
               std::pair<double, double> DCA_Btrack_b = computeDCA(tBtrack, B_KinFitter.fitted_vtx().x(), B_KinFitter.fitted_vtx().y(), B_KinFitter.fitted_vtx().z());
               double B_Kin_trk_b_dcaSig = DCA_Btrack_b.second==0? -99: abs(DCA_Btrack_b.first/DCA_Btrack_b.second);
-	      Bu.addUserFloat("B_Kin_trk_b_dca", abs(DCA_Btrack_b.first));
+	      Bu.addUserFloat("B_Kin_trk_b_dca",    DCA_Btrack_b.first);
               Bu.addUserFloat("B_Kin_trk_b_dcaSig", B_Kin_trk_b_dcaSig);
 	      Bu.setCharge(Btrack.charge());
 	      Bu.setP4(B_Kinfit_p4);

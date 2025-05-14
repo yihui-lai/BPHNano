@@ -7,11 +7,10 @@ xgboost_models = [
 ]
 
 
-savetrack=False
+savetrack=True
 
 BDh = cms.EDProducer("BDhFitter_v3",    
    # which beamSpot to reference
-
    xgboost_models = cms.vstring(),
    xgboost_variable_names = cms.vstring(),
    beamSpot        = cms.InputTag('offlineBeamSpot'),
@@ -19,30 +18,30 @@ BDh = cms.EDProducer("BDhFitter_v3",
    tracks          = cms.InputTag("packedPFCandidates"),
    lostTracks      = cms.InputTag("lostTracks"),
    # Tracks
-   tkNHitsCut = cms.int32(3), # Number of valid hits on track
-   tkPtCut    = cms.double(0.5), # Pt cut of track 1, 2
-   DtkPtCut    = cms.double(0.6), # Pt cut of track 3, 4
-   BtkPtCut    = cms.double(0.9), # Pt cut of track 5
-   tkEtaCut   = cms.double(2.4), # Eta of track
-   tkChi2Cut  = cms.double(30.), # Track normalized Chi2
-   tkIPSigXYCut = cms.double(0.5), # Track IP significance
+   tkNHitsCut      = cms.int32(3),    # Number of valid hits on track
+   tkPtCut         = cms.double(0.35), # Pt cut of track 1, 2
+   tkEtaCut        = cms.double(2.4), # Eta of track
+   tkChi2Cut       = cms.double(30.), # Track normalized Chi2
+   tkIPSigXYCut    = cms.double(0.1), # Track IP significance
    # diTrack 1
+   TrkSigXYCut       = cms.double(2),                 # track DCA significance
    vtxChi2Cut        = cms.double(6.63),              # Vertex KLM chi2
-   vtxDecaySigXYCut  = cms.double(2),                 # KLM XY decay distance significance
-   TrkSigXYCut       = cms.double(4),    # track DCA significance
-   vtxDecaySigXYZCut = cms.double(-1),                # KLM XYZ decay distance significance
-   cosThetaXYCut     = cms.double(0.995),             # cos(angleXY) between x and p of V0 candidate
+   vtxDecaySigXYCut  = cms.double(-1),                # (Not used) KLM XY decay distance significance
+   vtxDecaySigXYZCut = cms.double(-1),                # (Not used) KLM XYZ decay distance significance
+   cosThetaXYCut     = cms.double(0.995),             # cos(theta3D)  between x(D0->Ks0) and p(Ks0) candidate, a loose cut
    cosThetaXYZCut    = cms.double(-1),                # cos(angleXYZ) between x and p of V0 candidate
    # diTrack 2
-   diTrack2_dca      = cms.double(0.2),   # 0.2cm is a decent cut to remove comb.bkg
-   Trk34SigXYCut     = cms.double(0.5), # track DCA significance
+   DtkPtCut          = cms.double(0.35),   # Pt cut of track 3, 4
+   diTrack2_dca      = cms.double(0.2),    # 0.2cm is a decent cut to remove comb.bkg
+   Trk34SigXYCut     = cms.double(0.1),    # track DCA significance
    # reco ks0
    Ks0_l_xyzSigCut = cms.double(3), # Ks flight distancesignificance from D0
    # D0
    D0_PtCut            = cms.double(3), # D0 Pt cut, GeV 
    D0vtxDecaySigXYCut  = cms.double(2), # D0 XY distance significance from PV
    # B
-   B_PtCut             = cms.double(3), # B Pt cut, GeV
+   BtkPtCut    = cms.double(0.9), # Pt cut of track 5
+   B_PtCut             = cms.double(4), # B Pt cut, GeV
    Btrk_dcaSigCut      = cms.double(1), # B trk dca Sig
    # mass
    kShortMassCut   = cms.double(0.03), # Ks mass window +- pdg value
@@ -168,6 +167,21 @@ if savetrack:
             CandVars,
             leg1_idx           = Var("userInt('leg1_idx')", int, doc="leg1_idx"),
             leg2_idx           = Var("userInt('leg2_idx')", int, doc="leg2_idx"),
+            cxPtR2             = ufloat('cxPtR2'),
+            cxPtx              = ufloat('cxPtx'),
+            cxPty              = ufloat('cxPty'),
+            cxPtz              = ufloat('cxPtz'),
+            dot                = ufloat('dot'),
+            dca                = ufloat('dca'),
+            massSquared        = ufloat('massSquared'),
+            trk1_bs_dca        = ufloat('trk1_bs_dca'),
+            trk2_bs_dca        = ufloat('trk2_bs_dca'),
+            trk1_pv_dca        = ufloat('trk1_pv_dca'),
+            trk2_pv_dca        = ufloat('trk2_pv_dca'),
+            trk1_bs_dcaErr     = ufloat('trk1_bs_dcaErr'),
+            trk2_bs_dcaErr     = ufloat('trk2_bs_dcaErr'),
+            trk1_pv_dcaErr     = ufloat('trk1_pv_dcaErr'),
+            trk2_pv_dcaErr     = ufloat('trk2_pv_dcaErr'),
             ),
     )
 
@@ -380,8 +394,8 @@ BMCMatch = cms.EDProducer("MCMatcher",            # cut on deltaR, deltaPt/Pt; p
     mcPdgId     = cms.vint32(521),                            # one or more PDG ID (13 = mu); absolute values (see below)
     checkCharge = cms.bool(False),                            # True = require RECO and MC objects to have the same charge
     mcStatus    = cms.vint32(2),                              # PYTHIA status code (1 = stable, 2 = shower, 3 = hard scattering)
-    maxDeltaR   = cms.double(0.1),                            # Minimum deltaR for the match
-    maxDPtRel   = cms.double(0.2),                            # Minimum deltaPt/Pt for the match
+    maxDeltaR   = cms.double(0.3),                            # Minimum deltaR for the match
+    maxDPtRel   = cms.double(0.5),                            # Minimum deltaPt/Pt for the match
     resolveAmbiguities    = cms.bool(True),                   # Forbid two RECO objects to match to the same GEN object
     resolveByMatchQuality = cms.bool(True),                   # False = just match input in order; True = pick lowest deltaR pair first
 )

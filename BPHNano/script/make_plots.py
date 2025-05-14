@@ -32,6 +32,8 @@ def plot_histograms_with_options(histos, names, originalname, colors, options, i
     if "logx" in options.keys():
         logx = options["logx"]
     ratio_plot = options["ratio_plot"]
+    if "DIST2D" in names:
+        ratio_plot = False
 
     # Create canvas and pads if ratio plot is requested
     c = ROOT.TCanvas("c", "Canvas", 800, 800)
@@ -964,10 +966,12 @@ def define_hist_setting(TOBEFILL):
 def main( runset ):
 
     filename_list={
-            "BDK_matched":"/eos/uscms/store/user/yilai/BuToD0K_D0ToKs2Pi_Run3/BDh_NanoPost_2022_v1/250507_155126/0000/test_mc*.root",
-            "BDK_comb.bkg":"/eos/uscms/store/user/yilai/BuToD0K_D0ToKs2Pi_Run3/BDh_NanoPost_2022_v1/250507_155126/0000/test_mc*.root"
+            #"BDK_matched":"/eos/uscms/store/user/yilai/BuToD0K_D0ToKs2Pi_Run3/BDh_NanoPost_2022_v1/250507_155126/0000/test_mc*.root",
+            #"BDK_comb.bkg":"/eos/uscms/store/user/yilai/BuToD0K_D0ToKs2Pi_Run3/BDh_NanoPost_2022_v1/250507_155126/0000/test_mc*.root"
             #"BDK_matched":"/eos/uscms/store/user/yilai/BuToD0K_D0ToKs2Pi_Run3/BDh_NanoPost_2022_v1/250507_015120/0000/test_mc*.root",
             #"BDK_comb.bkg":"/eos/uscms/store/user/yilai/BuToD0K_D0ToKs2Pi_Run3/BDh_NanoPost_2022_v1/250507_015120/0000/test_mc*.root"
+            "BDK_match": "/eos/uscms/store/user/yilai/ParkingDoubleMuonLowMass0/BDh_NanoPost_2022_Data_v1/250510_013758/*/*kim*root"
+            "BDK_comb.bkg": "/eos/uscms/store/user/yilai/ParkingDoubleMuonLowMass0/BDh_NanoPost_2022_Data_v1/250510_013758/*/*kim*root"
             }
     
     names=[
@@ -992,10 +996,10 @@ def main( runset ):
         "B_DiTrk1_cxPtz",
         "B_DiTrk1_dot",
         "B_DiTrk1_dca",
-        "B_DiTrk1_KLM_vtx_r",
-        "B_DiTrk1_KLM_vtx_z",
-        "B_DiTrk1_KLM_chi2",
-        "B_DiTrk1_KLM_normalizedChi2",
+#        "B_DiTrk1_KLM_vtx_r",
+#        "B_DiTrk1_KLM_vtx_z",
+#        "B_DiTrk1_KLM_chi2",
+#        "B_DiTrk1_KLM_normalizedChi2",
 #        "B_DiTrk1_trk1_bs_dca",
 #        "B_DiTrk1_trk2_bs_dca",
         "B_DiTrk1_trk1_pv_dca",
@@ -1007,9 +1011,9 @@ def main( runset ):
 #        "B_DiTrk1_KLM_bs_lxy",
 #        "B_DiTrk1_KLM_bs_lxy_DD_B_DiTrk1_KLM_bs_lxyErr",
 #        "B_DiTrk1_KLM_bs_cos_theta_XY",
-        "B_DiTrk1_KLM_pv_lxy",
-        "B_DiTrk1_KLM_pv_lxy_DD_B_DiTrk1_KLM_pv_lxyErr",
-        "B_DiTrk1_KLM_pv_cos_theta_XY",
+#        "B_DiTrk1_KLM_pv_lxy",
+#        "B_DiTrk1_KLM_pv_lxy_DD_B_DiTrk1_KLM_pv_lxyErr",
+#        "B_DiTrk1_KLM_pv_cos_theta_XY",
     ]
     TOBEFILL_set2=[
         "B_DiTrk2_cxPtR2",
@@ -1017,10 +1021,10 @@ def main( runset ):
         "B_DiTrk2_dot",
         "B_DiTrk2_dca",
         "B_DiTrk2_massSquared",
-        "B_DiTrk2_KLM_vtx_r",
-        "B_DiTrk2_KLM_vtx_z",
-        "B_DiTrk2_KLM_chi2",
-        "B_DiTrk2_KLM_normalizedChi2",
+#        "B_DiTrk2_KLM_vtx_r",
+#        "B_DiTrk2_KLM_vtx_z",
+#        "B_DiTrk2_KLM_chi2",
+#        "B_DiTrk2_KLM_normalizedChi2",
 #        "B_DiTrk2_trk1_bs_dca",
 #        "B_DiTrk2_trk2_bs_dca",
         "B_DiTrk2_trk1_pv_dca",
@@ -1032,9 +1036,9 @@ def main( runset ):
 #        "B_DiTrk2_KLM_bs_lxy",
 #        "B_DiTrk2_KLM_bs_lxy_DD_B_DiTrk2_KLM_bs_lxyErr",
 #        "B_DiTrk2_KLM_bs_cos_theta_XY",
-        "B_DiTrk2_KLM_pv_lxy",
-        "B_DiTrk2_KLM_pv_lxy_DD_B_DiTrk2_KLM_pv_lxyErr",
-        "B_DiTrk2_KLM_pv_cos_theta_XY",
+#        "B_DiTrk2_KLM_pv_lxy",
+#        "B_DiTrk2_KLM_pv_lxy_DD_B_DiTrk2_KLM_pv_lxyErr",
+#        "B_DiTrk2_KLM_pv_cos_theta_XY",
     ]
     TOBEFILL_set3=[
         "B_Ks0_Kin_vtx_r",
@@ -1129,8 +1133,17 @@ def main( runset ):
         "B_B_Kin_trk_b_dcaSig",
     ]
 
+
+    #TOBEFILL_set1=[
+    #    "B_DiTrk1_dot","B_DiTrk1_dca",
+    #    "B_DiTrk1_trk1_pv_dcaSig","B_DiTrk1_trk2_pv_dcaSig",
+    #    "B_DiTrk2_dot","B_DiTrk2_dca",
+    #    "B_DiTrk2_trk1_pv_dcaSig","B_DiTrk2_trk2_pv_dcaSig",
+    #]
+
     TOBEFILL_must_have = []
     branch2read_must_have = ["nB","GenPart_BIdx", "GenPart_pt", "B_B_Kin_pt", "B_Ks0_Kin_mass", "B_B_Kin_mass"] 
+    branch2read_must_have = ["nB"]
     TOBEFILL = None
     branch2read = None
     if runset=="1":
@@ -1159,6 +1172,17 @@ def main( runset ):
         elif "_DD_" in bran:
             bran_0 = bran.split("_DD_")[0]
             bran_1 = bran.split("_DD_")[1]
+            if bran_0 in branch2read:
+                print(bran_0, "already in")
+            else:
+                branch2read.append(bran_0)
+            if bran_1 in branch2read:
+                print(bran_1, "already in")
+            else:
+                branch2read.append(bran_1)
+        elif "_H2D_" in bran:
+            bran_0 = bran.split("_H2D_")[0]
+            bran_1 = bran.split("_H2D_")[1]
             if bran_0 in branch2read:
                 print(bran_0, "already in")
             else:
@@ -1203,15 +1227,19 @@ def main( runset ):
         rawfile_list[fname] = glob.glob(filename_list[fname])
 
     all_histograms = {}
-
+    make2D=True
+    make2D=False
     renamelist=[]
     for index, name in enumerate(names):
         print(index, name)
         rename = name.replace(" ", "").replace("(", "").replace(")", "").replace(",", "")
         renamelist.append(rename)
-        histos = create_histograms(plot_options, rename)
-        #histos = create_histograms2D(plot_options, rename)
-        fill_histograms_MC_v2(rawfile_list[name], branch2read, TOBEFILL, histos, cuts[index], False)
+        if not make2D:
+            histos = create_histograms(plot_options, rename)
+            fill_histograms_MC_v2(rawfile_list[name], branch2read, TOBEFILL, histos, cuts[index], False)
+        else:
+            histos = create_histograms2D(plot_options, rename)
+            fill_histograms_MC_v2(rawfile_list[name], branch2read, TOBEFILL, histos, cuts[index], True)
         #fill_histograms_Data(rawfile_list[index], branch2read, TOBEFILL, histos, plot_options, rename, cuts[index], True)
         for h in histos.keys():
             normalize_histogram(histos[h])
@@ -1219,21 +1247,22 @@ def main( runset ):
 
     os.system("mkdir -p pic_recoB")
     # Plot each variable with its options
-    for var, opts in plot_options.items():
-        histos_to_plot = {name: all_histograms[name][var] for name in renamelist}
-        iseff=True
-        plot_histograms_with_options(histos_to_plot, renamelist, names, colors, opts, iseff, output_name="pic_recoB/"+var)
-    # 2D, not fully working
-    #for var, opts in plot_options.items():
-    #    for jvar, jopts in plot_options.items():
-    #        if var!=jvar:
-    #            histos_to_plot = {name: all_histograms[name]["DIST2D_"+var+"_"+jvar] for name in renamelist}
-    #            iseff=True
-    #            plot_histograms_with_options(histos_to_plot, renamelist, names, colors, opts, iseff, output_name=f"pic_recoB/{var}")
-    #del rawfile_list
-    #del file_list
-    #del tree_list
-
+    iseff=True
+    if not make2D:
+        for var, opts in plot_options.items():
+            histos_to_plot = {name: all_histograms[name][var] for name in renamelist}
+            plot_histograms_with_options(histos_to_plot, renamelist, names, colors, opts, iseff, output_name="pic_recoB/"+var)
+    else:
+        for var, opts in plot_options.items():
+            for jvar, jopts in plot_options.items():
+                if var!=jvar:
+                    histos_to_plot = {name: all_histograms[name]["DIST2D_"+var+"_"+jvar] for name in renamelist}
+                    newopts=copy.copy(opts)
+                    newopts['y_range'] = jopts['x_range']
+                    newopts['logy'] = jopts['logy']
+                    newopts['ylabel'] = jopts['xlabel']
+                    newopts['ybin_edges'] = jopts['bin_edges']
+                    plot_histograms_with_options(histos_to_plot, renamelist, names, colors, opts, iseff, output_name=f"pic_recoB/DIST2D_"+var+"_"+jvar)
 
 main("1")
 main("2")
