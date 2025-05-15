@@ -16,9 +16,9 @@ fnames = ["test_mc.root"]
 
 p = PostProcessor(outputDir=".",
                   inputFiles=fnames,
-                  cut="B_pt>10",
+                  cut="",
                   modules=[BdhModuleConstr()],
                   provenance=True,
-                  maxEntries=50000, #just read the first maxEntries events
+                  maxEntries=50000000, #just read the first maxEntries events
                   )
 p.run()
