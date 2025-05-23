@@ -5,7 +5,7 @@
 #include "RecoVertex/KinematicFit/interface/KinematicConstrainedVertexFitter.h"
 #include "RecoVertex/KinematicFit/interface/KinematicParticleVertexFitter.h"
 #include "RecoVertex/KinematicFit/interface/TwoTrackMassKinematicConstraint.h" // MIGHT be useful for Phi->KK?
-
+#include "RecoVertex/KinematicFit/interface/MassKinematicConstraint.h"
 
 KinVtxFitter::KinVtxFitter(const std::vector<reco::TransientTrack> tracks, 
                            const std::vector<double> masses, 
@@ -66,7 +66,14 @@ KinVtxFitter::KinVtxFitter(const std::vector<reco::TransientTrack> tracks,
       );
   }
 
-  MultiTrackKinematicConstraint *  dilep_c = new  TwoTrackMassKinematicConstraint(dilep_mass);
+  MultiTrackKinematicConstraint *  dilep_c;
+ 
+  if(tracks.size()==2){
+      MultiTrackKinematicConstraint * dilep_c = new TwoTrackMassKinematicConstraint(dilep_mass);
+  }else{
+      //dilep_c = new MultiTrackKinematicConstraint(dilep_mass);
+      KinematicConstraint * dilep_c = new MassKinematicConstraint(dilep_mass, 1e-6);
+  }
   KinematicConstrainedVertexFitter kcv_fitter;    
   RefCountedKinematicTree vtx_tree = kcv_fitter.fit(particles,dilep_c);
 

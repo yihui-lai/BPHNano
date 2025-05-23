@@ -58,6 +58,9 @@
 #include "MagneticField/VolumeBasedEngine/interface/VolumeBasedMagneticField.h"
 #include <memory>
 #include "KinVtxFitter.h"
+#include "RecoVertex/KinematicFit/interface/TwoTrackMassKinematicConstraint.h"
+#include "RecoVertex/KinematicFitPrimitives/interface/KinematicParticleFactoryFromTransientTrack.h"
+#include "RecoVertex/KinematicFit/interface/KinematicParticleVertexFitter.h"
 #include <tuple>  // For std::tuple
 
 #include "PhysicsTools/BPHNano/plugins/XGBooster.h"
@@ -584,8 +587,47 @@ void BDhFitter_v3::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	      //if((cos_theta_3D(B_KinFitter, referencePos.x(), referencePos.y(), referencePos.z(), B_KinFitter.fitted_p4()))<cosThetaXYCut_) continue;
               if(verbose>=2) std::cout<< "B looks good" << std::endl;
 
+	      // Refit with mass constraint
+              ParticleMass kShortMass_ = kShortMass;
+              KinVtxFitter ks_constraint_fitter(
+                  { vec_trk_ttrk[vec_ditrk[ditrk_trueidx1].first].second,
+		    vec_trk_ttrk[vec_ditrk[ditrk_trueidx1].second].second
+                  },
+                  {piMass, piMass},
+                  {PI_SIGMA, PI_SIGMA},
+                  kShortMass_);
+              if (!ks_constraint_fitter.success()) continue;
+              //auto ks_constraint_p4 = ks_constraint_fitter.fitted_p4();
+              //cand.addUserFloat("constraint_sv_prob", constraint_fitter.prob());
+              //cand.addUserFloat("constraint_pt", constraint_p4.pt());
+              //cand.addUserFloat("constraint_eta", constraint_p4.eta());
+              //cand.addUserFloat("constraint_phi", constraint_p4.phi());
+              //cand.addUserFloat("constraint_mass", constraint_fitter.fitted_candidate().mass());
+
+              //fitted_state_ = fitted_particle_->currentState();
+              ParticleMass D0Mass_ = D0Mass;
+	      KinVtxFitter d0_constraint_fitter(
+                  { vec_trk_ttrk[vec_ditrk[ditrk_trueidx2].first].second,
+                    vec_trk_ttrk[vec_ditrk[ditrk_trueidx2].second].second,
+		    ks_constraint_fitter.fitted_candidate_ttrk()
+                  },
+                  {piMass, piMass, kShortMass},
+                  {PI_SIGMA, PI_SIGMA, K_SIGMA},
+                  D0Mass_);
+              if (!d0_constraint_fitter.success()) continue;
+              KinVtxFitter b_fitter(
+                  { d0_constraint_fitter.fitted_candidate_ttrk(), vec_trk_ttrk[Btrack_idx].second},
+                  {D0Mass, kplusMass},
+                  {K_SIGMA, K_SIGMA}
+	      );
+              
+              if (!b_fitter.success()) continue;
+
+              float mass = b_fitter.fitted_candidate().mass();
+
               // Save something
               pat::CompositeCandidate Bu;
+              Bu.addUserFloat("B_fitted_mass", mass );
 	      // idx
 	      Bu.addUserInt("DiTrack_idx1", int(ditrk_trueidx1));
               Bu.addUserInt("DiTrack_idx2", int(ditrk_trueidx2));

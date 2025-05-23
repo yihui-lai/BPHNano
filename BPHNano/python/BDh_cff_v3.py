@@ -7,7 +7,7 @@ xgboost_models = [
 ]
 
 
-savetrack=True
+savetrack=False
 
 BDh = cms.EDProducer("BDhFitter_v3",    
    # which beamSpot to reference
@@ -197,6 +197,7 @@ BTable = cms.EDProducer(
     extension = cms.bool(False),
     variables = cms.PSet(
         CandVars,
+        B_fitted_mass             = ufloat('B_fitted_mass'),
         DiTrack_idx1              = uint('DiTrack_idx1'),
         DiTrack_idx2              = uint('DiTrack_idx2'),
         Track_idx1                = uint('Track_idx1'),
