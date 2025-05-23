@@ -19,21 +19,21 @@ BDh = cms.EDProducer("BDhFitter_v3",
    lostTracks      = cms.InputTag("lostTracks"),
    # Tracks
    tkNHitsCut      = cms.int32(3),    # Number of valid hits on track
-   tkPtCut         = cms.double(0.35), # Pt cut of track 1, 2
+   tkPtCut         = cms.double(0.5), # Pt cut of track 1, 2
    tkEtaCut        = cms.double(2.4), # Eta of track
    tkChi2Cut       = cms.double(30.), # Track normalized Chi2
-   tkIPSigXYCut    = cms.double(0.1), # Track IP significance
+   tkIPSigXYCut    = cms.double(0.5), # Track IP significance
    # diTrack 1
-   TrkSigXYCut       = cms.double(2),                 # track DCA significance
+   TrkSigXYCut       = cms.double(4),                 # track DCA significance
    vtxChi2Cut        = cms.double(6.63),              # Vertex KLM chi2
    vtxDecaySigXYCut  = cms.double(-1),                # (Not used) KLM XY decay distance significance
    vtxDecaySigXYZCut = cms.double(-1),                # (Not used) KLM XYZ decay distance significance
    cosThetaXYCut     = cms.double(0.995),             # cos(theta3D)  between x(D0->Ks0) and p(Ks0) candidate, a loose cut
    cosThetaXYZCut    = cms.double(-1),                # cos(angleXYZ) between x and p of V0 candidate
    # diTrack 2
-   DtkPtCut          = cms.double(0.35),   # Pt cut of track 3, 4
+   DtkPtCut          = cms.double(0.6),   # Pt cut of track 3, 4
    diTrack2_dca      = cms.double(0.2),    # 0.2cm is a decent cut to remove comb.bkg
-   Trk34SigXYCut     = cms.double(0.1),    # track DCA significance
+   Trk34SigXYCut     = cms.double(0.5),    # track DCA significance
    # reco ks0
    Ks0_l_xyzSigCut = cms.double(3), # Ks flight distancesignificance from D0
    # D0

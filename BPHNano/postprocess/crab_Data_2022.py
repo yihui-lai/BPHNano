@@ -7,8 +7,8 @@ config = Configuration()
 #config = config()
 
 config.section_("General")
-config.General.requestName = 'BDh_NanoPost_2022_Data_v1'
-config.General.workArea = 'crab_projects_data_v1'
+config.General.requestName = 'BDh_NanoPost_2022_Data_may14_1'
+config.General.workArea = '/afs/cern.ch/work/y/yilai/gamma/crab_projects_data_may14'
 config.General.transferLogs = True
 
 config.section_("JobType")
@@ -21,25 +21,24 @@ config.JobType.inputFiles = ['BDh_postproc.py', 'BDh_postproc_data.py', 'BDh_Pro
 config.JobType.outputFiles = ['test_data_Skim.root']
 #config.JobType.sendPythonFolder = True
 config.section_("Data")
-config.Data.inputDataset = '/ParkingDoubleMuonLowMass0/Run2022F-22Sep2023-v1/MINIAOD'
+#config.Data.inputDataset = '/ParkingDoubleMuonLowMass1/Run2022F-22Sep2023-v1/MINIAOD'
+config.Data.inputDataset = '/ParkingDoubleMuonLowMass1/Run2022G-22Sep2023-v1/MINIAOD'
 #config.Data.inputDBS = 'phys03'
 config.Data.inputDBS = 'global'
 config.Data.splitting = 'EventAwareLumiBased'
-config.Data.unitsPerJob = 80000
+config.Data.unitsPerJob = 100000
 #config.Data.splitting = 'FileBased'
 #config.Data.unitsPerJob = 3
 #config.Data.totalUnits = 5
 config.JobType.maxMemoryMB = 2000  ## 2500*4
 #config.JobType.maxJobRuntimeMin = 1315  ## 21.9 hours
 config.JobType.numCores = 2
-#config.Data.splitting = 'EventAwareLumiBased'
-#config.Data.unitsPerJob = 20000
 config.Data.lumiMask = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Muon.json'
 
-#config.Data.outLFNDirBase = '/store/user/yilai/NanoPost'
+config.Data.outLFNDirBase = '/store/user/yilai/NanoPost'
 #config.Data.outLFNDirBase = '/store/group/phys_bph/gamma/ntuples/'
 config.Data.publication = False
-config.Data.outputDatasetTag = 'BDh_NanoPost_2022_Data_v1'
+config.Data.outputDatasetTag = config.General.requestName
 config.section_("Site")
 #config.Site.storageSite = "T2_CH_CERN"
 
