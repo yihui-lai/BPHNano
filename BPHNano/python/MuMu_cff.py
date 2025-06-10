@@ -7,13 +7,12 @@ MuMu = cms.EDProducer(
     'DiMuonBuilder',
     src = cms.InputTag('muonBPH', 'SelectedMuons'),
     transientTracksSrc = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
-    lep1Selection = cms.string('pt > 4.0 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
-    lep2Selection = cms.string('pt > 3.0 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
+    lep1Selection = cms.string('pt > 1.0 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
+    lep2Selection = cms.string('pt > 1.0 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
     preVtxSelection  = cms.string('abs(userCand("l1").vz - userCand("l2").vz) <= 1.'
-                                  '&& 0 < mass() && mass() < 5.0 '
-                                  '&& charge() == 0'
-                                  '&& userFloat("lep_deltaR") > 0.03'),
-    postVtxSelection = cms.string('0 < userFloat("fitted_mass") && userFloat("fitted_mass") < 5.0'
+                                  '&& 2.4 < mass() && mass() < 3.8 '
+                                  '&& charge() == 0'),
+    postVtxSelection = cms.string('2.4 < userFloat("fitted_mass") && userFloat("fitted_mass") < 3.8'
                                   '&& userFloat("sv_prob") > 0.001')
 )
 

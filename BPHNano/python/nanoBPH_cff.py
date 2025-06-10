@@ -24,6 +24,8 @@ from PhysicsTools.BPHNano.BToKstarLL_cff import *
 from PhysicsTools.BPHNano.BToKshortLL_cff import *
 #from PhysicsTools.BPHNano.BDh_cff import *
 from PhysicsTools.BPHNano.BDh_cff_v3 import *
+from PhysicsTools.BPHNano.LambdaToPPi_cff import *
+from PhysicsTools.BPHNano.LambdabToLambdaLL_cff import *
 
 vertexTable.svSrc = cms.InputTag("slimmedSecondaryVertices")
 
@@ -111,6 +113,23 @@ def nanoAOD_customizeBDh(process, isMC):
     else:
        process.nanoSequence = cms.Sequence( process.nanoSequence+ BDhSequence + BDhSequenceTable )
        return process
+
+def nanoAOD_customizeLambda_MC(process):
+    process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + LambdaPPiTables+ LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
+    return process
+
+def nanoAOD_customizeLambda_Data(process):
+    process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + CountLambdaPPi + LambdaPPiTables+ LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
+    return process
+
+def nanoAOD_customizeLambda(process, isMC):
+    if isMC:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + LambdaPPiTables + LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
+       return process
+    else:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + CountLambdaPPi + LambdaPPiTables + LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
+       return process
+
 
 def nanoAOD_customizeBToXLL(process,isMC):
     if isMC:

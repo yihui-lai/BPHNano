@@ -104,8 +104,13 @@ void DiTrackBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup con
         pat::CompositeCandidate kstar_cand;
         auto trk1_p4 = trk1_ptr->polarP4();
         auto trk2_p4 = trk2_ptr->polarP4();
-        trk1_p4.SetM(masses.first);
-        trk2_p4.SetM(masses.second);
+	if(trk1_p4.pt()>trk2_p4.pt()){
+            trk1_p4.SetM(masses.first);
+            trk2_p4.SetM(masses.second);
+	}else{
+            trk2_p4.SetM(masses.first);
+            trk1_p4.SetM(masses.second);
+	}
         //adding stuff for pre fit selection
         kstar_cand.setP4(trk1_p4 + trk2_p4);
         kstar_cand.setCharge(trk1_ptr->charge() + trk2_ptr->charge());
