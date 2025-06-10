@@ -44,6 +44,7 @@ public:
     post_vtx_selection_{cfg.getParameter<std::string>("postVtxSelection")},
     pfcands_{consumes<pat::CompositeCandidateCollection>( cfg.getParameter<edm::InputTag>("tracks") )},
     ttracks_{consumes<TransientTrackCollection>( cfg.getParameter<edm::InputTag>("transientTracks") )},
+    beamspot_{consumes<reco::BeamSpot>( cfg.getParameter<edm::InputTag>("beamSpot") )},
     trk1_mass_{ cfg.getParameter<double>("trk1Mass")},
     trk2_mass_{ cfg.getParameter<double>("trk2Mass")}
   {
@@ -66,6 +67,7 @@ private:
   const StringCutObjectSelector<pat::CompositeCandidate> post_vtx_selection_; // cut on the di-lepton after the SV fit
   const edm::EDGetTokenT<pat::CompositeCandidateCollection> pfcands_; //input PF cands this is sorted in pT in previous step
   const edm::EDGetTokenT<TransientTrackCollection> ttracks_; //input TTracks of PF cands
+  const edm::EDGetTokenT<reco::BeamSpot> beamspot_;
   double trk1_mass_;
   double trk2_mass_;
 };
@@ -78,7 +80,8 @@ void DiTrackBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup con
   evt.getByToken(pfcands_, pfcands);
   edm::Handle<TransientTrackCollection> ttracks;
   evt.getByToken(ttracks_, ttracks);
-
+  edm::Handle<reco::BeamSpot> beamspot;
+  evt.getByToken(beamspot_, beamspot);
 
   // output
   std::unique_ptr<pat::CompositeCandidateCollection> kstar_out(new pat::CompositeCandidateCollection());
@@ -159,6 +162,15 @@ void DiTrackBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup con
         kstar_cand.addUserFloat("vtx_x", kstar_cand.vx());
         kstar_cand.addUserFloat("vtx_y", kstar_cand.vy());
         kstar_cand.addUserFloat("vtx_z", kstar_cand.vz());
+	auto fit_p4 = fitter.fitted_p4();
+
+        kstar_cand.addUserFloat("cos_theta_2D",
+                          cos_theta_2D(fitter, *beamspot, kstar_cand.p4()));
+        kstar_cand.addUserFloat("fitted_cos_theta_2D",
+                          cos_theta_2D(fitter, *beamspot, fit_p4));
+        auto lxy = l_xy(fitter, *beamspot);
+        kstar_cand.addUserFloat("l_xy", lxy.value());
+        kstar_cand.addUserFloat("l_xy_unc", lxy.error());
 
         // after fit selection
         if ( !post_vtx_selection_(kstar_cand) ) continue;

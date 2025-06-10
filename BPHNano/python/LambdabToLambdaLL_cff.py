@@ -12,8 +12,8 @@ LambdabToLambdaMuMu = cms.EDProducer(
     PUtracks = cms.InputTag('tracksBPH', 'SelectedTracks'),
     beamSpot = cms.InputTag("offlineBeamSpot"),
     preVtxSelection  = cms.string('pt > 1.'
-                                  '&& 4.8696 < mass && mass < 6.3696'),
-    postVtxSelection = cms.string('5.1196 < userFloat("fitted_mass") && userFloat("fitted_mass") < 6.1196'
+                                  '&& 5.2 < mass && mass < 6.0'),
+    postVtxSelection = cms.string('5.2 < userFloat("fitted_mass") && userFloat("fitted_mass") < 6.0'
                                   '&& userFloat("sv_prob") > 0.001'
                                   '&& userFloat("fitted_cos_theta_2D") > 0.'),
     dileptonMassContraint = cms.double(-1)
