@@ -13,11 +13,26 @@ import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 fnames = ["test_data.root"]
+#fnames = [
+#        "/eos/cms///store/group/phys_b2g/sqian/VV_comb_workdir/NanoPost/ParkingDoubleMuonLowMass0/BDh_NanoPost_2022_Data_Jun4_ParkingDoubleMuonLowMass0/250611_123452/0000/test_data_651.root",
+#        "/eos/cms///store/group/phys_b2g/sqian/VV_comb_workdir/NanoPost/ParkingDoubleMuonLowMass0/BDh_NanoPost_2022_Data_Jun4_ParkingDoubleMuonLowMass0/250611_123452/0000/test_data_652.root",
+#        ]
+#
+#with open("list.txt", "r") as file:
+#    lines = file.readlines()
+#    inline = 0
+#    for line in lines:
+#        inline+=1
+#        if inline>500 and inline < 1000:
+#            fnames.append(line.replace("\n",""))
+#
+#print(fnames)
 
 p = PostProcessor(outputDir=".",
                   inputFiles=fnames,
-                  cut="B_pt>1",
-                  modules=[BdhModuleConstr()],
+                  cut="nLambdabToLambdaMuMu>=1",
+                  modules=[],
+                  #modules=[BdhModuleConstr()],
                   provenance=True,
                   maxEntries=5000000, #just read the first maxEntries events
                   )

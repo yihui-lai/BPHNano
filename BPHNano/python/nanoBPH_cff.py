@@ -42,13 +42,12 @@ def nanoAOD_customizeMC(process):
     process.nanoSequence = cms.Sequence(process.nanoSequence +particleLevelBPHSequence + genParticleBPHSequence+ genParticleBPHTables )
     return process
 
-
-
 def nanoAOD_customizeMuonBPH(process,isMC):
     if isMC:
        process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequenceMC + muonBPHTablesMC)
     else:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequence + countTrgMuons + muonBPHTables)
+       process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequence + muonBPHTables)
+       #process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequence + countTrgMuons + muonBPHTables)
     return process
 
 
@@ -57,7 +56,8 @@ def nanoAOD_customizeDiMuonBPH(process, isMC):
     if isMC:
        process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuSequence + MuMuTables )
     else:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuSequence + CountDiMuonBPH + MuMuTables)
+       process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuSequence + MuMuTables)
+       #process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuSequence + CountDiMuonBPH + MuMuTables)
     return process
 
 
@@ -127,7 +127,8 @@ def nanoAOD_customizeLambda(process, isMC):
        process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + LambdaPPiTables + LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
        return process
     else:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + CountLambdaPPi + LambdaPPiTables + LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
+       process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + LambdaPPiTables + LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
+       #process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + CountLambdaPPi + LambdaPPiTables + LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
        return process
 
 

@@ -46,6 +46,7 @@ public:
     lambda_{consumes<pat::CompositeCandidateCollection>( cfg.getParameter<edm::InputTag>("ditracks") )},
     leptons_ttracks_{consumes<TransientTrackCollection>( cfg.getParameter<edm::InputTag>("leptonTransientTracks") )},
     lambda_ttracks_{consumes<TransientTrackCollection>( cfg.getParameter<edm::InputTag>("transientTracks") )},
+    v0_ttracks_{consumes<TransientTrackCollection>( cfg.getParameter<edm::InputTag>("v0TransientTracks") )},
     pu_tracks_(consumes<pat::CompositeCandidateCollection>(cfg.getParameter<edm::InputTag>("PUtracks"))),
     beamspot_{consumes<reco::BeamSpot>( cfg.getParameter<edm::InputTag>("beamSpot") )},
     dilepton_constraint_{cfg.getParameter<double>("dileptonMassContraint")}
@@ -74,6 +75,7 @@ private:
   const edm::EDGetTokenT<pat::CompositeCandidateCollection> lambda_;
   const edm::EDGetTokenT<TransientTrackCollection> leptons_ttracks_;
   const edm::EDGetTokenT<TransientTrackCollection> lambda_ttracks_;
+  const edm::EDGetTokenT<TransientTrackCollection> v0_ttracks_;
   const edm::EDGetTokenT<pat::CompositeCandidateCollection> pu_tracks_;
   const edm::EDGetTokenT<reco::BeamSpot> beamspot_;
   const double dilepton_constraint_;
@@ -94,6 +96,8 @@ void LambdabToLambdaLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::Even
   evt.getByToken(lambda_, lambda);
   edm::Handle<TransientTrackCollection> lambda_ttracks;
   evt.getByToken(lambda_ttracks_, lambda_ttracks);
+  edm::Handle<TransientTrackCollection> v0_ttracks;
+  evt.getByToken(v0_ttracks_, v0_ttracks);
 
   edm::Handle<pat::CompositeCandidateCollection> pu_tracks;
   evt.getByToken(pu_tracks_, pu_tracks);
@@ -104,12 +108,12 @@ void LambdabToLambdaLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::Even
   edm::ESHandle<MagneticField> fieldHandle;
   const auto& bField = iSetup.getData(bFieldToken_);
   AnalyticalImpactPointExtrapolator extrapolator(&bField);
-
-
+  
   // output
   std::unique_ptr<pat::CompositeCandidateCollection> ret_val(new pat::CompositeCandidateCollection());
 
   //std::cout<<"lambda->size: "<< lambda->size()<<std::endl;
+  //std::cout<<"v0_ttracks->size: "<< v0_ttracks->size()<<std::endl;
   //std::cout<<"dileptons->size: "<< dileptons->size()<<std::endl;
   for (size_t lambda_idx = 0; lambda_idx < lambda->size(); ++lambda_idx) {
     // both k* and lep pair already passed cuts; no need for more preselection
@@ -126,7 +130,7 @@ void LambdabToLambdaLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::Even
       int l1_idx = ll_ptr->userInt("l1_idx");
       int l2_idx = ll_ptr->userInt("l2_idx");
 
-      // B0 candidate
+      // lambda_b candidate
       pat::CompositeCandidate cand;
       cand.setP4(ll_ptr->p4() + lambda_ptr->p4());
       cand.setCharge( l1_ptr->charge() + l2_ptr->charge() + trk1_ptr->charge() + trk2_ptr->charge() );
@@ -158,13 +162,9 @@ void LambdabToLambdaLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::Even
       if ( !pre_vtx_selection_(cand) ) continue;
 
       KinVtxFitter fitter(
-        { leptons_ttracks->at(l1_idx), leptons_ttracks->at(l2_idx),
-          lambda_ttracks->at(trk1_idx), lambda_ttracks->at(trk2_idx)
-        },
-        { l1_ptr->mass(), l2_ptr->mass(), lambda_ptr->userFloat("trk1_mass"),
-          lambda_ptr->userFloat("trk2_mass")
-        },
-        { LEP_SIGMA, LEP_SIGMA, K_SIGMA, K_SIGMA }
+        { leptons_ttracks->at(l1_idx), leptons_ttracks->at(l2_idx), v0_ttracks->at(lambda_idx) },
+        { l1_ptr->mass(), l2_ptr->mass(), lambda_ptr->userFloat("fitted_mass") },
+        { LEP_SIGMA, LEP_SIGMA, lambda_ptr->userFloat("fitted_massErr") }
         );
 
       if (!fitter.success()) continue;
@@ -184,8 +184,7 @@ void LambdabToLambdaLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::Even
       cand.addUserFloat("sv_prob", fitter.prob());
 
       // refitted kinematic vars
-      cand.addUserFloat("fitted_ditrack_mass",
-                        (fitter.daughter_p4(2) + fitter.daughter_p4(3)).mass() );
+      cand.addUserFloat("fitted_ditrack_mass", fitter.daughter_p4(2).mass());
       cand.addUserFloat("fitted_mll",
                         (fitter.daughter_p4(0) + fitter.daughter_p4(1)).mass());
 
@@ -225,7 +224,7 @@ void LambdabToLambdaLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::Even
       cand.addUserFloat("vtx_czy", covMatrix.czy());
 
       // refitted daughters (leptons/tracks)
-      std::vector<std::string> dnames{ "l1", "l2", "trk1", "trk2" };
+      std::vector<std::string> dnames{ "l1", "l2", "lambda" };
 
       for (size_t idaughter = 0; idaughter < dnames.size(); idaughter++) {
         cand.addUserFloat("fitted_" + dnames[idaughter] + "_pt" , fitter.daughter_p4(idaughter).pt() );
@@ -254,14 +253,11 @@ void LambdabToLambdaLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::Even
         ParticleMass dilep_mass = dilepton_constraint_;
         // Mass constraint is applied to the first two particles in the "particles" vector
         // Make sure that the first two particles are the ones you want to constrain
-        KinVtxFitter constraint_fitter(
-            { leptons_ttracks->at(l1_idx), leptons_ttracks->at(l2_idx),
-              lambda_ttracks->at(trk1_idx), lambda_ttracks->at(trk2_idx)
-            },
-            { l1_ptr->mass(), l2_ptr->mass(),
-              lambda_ptr->userFloat("trk1_mass"), lambda_ptr->userFloat("trk2_mass")
-            },
-            { LEP_SIGMA, LEP_SIGMA, K_SIGMA, K_SIGMA },
+
+	KinVtxFitter constraint_fitter(
+            { leptons_ttracks->at(l1_idx), leptons_ttracks->at(l2_idx), v0_ttracks->at(lambda_idx) },
+            { l1_ptr->mass(), l2_ptr->mass(), lambda_ptr->userFloat("fitted_mass") },
+            { LEP_SIGMA, LEP_SIGMA, lambda_ptr->userFloat("fitted_massErr") },
             dilep_mass);
 
         if (constraint_fitter.success()) {

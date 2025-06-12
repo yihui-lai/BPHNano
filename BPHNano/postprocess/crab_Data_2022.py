@@ -7,8 +7,8 @@ config = Configuration()
 #config = config()
 
 config.section_("General")
-config.General.requestName = 'BDh_NanoPost_2022_Data_may14_1'
-config.General.workArea = '/afs/cern.ch/work/y/yilai/gamma/crab_projects_data_may14'
+config.General.requestName = 'BDh_NanoPost_2022_Data_Jun12_ParkingDoubleMuonLowMass0'
+config.General.workArea = '/afs/cern.ch/work/y/yilai/gamma/crab_projects_data_Jun12'
 config.General.transferLogs = True
 
 config.section_("JobType")
@@ -21,12 +21,13 @@ config.JobType.inputFiles = ['BDh_postproc.py', 'BDh_postproc_data.py', 'BDh_Pro
 config.JobType.outputFiles = ['test_data_Skim.root']
 #config.JobType.sendPythonFolder = True
 config.section_("Data")
-#config.Data.inputDataset = '/ParkingDoubleMuonLowMass1/Run2022F-22Sep2023-v1/MINIAOD'
-config.Data.inputDataset = '/ParkingDoubleMuonLowMass1/Run2022G-22Sep2023-v1/MINIAOD'
+#config.Data.inputDataset = '/ParkingSingleMuon0/Run2022F-22Sep2023-v1/MINIAOD'
+config.Data.inputDataset = '/ParkingDoubleMuonLowMass0/Run2022F-22Sep2023-v1/MINIAOD'
+#config.Data.inputDataset = '/ParkingDoubleMuonLowMass7/Run2022G-22Sep2023-v1/MINIAOD'
 #config.Data.inputDBS = 'phys03'
 config.Data.inputDBS = 'global'
 config.Data.splitting = 'EventAwareLumiBased'
-config.Data.unitsPerJob = 100000
+config.Data.unitsPerJob = 200000
 #config.Data.splitting = 'FileBased'
 #config.Data.unitsPerJob = 3
 #config.Data.totalUnits = 5
@@ -35,14 +36,14 @@ config.JobType.maxMemoryMB = 2000  ## 2500*4
 config.JobType.numCores = 2
 config.Data.lumiMask = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Muon.json'
 
-config.Data.outLFNDirBase = '/store/user/yilai/NanoPost'
-#config.Data.outLFNDirBase = '/store/group/phys_bph/gamma/ntuples/'
+#config.Data.outLFNDirBase = '/store/user/yilai/NanoPost_NosaveTrk'
+config.Data.outLFNDirBase = '/store/group/phys_b2g/sqian/VV_comb_workdir/NanoPost/'
 config.Data.publication = False
 config.Data.outputDatasetTag = config.General.requestName
 config.section_("Site")
-#config.Site.storageSite = "T2_CH_CERN"
+config.Site.storageSite = "T2_CH_CERN"
 
-config.Site.storageSite = "T3_US_FNALLPC"
+#config.Site.storageSite = "T3_US_FNALLPC"
 
 # config.section_("User")
 #config.User.voGroup = 'dcms'

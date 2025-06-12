@@ -13,7 +13,7 @@ LambdaToPPi = cms.EDProducer(
     preVtxSelection = cms.string('abs(userCand("l1").vz - userCand("l2").vz) <= 0.5 '
                                  '&& mass() > 1.025 && mass() < 1.205'
                                  '&& charge() == 0'),
-    postVtxSelection =  cms.string('userFloat("fitted_mass") > 1.025 && userFloat("fitted_mass") < 1.205'
+    postVtxSelection =  cms.string('userFloat("fitted_mass") > 1.10 && userFloat("fitted_mass") < 1.13'
                                    '&& userFloat("sv_prob") > 0.01')
 )
 
@@ -24,7 +24,7 @@ CountLambdaPPi = cms.EDFilter("PATCandViewCountFilter",
 )  
 
 LambdaToPPiTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
-    src  = cms.InputTag("LambdaToPPi"),
+    src  = cms.InputTag("LambdaToPPi",'SelectedLambdaCollection'),
     cut  = cms.string(""), #we should not filter on cross linked collections
     name = cms.string("LambdaToPPi"),
     doc  = cms.string("slimmedMuons for BPark after basic selection"),

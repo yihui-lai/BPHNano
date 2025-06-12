@@ -7,8 +7,9 @@ LambdabToLambdaMuMu = cms.EDProducer(
     'LambdabToLambdaLLBuilder',
     dileptons = cms.InputTag("MuMu:SelectedDiLeptons"),
     leptonTransientTracks = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
-    ditracks = cms.InputTag('LambdaToPPi'),
+    ditracks = cms.InputTag('LambdaToPPi', 'SelectedLambdaCollection'),
     transientTracks = cms.InputTag('tracksBPH', 'SelectedTransientTracks'),
+    v0TransientTracks = cms.InputTag('LambdaToPPi', 'SelectedLambda'),
     PUtracks = cms.InputTag('tracksBPH', 'SelectedTracks'),
     beamSpot = cms.InputTag("offlineBeamSpot"),
     preVtxSelection  = cms.string('pt > 1.'
@@ -16,7 +17,7 @@ LambdabToLambdaMuMu = cms.EDProducer(
     postVtxSelection = cms.string('5.2 < userFloat("fitted_mass") && userFloat("fitted_mass") < 6.0'
                                   '&& userFloat("sv_prob") > 0.001'
                                   '&& userFloat("fitted_cos_theta_2D") > 0.'),
-    dileptonMassContraint = cms.double(-1)
+    dileptonMassContraint = cms.double(3.0969)
 )
 
 ########################### Tables ###########################
@@ -75,19 +76,14 @@ LambdabToLambdaMuMuTable = cms.EDProducer(
         fit_l2_pt  = ufloat('fitted_l2_pt'),
         fit_l2_eta = ufloat('fitted_l2_eta'),
         fit_l2_phi = ufloat('fitted_l2_phi'),
-        #trk1
-        fit_trk1_pt  = ufloat('fitted_trk1_pt'),
-        fit_trk1_eta = ufloat('fitted_trk1_eta'),
-        fit_trk1_phi = ufloat('fitted_trk1_phi'),
-        #trk2
-        fit_trk2_pt  = ufloat('fitted_trk2_pt'),
-        fit_trk2_eta = ufloat('fitted_trk2_eta'),
-        fit_trk2_phi = ufloat('fitted_trk2_phi'),
+        #lambda
+        fit_lambda_pt  = ufloat('fitted_lambda_pt'),
+        fit_lambda_eta = ufloat('fitted_lambda_eta'),
+        fit_lambda_phi = ufloat('fitted_lambda_phi'),
         # isolation 
         l1_iso04   = ufloat('l1_iso04'),
         l2_iso04   = ufloat('l2_iso04'),
-        trk1_iso04 = ufloat('trk1_iso04'),
-        trk2_iso04 = ufloat('trk2_iso04'),
+        lambda_iso04 = ufloat('lambda_iso04'),
 
         trk1_svip2d     = ufloat('trk1_svip2d'),
         trk1_svip2d_err = ufloat('trk1_svip2d_err'),

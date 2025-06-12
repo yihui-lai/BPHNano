@@ -50,8 +50,8 @@ public:
   {
 
     //output
-    produces<pat::CompositeCandidateCollection>();
-
+    produces<pat::CompositeCandidateCollection>("SelectedLambdaCollection");
+    produces<TransientTrackCollection>("SelectedLambda");
   }
 
   ~DiTrackBuilder() override {}
@@ -85,7 +85,7 @@ void DiTrackBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup con
 
   // output
   std::unique_ptr<pat::CompositeCandidateCollection> kstar_out(new pat::CompositeCandidateCollection());
-
+  std::unique_ptr<TransientTrackCollection> trans_out( new TransientTrackCollection );
 
 
   // main loop
@@ -107,13 +107,8 @@ void DiTrackBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup con
         pat::CompositeCandidate kstar_cand;
         auto trk1_p4 = trk1_ptr->polarP4();
         auto trk2_p4 = trk2_ptr->polarP4();
-	if(trk1_p4.pt()>trk2_p4.pt()){
-            trk1_p4.SetM(masses.first);
-            trk2_p4.SetM(masses.second);
-	}else{
-            trk2_p4.SetM(masses.first);
-            trk1_p4.SetM(masses.second);
-	}
+        trk1_p4.SetM(masses.first);
+        trk2_p4.SetM(masses.second);
         //adding stuff for pre fit selection
         kstar_cand.setP4(trk1_p4 + trk2_p4);
         kstar_cand.setCharge(trk1_ptr->charge() + trk2_ptr->charge());
@@ -130,7 +125,7 @@ void DiTrackBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup con
         if ( !pre_vtx_selection_(kstar_cand) ) continue;
         //std::cout<<"trk1 "<<trk1_idx<<" trk2 "<<trk2_idx<<" dr "<< reco::deltaR(*trk1_ptr, *trk2_ptr)<<" pt1 "<<trk1_p4.pt()<<" pt2 "<<trk2_p4.pt()<<" mass "<<(trk1_p4+trk2_p4).mass()<<std::endl;
         KinVtxFitter fitter(
-              {ttracks->at(trk1_idx), ttracks->at(trk2_idx)},
+            {ttracks->at(trk1_idx), ttracks->at(trk2_idx)},
             { masses.first, masses.second },
             {K_SIGMA, K_SIGMA} //K and PI sigma equal...
                            );
@@ -149,6 +144,7 @@ void DiTrackBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup con
         kstar_cand.addUserFloat("sv_ndof", fitter.dof());
         kstar_cand.addUserFloat("sv_prob", fitter.prob());
         kstar_cand.addUserFloat("fitted_mass", fitter.fitted_candidate().mass() );
+        kstar_cand.addUserFloat("fitted_massErr", sqrt(fitter.fitted_candidate().kinematicParametersError().matrix()(6, 6)) );
         kstar_cand.addUserFloat("fitted_pt",
                                 fitter.fitted_candidate().globalMomentum().perp() );
 
@@ -175,6 +171,8 @@ void DiTrackBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup con
         // after fit selection
         if ( !post_vtx_selection_(kstar_cand) ) continue;
         kstar_out->emplace_back(kstar_cand);
+        auto V0TT = fitter.fitted_candidate_ttrk();
+        trans_out->emplace_back(V0TT);
         UsedAgain = true;
         if (masses.first == masses.second) break;
 
@@ -182,7 +180,8 @@ void DiTrackBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup con
     } // end for(size_t trk2_idx = trk1_idx + 1
   } //for(size_t trk1_idx = 0
 
-  evt.put(std::move(kstar_out));
+  evt.put(std::move(kstar_out), "SelectedLambdaCollection");
+  evt.put(std::move(trans_out), "SelectedLambda");
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"

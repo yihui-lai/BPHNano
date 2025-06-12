@@ -8,8 +8,8 @@ import FWCore.ParameterSet.Config as cms
 from Configuration.Eras.Era_Run3_cff import Run3
 
 
-#from FWCore.ParameterSet.VarParsing import VarParsing
-#options = VarParsing('python')
+from FWCore.ParameterSet.VarParsing import VarParsing
+options = VarParsing('python')
 #options.register('globalTag', '130X_mcRun3_2022_realistic_v5',
 #    #'130X_dataRun3_Prompt_v3',
 #    VarParsing.multiplicity.singleton,
@@ -22,11 +22,11 @@ from Configuration.Eras.Era_Run3_cff import Run3
 #    VarParsing.varType.string,
 #    "outputFiles"
 #)
-#options.register('isMC', True,
-#    VarParsing.multiplicity.singleton,
-#    VarParsing.varType.bool,
-#    "Adds gen info/matching"
-#)
+options.register('isMC', True,
+    VarParsing.multiplicity.singleton,
+    VarParsing.varType.bool,
+    "Adds gen info/matching"
+)
 #options.register('skip', 0,
 #    VarParsing.multiplicity.singleton,
 #    VarParsing.varType.int,
@@ -34,12 +34,13 @@ from Configuration.Eras.Era_Run3_cff import Run3
 #)
 #options.setDefault('maxEvents', 10)
 #options.setDefault('tag', 'test')
-#options.parseArguments()
-
+options.parseArguments()
+#
 #print("options.inputFiles = ", options.inputFiles)
 #print("options.outputFiles = ", options.outputFiles)
 #print("options.maxEvents = ", options.maxEvents)
 #print("options.skip = ", options.skip)
+print("options.isMC = ", options.isMC)
 
 process = cms.Process('NANO',Run3)
 
@@ -63,7 +64,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-        fileNames = cms.untracked.vstring('file:condor/MiniAODv4_237.root'),
+        fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/y/yilai/gamma/LambdaBToJpsiLambda_JpsiFilter_MuFilter_LambdaFilter.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -129,12 +130,23 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2022_realistic', '')
 
 # BPH 
+
 from PhysicsTools.NanoAOD.nano_cff import *
 from PhysicsTools.BPHNano.nanoBPH_cff import *
 process = nanoAOD_customizeMC(process)
-process = nanoAOD_customizeBDh_MC(process)
-#process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(cms.Task(lhcInfoTable)) + cms.Sequence(genWeightsTableTask))
+
+#BDK
+#process = nanoAOD_customizeBDh_MC(process)
+##process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(cms.Task(lhcInfoTable)) + cms.Sequence(genWeightsTableTask))
+
+# lambda
+process = nanoAOD_customizeMuonBPH(process,options.isMC)
+process = nanoAOD_customizeDiMuonBPH(process,options.isMC)
+process = nanoAOD_customizeTrackBPH(process,options.isMC)
+process = nanoAOD_customizeLambda(process, options.isMC)
+
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(genWeightsTableTask))
+process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
 
 # No filter at this point, move to postprocess
 #process.BDhFilter = cms.EDFilter("BDhFilter",

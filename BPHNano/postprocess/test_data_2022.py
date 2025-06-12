@@ -5,6 +5,14 @@
 # with command line options: RECO --conditions 140X_dataRun3_Prompt_v4 --datatier NANOAOD --era Run3,run3_nanoAOD_124 --eventcontent NANOAOD --filein file:/eos/cms/store/user/dmytro/tmp/store+data+Run2022C+ParkingDoubleMuonLowMass0+MINIAOD+PromptReco-v1+000+357+271+00000+ea64a9c2-6b1f-4744-b4ea-41aa0e3c3e1b.root --fileout file:test_data.root --nThreads 4 -n 10000 --no_exec --python_filename test_data.py --scenario pp --step NANO --customise_commands=process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)))
 import FWCore.ParameterSet.Config as cms
 
+
+from FWCore.ParameterSet.VarParsing import VarParsing
+options = VarParsing('python')
+
+options.parseArguments()
+#
+
+
 from Configuration.Eras.Era_Run3_cff import Run3
 from Configuration.Eras.Modifier_run3_nanoAOD_124_cff import run3_nanoAOD_124
 
@@ -29,7 +37,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:condor/3d1335a2-5a61-46ec-919f-ea4c8bb01898.root'),
+    fileNames = cms.untracked.vstring('file:data.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -87,9 +95,18 @@ process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
 
 # Additional output definition
 # BPH
+#from PhysicsTools.NanoAOD.nano_cff import *
 from PhysicsTools.BPHNano.nanoBPH_cff import *
-process = nanoAOD_customizeBDh_Data(process)
+#process = nanoAOD_customizeBDh_Data(process)
+
+process = nanoAOD_customizeMuonBPH(process,False)
+process = nanoAOD_customizeDiMuonBPH(process,False)
+process = nanoAOD_customizeTrackBPH(process,False)
+process = nanoAOD_customizeLambda(process, False)
+
+
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
+
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag

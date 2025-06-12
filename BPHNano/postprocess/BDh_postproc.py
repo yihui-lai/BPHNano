@@ -16,8 +16,8 @@ fnames = ["test_mc.root"]
 
 p = PostProcessor(outputDir=".",
                   inputFiles=fnames,
-                  cut="",
-                  modules=[BdhModuleConstr()],
+                  cut="nLambdabToLambdaMuMu>=1",
+                  #modules=[BdhModuleConstr()],
                   provenance=True,
                   maxEntries=50000000, #just read the first maxEntries events
                   )
