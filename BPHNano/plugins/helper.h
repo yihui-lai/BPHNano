@@ -35,6 +35,8 @@ constexpr float K_SIGMA = 0.000016;
 constexpr float PI_SIGMA = 0.000016;
 constexpr float MUON_MASS = 0.10565837;
 constexpr float ELECTRON_MASS = 0.000511;
+constexpr float LAMBDA_MASS = 1.115683;
+constexpr float LAMBDA_SIGMA = 0.000006;
 
 inline std::pair<float, float> min_max_dr(const std::vector< edm::Ptr<reco::Candidate> > & cands) {
   float min_dr = std::numeric_limits<float>::max();
@@ -267,5 +269,19 @@ TrackerIsolation(edm::Handle<pat::CompositeCandidateCollection> & tracks, pat::C
   return iso;
 }
 
+inline std::pair<float, int> TrackerIsolation_self(edm::Handle<pat::CompositeCandidateCollection> & tracks, pat::CompositeCandidate &B) {
+  float iso_v = 0;
+  int iso_n = 0;
+  for (size_t k_idx = 0; k_idx < tracks->size(); ++k_idx) {
+    if(int(k_idx)==B.userInt("trk1_idx") || int(k_idx)==B.userInt("trk2_idx") || int(k_idx)==B.userInt("trk3_idx") || int(k_idx)==B.userInt("trk4_idx")) continue;
+    edm::Ptr<pat::CompositeCandidate> trk_ptr(tracks, k_idx);
+    float dr = deltaR(B.userFloat("fitted_eta"), B.userFloat("fitted_phi"), trk_ptr->eta(), trk_ptr->phi());
+    if (dr < 0.4){
+	    iso_v += trk_ptr->pt();
+	    iso_n+=1;
+    }
+  }
+  return std::pair<float, int>(iso_v, iso_n);
+}
 
 #endif

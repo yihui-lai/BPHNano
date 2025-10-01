@@ -182,12 +182,9 @@ if options.isMC:
 
 
 # BPH nano
-#process = nanoAOD_customizeMuonBPH(process,options.isMC)
-#process = nanoAOD_customizeDiMuonBPH(process,options.isMC)
-process = nanoAOD_customizeTrackBPH(process,options.isMC)
-#process = nanoAOD_customizeLambda(process, options.isMC)   # J/psi + lambda 
-process = nanoAOD_customizeLambdahh(process, options.isMC)  # lambda + hh
-
+process = nanoAOD_customizeMuonBPH(process, options.isMC)
+process = nanoAOD_customizeTrackBPH(process, options.isMC)
+process = nanoAOD_customizeEta2Mu2PiBPH(process,options.isMC)
 
 
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)

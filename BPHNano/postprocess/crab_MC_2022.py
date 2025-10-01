@@ -1,14 +1,19 @@
 import sys
-#from WMCore.Configuration import Configuration
-from CRABClient.UserUtilities import config
-# source /cvmfs/cms.cern.ch/common/crab-setup.sh
 
-#config = Configuration()
+
+# if using a list
+# source /cvmfs/cms.cern.ch/common/crab-setup.sh
+# python3  xx.py xx.txt
+#from CRABClient.UserUtilities import config
+#config = config()
+
+# if using this file directly
+from CRABClient.UserUtilities import config
 config = config()
 
 config.section_("General")
-config.General.requestName = 'BDh_NanoPost_2022_MC_lambda_Jun12'
-config.General.workArea = '/afs/cern.ch/work/y/yilai/gamma/crab_projects_MC_Jun12'
+config.General.requestName = 'NanoPost_2022_MC_Sep12_lambdabtolambda2K'
+config.General.workArea = '/afs/cern.ch/work/y/yilai/gamma/crab_projects_MC_Sep12'
 config.General.transferLogs = True
 
 config.section_("JobType")
@@ -21,12 +26,17 @@ config.JobType.inputFiles = ['BDh_postproc.py', 'BDh_Producer.py', 'test_mc_2022
 config.JobType.outputFiles = ['test_mc_Skim.root']
 #config.JobType.sendPythonFolder = True
 config.section_("Data")
-config.Data.inputDataset = '/BuToD0K_D0ToKs2Pi_Run3/yilai-Run3Summer22_MiniAODv4-5443ed9e0a49f9c5d5f0b2fff4804347/USER'
-config.Data.inputDataset = '/LambdaBToJpsiLambda_JpsiFilter_MuFilter_LambdaFilter_TuneCP5_13p6TeV_pythia8-evtgen/Run3Summer22MiniAODv4-130X_mcRun3_2022_realistic_v5-v2/MINIAODSIM'
-#config.Data.inputDBS = 'phys03'
-config.Data.inputDBS = 'global'
-config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 2
+#config.Data.inputDataset = '/BuToD0K_D0ToKs2Pi_Run3/yilai-Run3Summer22_MiniAODv4-5443ed9e0a49f9c5d5f0b2fff4804347/USER'
+#config.Data.inputDataset = '/LambdaBToJpsiLambda_JpsiFilter_MuFilter_LambdaFilter_TuneCP5_13p6TeV_pythia8-evtgen/Run3Summer22MiniAODv4-130X_mcRun3_2022_realistic_v5-v2/MINIAODSIM'
+#config.Data.inputDataset = '/LambdaBToJpsiLambda_Unbiased_TuneCP5_13p6TeV_pythia8-evtgen/Run3Summer22EEMiniAODv4-130X_mcRun3_2022_realistic_postEE_v6-v2/MINIAODSIM'
+config.Data.inputDataset = '/lambdab_lambda2K_2/yilai-Run3Summer22_MiniAODv4-9542347e91aacc6744c44ee907c98ff2/USER'
+#config.Data.inputDataset = '/lambdab_lambda2Pi/yilai-Run3Summer22_MiniAODv4-9542347e91aacc6744c44ee907c98ff2/USER'
+config.Data.inputDBS = 'phys03'
+#config.Data.inputDBS = 'global'
+#config.Data.splitting = 'FileBased'
+#config.Data.unitsPerJob = 2
+config.Data.splitting = 'EventAwareLumiBased'
+config.Data.unitsPerJob = 100000
 #config.Data.totalUnits = 5
 config.JobType.maxMemoryMB = 2000  ## 2500*4
 #config.JobType.maxJobRuntimeMin = 1315  ## 21.9 hours

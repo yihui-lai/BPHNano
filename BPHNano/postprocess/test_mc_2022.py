@@ -120,7 +120,13 @@ process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
         filterName = cms.untracked.string('')
     ),
     fileName = cms.untracked.string('file:test_mc.root'),
-    outputCommands = process.NANOAODSIMEventContent.outputCommands
+    #outputCommands = process.NANOAODSIMEventContent.outputCommands
+    outputCommands = cms.untracked.vstring(
+      'drop *',
+      "keep nanoaodFlatTable_*Table_*_*",     # event data
+      "keep nanoaodUniqueString_nanoMetadata_*_*",   # basic metadata
+      "keep edmTriggerResults_*_*_*",
+    )
 )
 
 # Additional output definition
@@ -130,7 +136,6 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2022_realistic', '')
 
 # BPH 
-
 from PhysicsTools.NanoAOD.nano_cff import *
 from PhysicsTools.BPHNano.nanoBPH_cff import *
 process = nanoAOD_customizeMC(process)
@@ -139,14 +144,17 @@ process = nanoAOD_customizeMC(process)
 #process = nanoAOD_customizeBDh_MC(process)
 ##process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(cms.Task(lhcInfoTable)) + cms.Sequence(genWeightsTableTask))
 
-# lambda
-process = nanoAOD_customizeMuonBPH(process,options.isMC)
-process = nanoAOD_customizeDiMuonBPH(process,options.isMC)
-process = nanoAOD_customizeTrackBPH(process,options.isMC)
-process = nanoAOD_customizeLambda(process, options.isMC)
+
+# Lambdab0 -> lambda0 + J/psi
+#process = nanoAOD_customizeMuonBPH(process,  True)
+#process = nanoAOD_customizeDiMuonBPH(process,True)
+process = nanoAOD_customizeTrackBPH(process, True)
+#process = nanoAOD_customizeLambda(process,   True)
+
+# Lambdab0 -> lambda0 + hh
+process = nanoAOD_customizeLambdahh(process, True)
 
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(genWeightsTableTask))
-process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
 
 # No filter at this point, move to postprocess
 #process.BDhFilter = cms.EDFilter("BDhFilter",
@@ -155,7 +163,6 @@ process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
 #)
 #process.BDhFilterSequence = cms.Sequence(process.BDhFilter)
 #process.filtering_step = cms.Path(process.BDhFilterSequence)
-
 
 
 # Path and EndPath definitions

@@ -3,33 +3,29 @@ from PhysicsTools.NanoAOD.common_cff import *
 
 ########################### Selections ###########################
 
-MuMu = cms.EDProducer(
+EtaMuMu = cms.EDProducer(
     'DiMuonBuilder',
     src = cms.InputTag('muonBPH', 'SelectedMuons'),
     transientTracksSrc = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
-    #src = cms.InputTag('muonBPH', 'AllMuons'),
-    #transientTracksSrc = cms.InputTag('muonBPH', 'AllTransientMuons'),
-    lep1Selection = cms.string('pt > 0.3 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
-    lep2Selection = cms.string('pt > 0.3 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
+    lep1Selection = cms.string('pt > 4 && abs(eta) < 2.4 && isMediumMuon && isGlobalMuon'),
+    lep2Selection = cms.string('pt > 3 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
     preVtxSelection  = cms.string('abs(userCand("l1").vz - userCand("l2").vz) <= 1.'
-                                  '&& 2.9 < mass() && mass() < 3.3 '
                                   '&& charge() == 0'),
-    postVtxSelection = cms.string('2.9 < userFloat("fitted_mass") && userFloat("fitted_mass") < 3.3'
-                                  '&& userFloat("sv_prob") > 0.001')
+    postVtxSelection = cms.string('')
 )
 
-CountDiMuonBPH = cms.EDFilter("PATCandViewCountFilter",
+CountEtaDiMuonBPH = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(0),
     maxNumber = cms.uint32(999999),
-    src = cms.InputTag("MuMu:SelectedDiLeptons")
+    src = cms.InputTag("EtaMuMu:SelectedDiLeptons")
 )  
 
 ########################### Tables ###########################
 
-MuMuTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
-    src = cms.InputTag("MuMu:SelectedDiLeptons"),
+EtaMuMuTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
+    src = cms.InputTag("EtaMuMu:SelectedDiLeptons"),
     cut = cms.string(""), #we should not filter on cross linked collections
-    name = cms.string("MuMu"),
+    name = cms.string("EtaMuMu"),
     doc  = cms.string("Dilepton collections"),
     singleton = cms.bool(False), # the number of entries is variable
     extension = cms.bool(False), # this is the main table for the muons
@@ -48,8 +44,8 @@ MuMuTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
 )
 
 
-MuMuBPHMCMatch = cms.EDProducer("MCMatcher",                  # cut on deltaR, deltaPt/Pt; pick best by deltaR
-    src         = MuMuTable.src,                           # final reco collection
+EtaMuMuBPHMCMatch = cms.EDProducer("MCMatcher",                  # cut on deltaR, deltaPt/Pt; pick best by deltaR
+    src         = EtaMuMuTable.src,                           # final reco collection
     matched     = cms.InputTag("finalGenParticlesBPH"),       # final mc-truth particle collection
     mcPdgId     = cms.vint32(443),                             # one or more PDG ID (443 = J/psi); absolute values (see below)
     checkCharge = cms.bool(False),                            # True = require RECO and MC objects to have the same charge
@@ -60,18 +56,18 @@ MuMuBPHMCMatch = cms.EDProducer("MCMatcher",                  # cut on deltaR, d
     resolveByMatchQuality = cms.bool(True),                   # False = just match input in order; True = pick lowest deltaR pair first
 )
 
-MuMuBPHMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
-    recoObjects = MuMuTable.src,
+EtaMuMuBPHMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
+    recoObjects = EtaMuMuTable.src,
     genParts    = cms.InputTag("finalGenParticlesBPH"),
-    mcMap       = cms.InputTag("MuMuBPHMCMatch"),
-    objName     = MuMuTable.name,
+    mcMap       = cms.InputTag("EtaMuMuBPHMCMatch"),
+    objName     = EtaMuMuTable.name,
     objType     = cms.string("Other"),
     objBranchName = cms.string("genPart"),
-    genBranchName = cms.string("MuMu"),
+    genBranchName = cms.string("EtaMuMu"),
     docString   = cms.string("MC matching to status==2 J/psi"),
 )
 
-MuMuSequence = cms.Sequence(MuMu)
-MuMuTables = cms.Sequence(MuMuTable)
-MuMuMCSequence = cms.Sequence(MuMu+MuMuBPHMCMatch)
-MuMuMCTables = cms.Sequence(MuMuTable+MuMuBPHMCTable)
+EtaMuMuSequence = cms.Sequence(EtaMuMu)
+EtaMuMuTables = cms.Sequence(EtaMuMuTable)
+EtaMuMuMCSequence = cms.Sequence(EtaMuMu+EtaMuMuBPHMCMatch)
+EtaMuMuMCTables = cms.Sequence(EtaMuMuTable+EtaMuMuBPHMCTable)

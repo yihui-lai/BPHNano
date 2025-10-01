@@ -5,6 +5,7 @@
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/Utilities/interface/InputTag.h"
+#include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
 
 #include <vector>
 #include <memory>
@@ -67,6 +68,8 @@ void DiLeptonBuilder<Lepton>::produce(edm::StreamID, edm::Event &evt, edm::Event
   std::unique_ptr<pat::CompositeCandidateCollection> ret_value(new pat::CompositeCandidateCollection());
   std::unique_ptr<std::vector<KinVtxFitter> > kinVtx_out( new std::vector<KinVtxFitter> );
 
+  // std::cout<<"leptons->size: "<< leptons->size()<<std::endl;
+
   for (size_t l1_idx = 0; l1_idx < leptons->size(); ++l1_idx) {
     edm::Ptr<Lepton> l1_ptr(leptons, l1_idx);
     if (!l1_selection_(*l1_ptr)) continue;
@@ -111,11 +114,23 @@ void DiLeptonBuilder<Lepton>::produce(edm::StreamID, edm::Event &evt, edm::Event
       lepton_pair.addUserFloat("vtx_x", lepton_pair.vx());
       lepton_pair.addUserFloat("vtx_y", lepton_pair.vy());
       lepton_pair.addUserFloat("vtx_z", lepton_pair.vz());
-
       // if needed, add here more stuff
 
       // cut on the SV info
       if ( !post_vtx_selection_(lepton_pair) ) continue;
+      
+      const auto& posImpact = ttracks->at(l1_idx).impactPointTSCP();
+      const auto& negImpact = ttracks->at(l2_idx).impactPointTSCP();
+      if (!posImpact.isValid() || !negImpact.isValid()) continue;
+      FreeTrajectoryState const& posState = posImpact.theState();
+      FreeTrajectoryState const& negState = negImpact.theState();
+      ClosestApproachInRPhi cApp;
+      cApp.calculate(posState, negState);
+      if (!cApp.status()) continue;
+      //  the distance between the two trajectories at their closest approach in R-phi
+      float dca = std::abs(cApp.distance());
+      lepton_pair.addUserFloat("dca", dca);
+
       ret_value->push_back(lepton_pair);
     }
   }

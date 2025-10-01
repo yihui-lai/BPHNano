@@ -1,34 +1,29 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.BPHNano.common_cff import *
 
-########################### LambdaB0 -> Lambda0 J/psi ###########################
+########################### Eta -> 2mu 2pion ###########################
 
-LambdabToLambdaMuMu = cms.EDProducer(
-    'LambdabToLambdaLLBuilder',
-    dileptons = cms.InputTag("MuMu:SelectedDiLeptons"),
-    #leptonTransientTracks = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
-    leptonTransientTracks = cms.InputTag('muonBPH', 'AllTransientMuons'),
-    ditracks = cms.InputTag('LambdaToPPi', 'SelectedLambdaCollection'),
+EtaTo2L2Pi = cms.EDProducer(
+    'EtaTo2L2PiBuilder',
+    dileptons = cms.InputTag("EtaMuMu:SelectedDiLeptons"),
+    leptonTransientTracks = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
+    tracks = cms.InputTag('tracksBPH', 'SelectedTracks'),
     transientTracks = cms.InputTag('tracksBPH', 'SelectedTransientTracks'),
-    v0TransientTracks = cms.InputTag('LambdaToPPi', 'SelectedLambda'),
-    PUtracks = cms.InputTag('tracksBPH', 'SelectedTracks'),
     beamSpot = cms.InputTag("offlineBeamSpot"),
-    preVtxSelection  = cms.string('pt > 1.'
-                                  '&& 5.2 < mass && mass < 6.0'),
-    postVtxSelection = cms.string('5.2 < userFloat("fitted_mass") && userFloat("fitted_mass") < 6.0'
-                                  '&& userFloat("sv_prob") > 0.001'
-                                  '&& userFloat("fitted_cos_theta_2D") > 0.'),
-    dileptonMassContraint = cms.double(3.0969)
+    trk1Selection   = cms.string('pt > 2 && abs(eta) < 2.4 '),
+    trk2Selection   = cms.string('pt > 2 && abs(eta) < 2.4 '),
+    preVtxSelection  = cms.string('pt > 1. && ((mass > 0.45 && mass < 0.6)||(mass > 0.9 && mass < 1.0)) '),
+    postVtxSelection = cms.string('userFloat("sv_prob") > 0.0 && userFloat("fitted_mass") > 0.45 && userFloat("fitted_mass") < 1.2'),
 )
 
 ########################### Tables ###########################
 
-LambdabToLambdaMuMuTable = cms.EDProducer(
+EtaTo2L2PiTable = cms.EDProducer(
     'SimpleCompositeCandidateFlatTableProducer',
-    src       = cms.InputTag("LambdabToLambdaMuMu"),
+    src       = cms.InputTag("EtaTo2L2Pi"),
     cut       = cms.string(""),
-    name      = cms.string("LambdabToLambdaMuMu"),
-    doc       = cms.string("LambdabToLambdaMuMu Variables"),
+    name      = cms.string("EtaTo2L2Pi"),
+    doc       = cms.string("EtaTo2L2Pi Variables"),
     singleton = cms.bool(False),
     extension = cms.bool(False),
     variables = cms.PSet(
@@ -36,10 +31,9 @@ LambdabToLambdaMuMuTable = cms.EDProducer(
         CandVars,
         l1_idx      = uint('l1_idx'),
         l2_idx      = uint('l2_idx'),
+        ll_idx   = uint('ll_idx'),
         trk1_idx    = uint('trk1_idx'),
         trk2_idx    = uint('trk2_idx'),
-        lambda_idx   = uint('lambda_idx'),
-        ll_idx   = uint('ll_idx'),
         trk1_mass   = ufloat('trk1_mass'),
         trk2_mass   = ufloat('trk2_mass'),
         min_dr      = ufloat('min_dr'),
@@ -79,14 +73,17 @@ LambdabToLambdaMuMuTable = cms.EDProducer(
         fit_l2_eta = ufloat('fitted_l2_eta'),
         fit_l2_phi = ufloat('fitted_l2_phi'),
         #lambda
-        fit_lambda_pt  = ufloat('fitted_lambda_pt'),
-        fit_lambda_eta = ufloat('fitted_lambda_eta'),
-        fit_lambda_phi = ufloat('fitted_lambda_phi'),
+        fit_trk1_pt  = ufloat('fitted_trk1_pt'),
+        fit_trk1_eta = ufloat('fitted_trk1_eta'),
+        fit_trk1_phi = ufloat('fitted_trk1_phi'),
+        fit_trk2_pt  = ufloat('fitted_trk2_pt'),
+        fit_trk2_eta = ufloat('fitted_trk2_eta'),
+        fit_trk2_phi = ufloat('fitted_trk2_phi'),
         # isolation 
         l1_iso04   = ufloat('l1_iso04'),
         l2_iso04   = ufloat('l2_iso04'),
-        lambda_iso04 = ufloat('lambda_iso04'),
-
+        trk1_iso04 = ufloat('trk1_iso04'),
+        trk2_iso04 = ufloat('trk2_iso04'),
         trk1_svip2d     = ufloat('trk1_svip2d'),
         trk1_svip2d_err = ufloat('trk1_svip2d_err'),
         trk2_svip2d     = ufloat('trk2_svip2d'),
@@ -94,14 +91,14 @@ LambdabToLambdaMuMuTable = cms.EDProducer(
     )
 )
 
-CountLambdabToLambdaMuMu = cms.EDFilter("PATCandViewCountFilter",
+CountEtaTo2L2Pi = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(0),
     maxNumber = cms.uint32(999999),
-    src       = cms.InputTag("LambdabToLambdaMuMu")
+    src       = cms.InputTag("EtaTo2L2Pi")
 )
 
-LambdabToLambdaMuMuBPHMCMatch = cms.EDProducer("MCMatcher",                  # cut on deltaR, deltaPt/Pt; pick best by deltaR
-    src         = LambdabToLambdaMuMuTable.src,                           # final reco collection
+EtaTo2L2PiBPHMCMatch = cms.EDProducer("MCMatcher",                  # cut on deltaR, deltaPt/Pt; pick best by deltaR
+    src         = EtaTo2L2PiTable.src,                           # final reco collection
     matched     = cms.InputTag("finalGenParticlesBPH"),       # final mc-truth particle collection
     mcPdgId     = cms.vint32(5122),                             # one or more PDG ID (443 = J/psi); absolute values (see below)
     checkCharge = cms.bool(False),                            # True = require RECO and MC objects to have the same charge
@@ -112,20 +109,20 @@ LambdabToLambdaMuMuBPHMCMatch = cms.EDProducer("MCMatcher",                  # c
     resolveByMatchQuality = cms.bool(True),                   # False = just match input in order; True = pick lowest deltaR pair first
 )
 
-LambdabToLambdaMuMuBPHMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
-    recoObjects = LambdabToLambdaMuMuTable.src,
+EtaTo2L2PiBPHMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
+    recoObjects = EtaTo2L2PiTable.src,
     genParts    = cms.InputTag("finalGenParticlesBPH"),
-    mcMap       = cms.InputTag("LambdabToLambdaMuMuBPHMCMatch"),
-    objName     = LambdabToLambdaMuMuTable.name,
+    mcMap       = cms.InputTag("EtaTo2L2PiBPHMCMatch"),
+    objName     = EtaTo2L2PiTable.name,
     objType     = cms.string("Other"),
     objBranchName = cms.string("genPart"),
-    genBranchName = cms.string("LambdabToLambdaMuMu"),
+    genBranchName = cms.string("EtaTo2L2Pi"),
     docString   = cms.string("MC matching to status==2 LambdaB0"),
 )
 
 
 ########################### Sequencies  ############################
-LambdabToLambdaMuMuSequence = cms.Sequence( LambdabToLambdaMuMu  )
-LambdabToLambdaMuMuTables   = cms.Sequence( LambdabToLambdaMuMuTable )
-LambdabToLambdaMuMuMCSequence = cms.Sequence( LambdabToLambdaMuMu + LambdabToLambdaMuMuBPHMCMatch )
-LambdabToLambdaMuMuMCTables   = cms.Sequence( LambdabToLambdaMuMuTable + LambdabToLambdaMuMuBPHMCTable )
+EtaTo2L2PiSequence = cms.Sequence( EtaTo2L2Pi  )
+EtaTo2L2PiTables   = cms.Sequence( EtaTo2L2PiTable )
+EtaTo2L2PiMCSequence = cms.Sequence( EtaTo2L2Pi + EtaTo2L2PiBPHMCMatch )
+EtaTo2L2PiMCTables   = cms.Sequence( EtaTo2L2PiTable + EtaTo2L2PiBPHMCTable )

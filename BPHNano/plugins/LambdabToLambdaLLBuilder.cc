@@ -149,6 +149,7 @@ void LambdabToLambdaLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::Even
       cand.addUserInt("trk1_idx", trk1_idx);
       cand.addUserInt("trk2_idx", trk2_idx);
       cand.addUserInt("lambda_idx" , lambda_idx);
+      cand.addUserInt("ll_idx" , ll_idx);
       cand.addUserFloat("trk1_mass", lambda_ptr->userFloat("trk1_mass"));
       cand.addUserFloat("trk2_mass", lambda_ptr->userFloat("trk2_mass"));
       cand.addUserInt("second_mass_hypothesis" , lambda_ptr->userInt("second_mass_hypothesis"));
@@ -207,7 +208,7 @@ void LambdabToLambdaLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::Even
       auto lxy = l_xy(fitter, *beamspot);
       cand.addUserFloat("l_xy", lxy.value());
       cand.addUserFloat("l_xy_unc", lxy.error());
-
+              
       // post fit selection
       if ( !post_vtx_selection_(cand) ) continue;
 
@@ -256,8 +257,8 @@ void LambdabToLambdaLLBuilder::produce(edm::StreamID, edm::Event &evt, edm::Even
 
 	KinVtxFitter constraint_fitter(
             { leptons_ttracks->at(l1_idx), leptons_ttracks->at(l2_idx), v0_ttracks->at(lambda_idx) },
-            { l1_ptr->mass(), l2_ptr->mass(), lambda_ptr->userFloat("fitted_mass") },
-            { LEP_SIGMA, LEP_SIGMA, lambda_ptr->userFloat("fitted_massErr") },
+            { MUON_MASS, MUON_MASS, LAMBDA_MASS },
+            { LEP_SIGMA, LEP_SIGMA, LAMBDA_SIGMA },
             dilep_mass);
 
         if (constraint_fitter.success()) {

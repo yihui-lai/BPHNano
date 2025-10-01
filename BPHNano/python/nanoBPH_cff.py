@@ -22,10 +22,15 @@ from PhysicsTools.BPHNano.KshortToPiPi_cff import *
 from PhysicsTools.BPHNano.BToKLL_cff import *
 from PhysicsTools.BPHNano.BToKstarLL_cff import *
 from PhysicsTools.BPHNano.BToKshortLL_cff import *
-#from PhysicsTools.BPHNano.BDh_cff import *
 from PhysicsTools.BPHNano.BDh_cff_v3 import *
+
 from PhysicsTools.BPHNano.LambdaToPPi_cff import *
 from PhysicsTools.BPHNano.LambdabToLambdaLL_cff import *
+from PhysicsTools.BPHNano.DiHs_cff import *
+from PhysicsTools.BPHNano.EtaMuMu_cff import *
+from PhysicsTools.BPHNano.EtaTo2L2Pi_cff import *
+from PhysicsTools.BPHNano.LambdabToLambdahhBuilder import *
+#from PhysicsTools.BPHNano.LambdabToLambdahhBuilder_v2 import *
 
 vertexTable.svSrc = cms.InputTag("slimmedSecondaryVertices")
 
@@ -54,19 +59,24 @@ def nanoAOD_customizeMuonBPH(process,isMC):
 
 def nanoAOD_customizeDiMuonBPH(process, isMC):
     if isMC:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuSequence + MuMuTables )
+       process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuMCSequence + MuMuMCTables )
     else:
        process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuSequence + MuMuTables)
-       #process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuSequence + CountDiMuonBPH + MuMuTables)
     return process
 
+def nanoAOD_customizeEta2Mu2PiBPH(process, isMC):
+    if isMC:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + EtaMuMuMCSequence + EtaMuMuMCTables + EtaTo2L2PiMCSequence + EtaTo2L2PiMCTables )
+    else:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + EtaMuMuSequence + EtaMuMuTables + EtaTo2L2PiSequence + EtaTo2L2PiTables)
+    return process
 
 
 def nanoAOD_customizeTrackBPH(process,isMC):
     if isMC:
-       process.nanoSequence =  cms.Sequence( process.nanoSequence + tracksBPHSequenceMC + tracksBPHTablesMC)
+       process.nanoSequence =  cms.Sequence( process.nanoSequence + tracksBPHSequenceMC)# + tracksBPHTablesMC)
     else:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + tracksBPHSequence + tracksBPHTables)
+       process.nanoSequence = cms.Sequence( process.nanoSequence + tracksBPHSequence)# + tracksBPHTables)
     return process
 
 
@@ -114,22 +124,30 @@ def nanoAOD_customizeBDh(process, isMC):
        process.nanoSequence = cms.Sequence( process.nanoSequence+ BDhSequence + BDhSequenceTable )
        return process
 
-def nanoAOD_customizeLambda_MC(process):
-    process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + LambdaPPiTables+ LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
-    return process
-
-def nanoAOD_customizeLambda_Data(process):
-    process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + CountLambdaPPi + LambdaPPiTables+ LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
-    return process
 
 def nanoAOD_customizeLambda(process, isMC):
     if isMC:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + LambdaPPiTables + LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
+       process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequenceMC + LambdaPPiTablesMC + LambdabToLambdaMuMuMCSequence + LambdabToLambdaMuMuMCTables  )
        return process
     else:
        process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + LambdaPPiTables + LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
-       #process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + CountLambdaPPi + LambdaPPiTables + LambdabToLambdaMuMuSequence + LambdabToLambdaMuMuTables  )
        return process
+
+def nanoAOD_customizeLambdahh(process, isMC):
+    if isMC:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequenceMC + LambdaPPiTablesMC + LambdabToLambdahhSequenceMC + LambdabToLambdahhTablesMC  )
+       return process
+    else:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + LambdaPPiSequence + LambdaPPiTables + LambdabToLambdahhSequence + LambdabToLambdahhTables  )
+       return process
+
+#def nanoAOD_customizeLambdahh_v2(process, isMC):
+#    if isMC:
+#       process.nanoSequence = cms.Sequence( process.nanoSequence + LambdabToLambdahhv2SequenceMC + LambdabToLambdahhv2SequenceMCTable )
+#       return process
+#    else:
+#       process.nanoSequence = cms.Sequence( process.nanoSequence+ LambdabToLambdahhv2Sequence + LambdabToLambdahhv2SequenceTable )
+#       return process
 
 
 def nanoAOD_customizeBToXLL(process,isMC):

@@ -13,24 +13,26 @@ import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 fnames = ["test_data.root"]
+#fnames = []
 #fnames = [
 #        "/eos/cms///store/group/phys_b2g/sqian/VV_comb_workdir/NanoPost/ParkingDoubleMuonLowMass0/BDh_NanoPost_2022_Data_Jun4_ParkingDoubleMuonLowMass0/250611_123452/0000/test_data_651.root",
 #        "/eos/cms///store/group/phys_b2g/sqian/VV_comb_workdir/NanoPost/ParkingDoubleMuonLowMass0/BDh_NanoPost_2022_Data_Jun4_ParkingDoubleMuonLowMass0/250611_123452/0000/test_data_652.root",
 #        ]
 #
-#with open("list.txt", "r") as file:
+#with open("list2.txt", "r") as file:
 #    lines = file.readlines()
 #    inline = 0
 #    for line in lines:
 #        inline+=1
-#        if inline>500 and inline < 1000:
-#            fnames.append(line.replace("\n",""))
+#        fnames.append(line.replace("\n",""))
 #
 #print(fnames)
 
 p = PostProcessor(outputDir=".",
                   inputFiles=fnames,
-                  cut="nLambdabToLambdaMuMu>=1",
+                  #cut="nLambdabToLambdaMuMu>=1 || nLambdabToLambdahh>=1",
+                  #cut="nLambdabToLambdahh>=1",
+                  cut="nEtaTo2L2Pi>=1",
                   modules=[],
                   #modules=[BdhModuleConstr()],
                   provenance=True,

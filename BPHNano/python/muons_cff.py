@@ -1,7 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 
-Path=["HLT_DoubleMu4_LowMass_Displaced", "HLT_DoubleMu4_3_LowMass"]
+Path=["HLT_DoubleMu4_3_LowMass", "HLT_DoubleMu2_Jpsi_LowPt", "HLT_Dimuon0_Jpsi3p5_Muon2"]
+
+Path=["HLT_DoubleMu4_3_LowMass"]
 
 muonBPH = cms.EDProducer("MuonTriggerSelector",
                          muonCollection = cms.InputTag("slimmedMuons"), #same collection as in NanoAOD                                                           
@@ -9,7 +11,7 @@ muonBPH = cms.EDProducer("MuonTriggerSelector",
                          prescales      = cms.InputTag("patTrigger"),
                          objects        = cms.InputTag("slimmedPatTrigger"),
                          maxdR_matching = cms.double(0.3), ##for the output trigger matched collection
-                         muonSelection  = cms.string("pt > 1 && abs(eta) < 2.4"), ## on the fly selection
+                         muonSelection  = cms.string("pt > 2.0 && abs(eta) < 2.4"), ## on the fly selection
                          HLTPaths       = cms.vstring(Path), ### comma to the softMuonsOnly
                         )
 
@@ -18,10 +20,12 @@ countTrgMuons = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(2),
     maxNumber = cms.uint32(999999),
     src       = cms.InputTag("muonBPH", "SelectedMuons")
+    #src       = cms.InputTag("muonBPH", "AllMuons")
 )
 
 muonBPHTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
     src  = cms.InputTag("muonBPH:SelectedMuons"),
+    #src  = cms.InputTag("muonBPH:AllMuons"),
     cut  = cms.string(""), #we should not filter on cross linked collections
     name = cms.string("Muon"),
     doc  = cms.string("slimmedMuons after basic selection"),
@@ -62,7 +66,7 @@ muonBPHTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         isTriggering    = Var("userInt('isTriggering')", int, doc="flag the reco muon is also triggering"),
         matched_dr      = Var("userFloat('trgDR')", float, doc="dr with the matched triggering muon"),
         matched_dpt     = Var("userFloat('trgDPT')", float, doc="dpt/pt with the matched triggering muon"),        #comma
-#        fired_HLT_DoubleMu4_3_LowMass = Var("userInt('HLT_DoubleMu4_3_LowMass')", int, doc="reco muon fired this trigger"),
+ #       fired_HLT_DoubleMu4_3_LowMass = Var("userInt('HLT_DoubleMu4_3_LowMass')", int, doc="reco muon fired this trigger"),
  #       fired_HLT_DoubleMu4_LowMass_Displaced = Var("userInt('HLT_DoubleMu4_LowMass_Displaced')", int, doc="reco muon fired this trigger")
     ),
 )

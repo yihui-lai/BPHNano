@@ -11,6 +11,7 @@ finalGenParticlesBPH = finalGenParticles.clone(
   select = cms.vstring(
 	"drop *",
         "keep++ (abs(pdgId) == 511 || abs(pdgId) == 521 || abs(pdgId)==531)",  #keep all B0(=511) and B+/-(521) + their daughters and granddaughters
+        "keep++ abs(pdgId) == 5122", #  keep full lambda_b0
    )
 )
 

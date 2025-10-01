@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: RECO --conditions 140X_dataRun3_Prompt_v4 --datatier NANOAOD --era Run3,run3_nanoAOD_124 --eventcontent NANOAOD --filein file:/eos/cms/store/user/dmytro/tmp/store+data+Run2022C+ParkingDoubleMuonLowMass0+MINIAOD+PromptReco-v1+000+357+271+00000+ea64a9c2-6b1f-4744-b4ea-41aa0e3c3e1b.root --fileout file:test_data.root --nThreads 4 -n 10000 --no_exec --python_filename test_data.py --scenario pp --step NANO --customise_commands=process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)))
+# with command line options: RECO --conditions 150X_dataRun3_v2 --datatier NANOAOD --era Run3 --eventcontent NANOAOD --filein file:/eos/cms/store/user/dmytro/tmp/store+data+Run2022C+ParkingDoubleMuonLowMass0+MINIAOD+PromptReco-v1+000+357+271+00000+ea64a9c2-6b1f-4744-b4ea-41aa0e3c3e1b.root --fileout file:test_data.root --nThreads 4 -n 10000 --no_exec --python_filename test_data.py --scenario pp --step NANO --customise_commands=process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)))
 import FWCore.ParameterSet.Config as cms
 
 
@@ -14,9 +14,8 @@ options.parseArguments()
 
 
 from Configuration.Eras.Era_Run3_cff import Run3
-from Configuration.Eras.Modifier_run3_nanoAOD_124_cff import run3_nanoAOD_124
 
-process = cms.Process('NANO',Run3,run3_nanoAOD_124)
+process = cms.Process('NANO',Run3)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -29,15 +28,15 @@ process.load('PhysicsTools.NanoAOD.nano_cff')
 process.load('PhysicsTools.BPHNano.nanoBPH_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-
+process.MessageLogger.cerr.FwkReport.reportEvery = 500
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1000),
+    input = cms.untracked.int32(50000),
     output = cms.optional.untracked.allowed(cms.int32,cms.PSet)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/y/yilai/gamma/ParkingDoubleMuonLowMass0.root'),
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/y/yilai/gamma/ParkingDoubleMuonLowMass0_2024.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -120,7 +119,7 @@ process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '140X_dataRun3_Prompt_v4', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '150X_dataRun3_v2', '')
 
 # Path and EndPath definitions
 process.nanoAOD_step = cms.Path(process.nanoSequence)

@@ -12,34 +12,27 @@ config = config()
 
 
 config.section_("General")
-config.General.requestName = 'BNanoPost_2022_Data_Sep30_ParkingDoubleMuonLowMass1_Run2022F_eta'
-#config.General.requestName = 'BNanoPost_2022_Data_Sep12_ParkingSingleMuon2_Run2022F_lambdabBtolambda2h'
-config.General.workArea = '/afs/cern.ch/work/y/yilai/gamma/crab_projects_data_Sep12'
+config.General.requestName = 'BNanoPost_2024_Data'
+config.General.workArea = '/afs/cern.ch/work/y/yilai/gamma/crab_projects_data_Sep30'
 config.General.transferLogs = True
 
 config.section_("JobType")
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = "test_data_2022.py"
+config.JobType.psetName = "test_data_2024.py"
 #config.JobType.psetName = 'PSet.py'
 config.JobType.scriptExe = 'crab_script_data.sh'
 config.JobType.scriptArgs = ['isMC=0','era=UL2018','dataRun=X','isVjets=0']
-config.JobType.inputFiles = ['BDh_postproc.py', 'BDh_postproc_data.py', 'BDh_Producer.py', 'test_mc_2022.py', 'test_data_2022.py']
+config.JobType.inputFiles = ['BDh_postproc.py', 'BDh_postproc_data.py', 'BDh_Producer.py', 'test_data_2024.py']
 config.JobType.outputFiles = ['test_data_Skim.root']
 #config.JobType.sendPythonFolder = True
 config.section_("Data")
-#config.Data.inputDataset = '/ParkingSingleMuon2/Run2022F-22Sep2023-v1/MINIAOD'
-#config.Data.inputDataset = '/ParkingDoubleMuonLowMass0/Run2022F-22Sep2023-v1/MINIAOD'
-config.Data.inputDataset = '/ParkingDoubleMuonLowMass1/Run2022F-22Sep2023-v1/MINIAOD'
-#config.Data.inputDataset = '/ParkingDoubleMuonLowMass2/Run2022F-22Sep2023-v1/MINIAOD'
-#config.Data.inputDataset = '/ParkingDoubleMuonLowMass3/Run2022F-22Sep2023-v1/MINIAOD'
-#config.Data.inputDataset = '/ParkingDoubleMuonLowMass4/Run2022F-22Sep2023-v1/MINIAOD'
-#config.Data.inputDataset = '/ParkingDoubleMuonLowMass5/Run2022F-22Sep2023-v1/MINIAOD'
-#config.Data.inputDataset = '/ParkingDoubleMuonLowMass6/Run2022F-22Sep2023-v1/MINIAOD'
-#config.Data.inputDataset = '/ParkingDoubleMuonLowMass7/Run2022F-22Sep2023-v1/MINIAOD' 
+config.Data.inputDataset = '/ParkingDoubleMuonLowMass0/Run2024F-MINIv6NANOv15-v3/MINIAOD'
 #config.Data.inputDBS = 'phys03'
 config.Data.inputDBS = 'global'
 config.Data.splitting = 'EventAwareLumiBased'
-config.Data.unitsPerJob = 200000
+config.Data.unitsPerJob = 3000000 # events
+#config.Data.splitting = 'Automatic'
+#config.Data.unitsPerJob = 360 # time
 #config.Data.splitting = 'FileBased'
 #config.Data.unitsPerJob = 3
 #config.Data.totalUnits = 5
@@ -47,9 +40,8 @@ config.Data.unitsPerJob = 200000
 config.JobType.maxMemoryMB = 2000  ## 2500*4
 #config.JobType.maxJobRuntimeMin = 1315  ## 21.9 hours
 config.JobType.numCores = 2
-config.Data.lumiMask = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Muon.json'
+config.Data.lumiMask = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions24/Cert_Collisions2024_378981_386951_Muon.json'
 
-#config.Data.outLFNDirBase = '/store/user/yilai/NanoPost_NosaveTrk'
 config.Data.outLFNDirBase = '/store/group/phys_b2g/sqian/VV_comb_workdir/NanoPost/'
 config.Data.publication = False
 config.Data.outputDatasetTag = config.General.requestName
@@ -71,10 +63,8 @@ if __name__ == '__main__':
         config.Data.inputDataset = dataset
         n+=1
         nnn="%s"%n
-        #config.General.requestName = "BNanoPost_lambdabBtolambda2h_Data_Sep12_"+dataset.split('/')[1][:30]+dataset.split('/')[2][:30]+nnn
-        #config.General.requestName = "BNanoPost_Eta_Data_Sep30_"+dataset.split('/')[1][:30]+dataset.split('/')[2][:30]+nnn
         config.General.requestName = "BNanoPost_Etaprime_Data_Sep30_"+dataset.split('/')[1][:30]+dataset.split('/')[2][:30]+nnn
-        config.Data.outputDatasetTag = dataset.split('/')[2][:30]+nnn
+        config.Data.outputDatasetTag = "eta2m2pi_"+dataset.split('/')[2][:30]+nnn
         print(config.General.requestName, config.Data.outputDatasetTag)
         crabCommand('submit', config = config)
 

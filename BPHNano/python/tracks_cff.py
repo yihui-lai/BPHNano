@@ -4,10 +4,9 @@ from PhysicsTools.NanoAOD.common_cff import *
 tracksBPH = cms.EDProducer(
     "TrackMerger",
     beamSpot        = cms.InputTag("offlineBeamSpot"),
-    dileptons       = cms.InputTag("MuMu:SelectedDiLeptons"),
     tracks          = cms.InputTag("packedPFCandidates"),
     lostTracks      = cms.InputTag("lostTracks"),
-    trackSelection  = cms.string("pt>1.0 && abs(eta)<2.4"),  # We need all tracks for tagging, no cuts here for now
+    trackSelection  = cms.string("pt>2 && abs(eta)<2.4"),  # We need all tracks for tagging, no cuts here for now
     muons           = cms.InputTag("slimmedMuons"),
     electrons       = cms.InputTag("slimmedElectrons"),
     maxDzDilep      = cms.double(-1.0),
@@ -36,7 +35,7 @@ trackBPHTable = cms.EDProducer(
         dzS     = Var("userFloat('dzS')", float, doc="dz/err (with sign) wrt first PV [cm]"),
         dxyS    = Var("userFloat('dxyS')", float, doc="dxy/err (with sign) wrt first PV [cm]"),
         DCASig  = Var("userFloat('DCASig')", float, doc="significance of xy-distance of closest approach wrt beamspot"),
-        dzTrg   = Var("userFloat('dzTrg')", float, doc="dz from the corresponding trigger muon [cm]"),
+        #dzTrg   = Var("userFloat('dzTrg')", float, doc="dz from the corresponding trigger muon [cm]"),
         isMatchedToMuon = Var("userInt('isMatchedToMuon')", bool, doc="track was used to build a muon"),
         isMatchedToEle  = Var("userInt('isMatchedToEle')", bool, doc="track was used to build a PF ele"),
         nValidHits      = Var("userInt('nValidHits')", int, doc="Number of valid hits"),
@@ -59,7 +58,7 @@ trackBPHTable = cms.EDProducer(
 tracksBPHMCMatch = cms.EDProducer("MCMatcher",              # cut on deltaR, deltaPt/Pt; pick best by deltaR
     src         = trackBPHTable.src,                        # final reco collection
     matched     = cms.InputTag("finalGenParticlesBPH"),     # final mc-truth particle collection
-    mcPdgId     = cms.vint32(321, 211),                     # one or more PDG ID (321 = charged kaon, 211 = charged pion); absolute values (see below)
+    mcPdgId     = cms.vint32(321, 211, 2212),                     # one or more PDG ID (321 = charged kaon, 211 = charged pion); absolute values (see below)
     checkCharge = cms.bool(False),                          # True = require RECO and MC objects to have the same charge
     mcStatus    = cms.vint32(1),                            # PYTHIA status code (1 = stable, 2 = shower, 3 = hard scattering)
     maxDeltaR   = cms.double(0.03),                         # Minimum deltaR for the match

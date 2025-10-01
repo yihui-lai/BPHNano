@@ -37,7 +37,6 @@ public:
     beamSpotSrc_(consumes<reco::BeamSpot>(cfg.getParameter<edm::InputTag>("beamSpot"))),
     tracksToken_(consumes<pat::PackedCandidateCollection>(cfg.getParameter<edm::InputTag>("tracks"))),
     lostTracksToken_(consumes<pat::PackedCandidateCollection>(cfg.getParameter<edm::InputTag>("lostTracks"))),
-    dileptonToken_(consumes<pat::CompositeCandidateCollection>(cfg.getParameter<edm::InputTag>("dileptons"))),
     muonToken_(consumes<pat::MuonCollection>(cfg.getParameter<edm::InputTag>("muons"))),
     eleToken_(consumes<pat::ElectronCollection>(cfg.getParameter<edm::InputTag>("electrons"))),
     maxDzDilep_(cfg.getParameter<double>("maxDzDilep")),
@@ -87,8 +86,8 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
   evt.getByToken(tracksToken_, tracks);
   edm::Handle<pat::PackedCandidateCollection> lostTracks;
   evt.getByToken(lostTracksToken_, lostTracks);
-  edm::Handle<pat::CompositeCandidateCollection> dileptons;
-  evt.getByToken(dileptonToken_, dileptons);
+  //edm::Handle<pat::CompositeCandidateCollection> dileptons;
+  //evt.getByToken(dileptonToken_, dileptons);
 
   edm::Handle<pat::MuonCollection> muons;
   evt.getByToken(muonToken_, muons);
@@ -118,11 +117,12 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     const pat::PackedCandidate & trk = (iTrk < nTracks) ? (*tracks)[iTrk] : (*lostTracks)[iTrk - nTracks];
     //arranging cuts for speed
     if (!trk.hasTrackDetails()) continue;
-    if (fabs(trk.pdgId()) != 211) continue; //do we want also to keep muons?
+    if (fabs(trk.pdgId()) != 211 && fabs(trk.pdgId()) != 321) continue; //do we want also to keep muons?
     if ( !track_selection_(trk) ) continue;
 
-    bool skipTrack = true;
-    float dzTrg = 0.0;
+    //bool skipTrack = true;
+    //float dzTrg = 0.0;
+    /*
     for (const pat::CompositeCandidate & dilep : *dileptons) {
       //if dz is negative it is deactivated
       if ( fabs(trk.vz() - dilep.vz()) > maxDzDilep_ && maxDzDilep_ > 0)
@@ -130,10 +130,10 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
       skipTrack = false;
       dzTrg = trk.vz() - dilep.vz();
       break; // at least for one dilepton candidate to pass this cuts
-    }
+    }*/
 
     // if track is far from all dilepton candidate
-    if (skipTrack) continue;
+    //if (skipTrack) continue;
 
     // high purity requirment applied only in packedCands
     if ( iTrk < nTracks && !trk.trackHighPurity()) continue;
@@ -182,8 +182,16 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
 
     // output
     pat::CompositeCandidate pcand;
-    pcand.setP4(trk.p4());
-    pcand.setCharge(trk.charge());
+    //pcand.setP4(trk.p4());
+    //K mass
+    math::PtEtaPhiMLorentzVector trackP4(
+        trk.bestTrack()->pt(),
+        trk.bestTrack()->eta(),
+        trk.bestTrack()->phi(),
+	PI_MASS
+    );
+    pcand.setP4(trackP4);
+    pcand.setCharge(trk.bestTrack()->charge());
     pcand.setVertex(trk.vertex());
     pcand.setPdgId(trk.pdgId());
     pcand.addUserInt("isPacked", (iTrk < nTracks));
@@ -193,7 +201,7 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     pcand.addUserFloat("dz", trk.dz());
     pcand.addUserFloat("dzS", trk.dz() / trk.dzError());
     pcand.addUserFloat("DCASig", DCASig);
-    pcand.addUserFloat("dzTrg", dzTrg);
+    //pcand.addUserFloat("dzTrg", dzTrg);
     pcand.addUserInt("isMatchedToMuon", matchedToMuon);
     pcand.addUserInt("isMatchedToEle", matchedToEle);
     pcand.addUserInt("nValidHits", trk.bestTrack()->found());

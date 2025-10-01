@@ -68,6 +68,7 @@ MuonTriggerSelector::MuonTriggerSelector(const edm::ParameterSet &iConfig):
   produces<pat::MuonCollection>("AllMuons");
   produces<pat::MuonCollection>("SelectedMuons");
   produces<TransientTrackCollection>("SelectedTransientMuons");
+  produces<TransientTrackCollection>("AllTransientMuons");
 }
 
 void MuonTriggerSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -86,6 +87,7 @@ void MuonTriggerSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSe
   std::unique_ptr<pat::MuonCollection>      allmuons_out   ( new pat::MuonCollection );
   std::unique_ptr<pat::MuonCollection>      muons_out      ( new pat::MuonCollection );
   std::unique_ptr<TransientTrackCollection> trans_muons_out( new TransientTrackCollection );
+  std::unique_ptr<TransientTrackCollection> alltrans_muons_out( new TransientTrackCollection );
 
   edm::Handle<std::vector<pat::Muon>> muons;
   iEvent.getByToken(muonSrc_, muons);
@@ -191,8 +193,15 @@ void MuonTriggerSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSe
     if (!muonTT.isValid()) continue;
 
     allmuons_out->emplace_back(muon);
-    if (muonIsTrigger[iMuo] != 1) continue;
+    alltrans_muons_out->emplace_back(muonTT);
 
+    if (muonIsTrigger[iMuo] != 1){
+            allmuons_out->back().addUserInt("isTriggering", -1);
+            allmuons_out->back().addUserFloat("trgDR", -1);
+            allmuons_out->back().addUserFloat("trgDPT", -1);
+            allmuons_out->back().addUserInt("looseId", -1);
+	    continue;
+    }
 
     muons_out->emplace_back(muon);
     muons_out->back().addUserInt("isTriggering", muonIsTrigger[iMuo]);
@@ -200,13 +209,20 @@ void MuonTriggerSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSe
     muons_out->back().addUserFloat("trgDPT", muonDPT[iMuo]);
     muons_out->back().addUserInt("looseId", loose_id[iMuo]);
 
+    allmuons_out->back().addUserInt("isTriggering", muonIsTrigger[iMuo]);
+    allmuons_out->back().addUserFloat("trgDR", muonDR[iMuo]);
+    allmuons_out->back().addUserFloat("trgDPT", muonDPT[iMuo]);
+    allmuons_out->back().addUserInt("looseId", loose_id[iMuo]);
+
+
     for (unsigned int i = 0; i < HLTPaths_.size(); i++)
       muons_out->back().addUserInt(HLTPaths_[i], fires[iMuo][i]);
-
     trans_muons_out->emplace_back(muonTT);
+
   }
 
   iEvent.put(std::move(allmuons_out),    "AllMuons");
+  iEvent.put(std::move(alltrans_muons_out), "AllTransientMuons");
   iEvent.put(std::move(muons_out),       "SelectedMuons");
   iEvent.put(std::move(trans_muons_out), "SelectedTransientMuons");
 }
