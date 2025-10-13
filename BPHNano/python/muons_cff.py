@@ -5,8 +5,14 @@ Path=["HLT_DoubleMu4_3_LowMass", "HLT_DoubleMu2_Jpsi_LowPt", "HLT_Dimuon0_Jpsi3p
 
 Path=["HLT_DoubleMu4_3_LowMass"]
 
+use_allmuon=True
+if use_allmuon:
+    name_muon = "AllMuons"
+else:
+    name_muon = "SelectedMuons"
+
 muonBPH = cms.EDProducer("MuonTriggerSelector",
-                         muonCollection = cms.InputTag("slimmedMuons"), #same collection as in NanoAOD                                                           
+                         muonCollection = cms.InputTag("slimmedMuons"), #same collection as in NanoAOD 
                          bits           = cms.InputTag("TriggerResults", "", "HLT"),
                          prescales      = cms.InputTag("patTrigger"),
                          objects        = cms.InputTag("slimmedPatTrigger"),
@@ -19,13 +25,11 @@ muonBPH = cms.EDProducer("MuonTriggerSelector",
 countTrgMuons = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(2),
     maxNumber = cms.uint32(999999),
-    src       = cms.InputTag("muonBPH", "SelectedMuons")
-    #src       = cms.InputTag("muonBPH", "AllMuons")
+    src       = cms.InputTag("muonBPH", name_muon)
 )
 
 muonBPHTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
-    src  = cms.InputTag("muonBPH:SelectedMuons"),
-    #src  = cms.InputTag("muonBPH:AllMuons"),
+    src  = cms.InputTag("muonBPH:"+name_muon),
     cut  = cms.string(""), #we should not filter on cross linked collections
     name = cms.string("Muon"),
     doc  = cms.string("slimmedMuons after basic selection"),
@@ -65,9 +69,9 @@ muonBPHTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         triggerIdLoose  = Var("passed('TriggerIdLoose')", bool, doc="TriggerIdLoose ID"),
         isTriggering    = Var("userInt('isTriggering')", int, doc="flag the reco muon is also triggering"),
         matched_dr      = Var("userFloat('trgDR')", float, doc="dr with the matched triggering muon"),
-        matched_dpt     = Var("userFloat('trgDPT')", float, doc="dpt/pt with the matched triggering muon"),        #comma
- #       fired_HLT_DoubleMu4_3_LowMass = Var("userInt('HLT_DoubleMu4_3_LowMass')", int, doc="reco muon fired this trigger"),
- #       fired_HLT_DoubleMu4_LowMass_Displaced = Var("userInt('HLT_DoubleMu4_LowMass_Displaced')", int, doc="reco muon fired this trigger")
+        matched_dpt     = Var("userFloat('trgDPT')", float, doc="dpt/pt with the matched triggering muon"),
+        #fired_HLT_DoubleMu4_3_LowMass = Var("userInt('HLT_DoubleMu4_3_LowMass')", int, doc="reco muon fired this trigger"),
+        #fired_HLT_DoubleMu4_LowMass_Displaced = Var("userInt('HLT_DoubleMu4_LowMass_Displaced')", int, doc="reco muon fired this trigger")
     ),
 )
 
@@ -92,18 +96,6 @@ muonBPHMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
     objBranchName = cms.string("genPart"),
     genBranchName = cms.string("muon"),
     docString   = cms.string("MC matching to status==1 muons"),
-)
-
-allMuonTable = muonBPHTable.clone(
-    src  = cms.InputTag("muonBPH:AllMuons"),
-    name = cms.string("AllMuon"),
-    doc  = cms.string("HLT Muons matched with reco muons"), #reco muon matched to triggering muon"),
-    variables = cms.PSet(
-        CandVars,
-        vx = Var("vx()", float, doc="x coordinate of vertex position [cm]"),
-        vy = Var("vy()", float, doc="y coordinate of vertex position [cm]"),
-        vz = Var("vz()", float, doc="z coordinate of vertex position [cm]")
-   )
 )
 
 muonBPHSequence   = cms.Sequence(muonBPH)

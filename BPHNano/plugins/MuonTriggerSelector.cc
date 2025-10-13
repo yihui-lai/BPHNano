@@ -221,8 +221,11 @@ void MuonTriggerSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSe
 
   }
 
+  // All muon
   iEvent.put(std::move(allmuons_out),    "AllMuons");
   iEvent.put(std::move(alltrans_muons_out), "AllTransientMuons");
+
+  // Muon match to HLT
   iEvent.put(std::move(muons_out),       "SelectedMuons");
   iEvent.put(std::move(trans_muons_out), "SelectedTransientMuons");
 }

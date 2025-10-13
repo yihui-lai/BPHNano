@@ -100,7 +100,7 @@ CountEtaTo2L2Pi = cms.EDFilter("PATCandViewCountFilter",
 EtaTo2L2PiBPHMCMatch = cms.EDProducer("MCMatcher",                  # cut on deltaR, deltaPt/Pt; pick best by deltaR
     src         = EtaTo2L2PiTable.src,                           # final reco collection
     matched     = cms.InputTag("finalGenParticlesBPH"),       # final mc-truth particle collection
-    mcPdgId     = cms.vint32(5122),                             # one or more PDG ID (443 = J/psi); absolute values (see below)
+    mcPdgId     = cms.vint32(221, 331),                             # one or more PDG ID (443 = J/psi); absolute values (see below)
     checkCharge = cms.bool(False),                            # True = require RECO and MC objects to have the same charge
     mcStatus    = cms.vint32(2),                              # PYTHIA status code (1 = stable, 2 = shower, 3 = hard scattering)
     maxDeltaR   = cms.double(0.03),                           # Minimum deltaR for the match
@@ -117,7 +117,7 @@ EtaTo2L2PiBPHMCTable = cms.EDProducer("CandMCMatchTableProducerBPH",
     objType     = cms.string("Other"),
     objBranchName = cms.string("genPart"),
     genBranchName = cms.string("EtaTo2L2Pi"),
-    docString   = cms.string("MC matching to status==2 LambdaB0"),
+    docString   = cms.string("MC matching to status==2 eta or eta'"),
 )
 
 
