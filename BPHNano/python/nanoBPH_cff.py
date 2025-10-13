@@ -22,7 +22,7 @@ from PhysicsTools.BPHNano.KshortToPiPi_cff import *
 from PhysicsTools.BPHNano.BToKLL_cff import *
 from PhysicsTools.BPHNano.BToKstarLL_cff import *
 from PhysicsTools.BPHNano.BToKshortLL_cff import *
-from PhysicsTools.BPHNano.BDh_cff_v3 import *
+#from PhysicsTools.BPHNano.BDh_cff_v3 import *
 
 from PhysicsTools.BPHNano.LambdaToPPi_cff import *
 from PhysicsTools.BPHNano.LambdabToLambdaLL_cff import *
@@ -30,6 +30,7 @@ from PhysicsTools.BPHNano.DiHs_cff import *
 from PhysicsTools.BPHNano.EtaMuMu_cff import *
 from PhysicsTools.BPHNano.EtaTo2L2Pi_cff import *
 from PhysicsTools.BPHNano.LambdabToLambdahhBuilder import *
+from PhysicsTools.BPHNano.BDKstar_cff import *
 #from PhysicsTools.BPHNano.LambdabToLambdahhBuilder_v2 import *
 
 vertexTable.svSrc = cms.InputTag("slimmedSecondaryVertices")
@@ -71,6 +72,12 @@ def nanoAOD_customizeEta2Mu2PiBPH(process, isMC):
        process.nanoSequence = cms.Sequence( process.nanoSequence + EtaMuMuSequence + EtaMuMuTables + EtaTo2L2PiSequence + EtaTo2L2PiTables)
     return process
 
+def nanoAOD_customizeBDKstar(process, isMC):
+    if isMC:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + BDKstarSequenceMC + BDKstarSequenceMCTable)
+    else:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + BDKstarSequence + BDKstarSequenceTable)
+    return process
 
 def nanoAOD_customizeTrackBPH(process,isMC):
     if isMC:
@@ -108,21 +115,21 @@ def nanoAOD_customizeBToKshortLL(process, isMC):
     return process
 
 
-def nanoAOD_customizeBDh_MC(process):
-    process.nanoSequence = cms.Sequence( process.nanoSequence + BDhSequenceMC + BDhSequenceMCTable )
-    return process
-
-def nanoAOD_customizeBDh_Data(process):
-    process.nanoSequence = cms.Sequence( process.nanoSequence+ BDhSequence + BDhSequenceTable )
-    return process
-
-def nanoAOD_customizeBDh(process, isMC):
-    if isMC:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + BDhSequenceMC + BDhSequenceMCTable )
-       return process
-    else:
-       process.nanoSequence = cms.Sequence( process.nanoSequence+ BDhSequence + BDhSequenceTable )
-       return process
+#def nanoAOD_customizeBDh_MC(process):
+#    process.nanoSequence = cms.Sequence( process.nanoSequence + BDhSequenceMC + BDhSequenceMCTable )
+#    return process
+#
+#def nanoAOD_customizeBDh_Data(process):
+#    process.nanoSequence = cms.Sequence( process.nanoSequence+ BDhSequence + BDhSequenceTable )
+#    return process
+#
+#def nanoAOD_customizeBDh(process, isMC):
+#    if isMC:
+#       process.nanoSequence = cms.Sequence( process.nanoSequence + BDhSequenceMC + BDhSequenceMCTable )
+#       return process
+#    else:
+#       process.nanoSequence = cms.Sequence( process.nanoSequence+ BDhSequence + BDhSequenceTable )
+#       return process
 
 
 def nanoAOD_customizeLambda(process, isMC):

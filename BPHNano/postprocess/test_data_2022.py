@@ -31,7 +31,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1000),
+    input = cms.untracked.int32(5000),
     output = cms.optional.untracked.allowed(cms.int32,cms.PSet)
 )
 
@@ -109,14 +109,16 @@ from PhysicsTools.BPHNano.nanoBPH_cff import *
 #process = nanoAOD_customizeLambdahh(process, False)
 
 #Eta
-process = nanoAOD_customizeMuonBPH(process, False)
-process = nanoAOD_customizeTrackBPH(process, False)
-process = nanoAOD_customizeEta2Mu2PiBPH(process, False)
+#process = nanoAOD_customizeMuonBPH(process, False)
+#process = nanoAOD_customizeTrackBPH(process, False)
+#process = nanoAOD_customizeEta2Mu2PiBPH(process, False)
 
-
+# BDKstar
+process = nanoAOD_customizeBDKstar(process,False)
 
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
 
+process.MessageLogger.cerr.FwkReport.reportEvery = 500
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
