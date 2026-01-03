@@ -12,8 +12,8 @@ config = config()
 
 
 config.section_("General")
-config.General.requestName = 'BNanoPost_2022_Data_Oct23'
-config.General.workArea = '/afs/cern.ch/work/y/yilai/gamma/crab_projects_data_Oct23'
+config.General.requestName = 'BNanoPost_2022_Data_Dec9'
+config.General.workArea = '/afs/cern.ch/work/y/yilai/gamma/crab_projects_data_Dec9'
 config.General.transferLogs = True
 
 config.section_("JobType")
@@ -30,14 +30,14 @@ config.Data.inputDataset = '/ParkingDoubleMuonLowMass1/Run2022F-22Sep2023-v1/MIN
 #config.Data.inputDBS = 'phys03'
 config.Data.inputDBS = 'global'
 config.Data.splitting = 'EventAwareLumiBased'
-config.Data.unitsPerJob = 800000 # events
-config.JobType.maxMemoryMB = 2000  ## 2500*4
+config.Data.unitsPerJob = 400000 # events
+config.JobType.maxMemoryMB = 4000  ## 2500*4
 #config.JobType.maxJobRuntimeMin = 1315  ## 21.9 hours
 config.JobType.numCores = 2
-config.Data.lumiMask = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Muon.json'
+config.Data.lumiMask = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json'
 
 #config.Data.outLFNDirBase = '/store/user/yilai/NanoPost_NosaveTrk'
-config.Data.outLFNDirBase = '/store/group/phys_b2g/sqian/VV_comb_workdir/NanoPost/eta/'
+config.Data.outLFNDirBase = '/store/group/phys_b2g/sqian/VV_comb_workdir/NanoPost/eta_ext_4mu/'
 config.Data.publication = False
 config.Data.outputDatasetTag = config.General.requestName
 config.section_("Site")
@@ -53,12 +53,12 @@ if __name__ == '__main__':
     content = f.readlines()
     content = [x.strip() for x in content] 
     from CRABAPI.RawCommand import crabCommand
-    n=0
+    n=10
     for dataset in content :
         config.Data.inputDataset = dataset
         n+=1
         nnn="%s"%n
-        config.General.requestName = "BNanoPost_Data_Oct23_"+dataset.split('/')[1][:30]+dataset.split('/')[2][:30]+nnn
+        config.General.requestName = "BNanoPost_Data_"+dataset.split('/')[1][:30]+dataset.split('/')[2][:30]+nnn
         config.Data.outputDatasetTag = dataset.split('/')[2][:30]+nnn
         print(config.General.requestName, config.Data.outputDatasetTag)
         crabCommand('submit', config = config)

@@ -31,7 +31,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100),
+    input = cms.untracked.int32(1000),
     output = cms.optional.untracked.allowed(cms.int32,cms.PSet)
 )
 
@@ -99,26 +99,11 @@ process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
 from PhysicsTools.BPHNano.nanoBPH_cff import *
 #process = nanoAOD_customizeBDh_Data(process)
 
-# Lambdab0 -> lambda0 + J/psi
-#process = nanoAOD_customizeMuonBPH(process,False)
-#process = nanoAOD_customizeDiMuonBPH(process,False)
-#process = nanoAOD_customizeTrackBPH(process,False)
-#process = nanoAOD_customizeLambda(process, False)
-
-# Lambdab0 -> lambda0 + hh
-#process = nanoAOD_customizeLambdahh(process, False)
-
-# Eta4mu
-#process = nanoAOD_customizeMuonBPH(process, False)
-#process = nanoAOD_customizeEtaTo4MuBPH(process, False)
 
 process = nanoAOD_customizeTrackBPH(process, False)
-process = nanoAOD_customizeEta2Mu2PiBPH(process, False)
-#process = nanoAOD_customizeEtaBPH(process, False)
+#process = nanoAOD_customizeEta2Mu2PiBPH(process, False)
+process = nanoAOD_customizeEta2Mu2PiAnd4MuBPH(process,False)
 
-
-# BDKstar
-# process = nanoAOD_customizeBDKstar(process,False)
 
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
 

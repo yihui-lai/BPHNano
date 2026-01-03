@@ -30,13 +30,8 @@ fnames = ["test_data.root"]
 
 p = PostProcessor(outputDir=".",
                   inputFiles=fnames,
-                  #cut="nLambdabToLambdaMuMu>=1 || nLambdabToLambdahh>=1",
-                  #cut="nLambdabToLambdahh>=1",
-                  cut="(nEtaTo2L2Pi>=1 || nEtaTo4Mu>=1)",
-                  #cut="nB>=1",
-                  #cut="nEtaTo4Mu>=1",
+                  cut="(nEtaTo2L2Pi>=1 || Sum$(EtaMuMu_fitted_mass<0.9 && EtaMuMu_fitted_mass>0.45)>=1 || nEtaTo4Mu>=1)",
                   modules=[],
-                  #modules=[BdhModuleConstr()],
                   provenance=True,
                   maxEntries=5000000, #just read the first maxEntries events
                   )

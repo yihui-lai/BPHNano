@@ -12,9 +12,11 @@ from PhysicsTools.NanoAOD.triggerObjects_cff import *
 from PhysicsTools.BPHNano.pverticesBPH_cff import *
 from PhysicsTools.BPHNano.genparticlesBPH_cff import *
 from PhysicsTools.BPHNano.particlelevelBPH_cff import *
+from PhysicsTools.BPHNano.globalsBPH_cff import *
 
 ## BPH collections
 from PhysicsTools.BPHNano.muons_cff import *
+from PhysicsTools.BPHNano.photons_cff import *
 from PhysicsTools.BPHNano.MuMu_cff import *
 from PhysicsTools.BPHNano.tracks_cff import *
 from PhysicsTools.BPHNano.KstarToKPi_cff import *
@@ -30,6 +32,7 @@ from PhysicsTools.BPHNano.DiHs_cff import *
 from PhysicsTools.BPHNano.EtaMuMu_cff import *
 from PhysicsTools.BPHNano.EtaTo4Mu_cff import *
 from PhysicsTools.BPHNano.EtaTo2L2Pi_cff import *
+from PhysicsTools.BPHNano.EtaTo2L2PiGamma_cff import *
 from PhysicsTools.BPHNano.LambdabToLambdahhBuilder import *
 from PhysicsTools.BPHNano.BDKstar_cff import *
 #from PhysicsTools.BPHNano.LambdabToLambdahhBuilder_v2 import *
@@ -46,7 +49,8 @@ nanoSequence = cms.Sequence(nanoMetadata +
                           )
 
 def nanoAOD_customizeMC(process):
-    process.nanoSequence = cms.Sequence(process.nanoSequence +particleLevelBPHSequence + genParticleBPHSequence+ genParticleBPHTables )
+    #process.nanoSequence = cms.Sequence(process.nanoSequence + particleLevelBPHSequence + particleLevelBPHTables + genParticleBPHSequence + genParticleBPHTables )
+    process.nanoSequence = cms.Sequence(process.nanoSequence + particleLevelBPHSequence + particleLevelBPHTables + genParticleBPHSequence + genParticleBPHTables + cms.Sequence(ppuTable) )
     return process
 
 def nanoAOD_customizeMuonBPH(process,isMC):
@@ -57,7 +61,12 @@ def nanoAOD_customizeMuonBPH(process,isMC):
        #process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequence + countTrgMuons + muonBPHTables)
     return process
 
-
+def nanoAOD_customizePhotonBPH(process,isMC):
+    if isMC:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + photonBPHSequenceMC + photonBPHTablesMC)
+    else:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + photonBPHSequence + photonBPHTables)
+    return process
 
 def nanoAOD_customizeDiMuonBPH(process, isMC):
     if isMC:
@@ -66,18 +75,41 @@ def nanoAOD_customizeDiMuonBPH(process, isMC):
        process.nanoSequence = cms.Sequence( process.nanoSequence + MuMuSequence + MuMuTables)
     return process
 
+def nanoAOD_customizeEta2Mu2PiAnd4MuBPH(process, isMC):
+    if isMC:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequenceMC + muonBPHTablesMC + EtaMuMuMCSequence + EtaMuMuMCTables + EtaTo2L2PiMCSequence + EtaTo2L2PiMCTables + EtaTo4MuMCSequence + EtaTo4MuMCTables + EtaGenMCSequence + EtaGenMCTables )
+    else:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequence + muonBPHTables + EtaMuMuSequence + EtaMuMuTables + EtaTo2L2PiSequence + EtaTo2L2PiTables + EtaTo4MuSequence + EtaTo4MuTables)
+    return process
+
+
+def nanoAOD_customize2L2Pi1Gamma(process,isMC):
+    if isMC:
+        process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequenceMC + muonBPHTablesMC + EtaMuMuMCSequence + EtaMuMuMCTables +  photonBPHSequenceMC + photonBPHTablesMC + EtaTo2L2Pi1GammaMCSequence + EtaTo2L2Pi1GammaMCTables)
+    else:
+        process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequence + muonBPHTables + EtaMuMuSequence + EtaMuMuTables +  photonBPHSequence + photonBPHTables + EtaTo2L2Pi1GammaSequence + EtaTo2L2Pi1GammaTables)
+    return process
+
+
 def nanoAOD_customizeEta2Mu2PiBPH(process, isMC):
     if isMC:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + EtaMuMuMCSequence + EtaMuMuMCTables + EtaTo2L2PiMCSequence + EtaTo2L2PiMCTables )
+       process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequenceMC + muonBPHTablesMC + EtaMuMuMCSequence + EtaMuMuMCTables + EtaTo2L2PiMCSequence + EtaTo2L2PiMCTables + EtaGenMCSequence + EtaGenMCTables )
     else:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + EtaMuMuSequence + EtaMuMuTables + EtaTo2L2PiSequence + EtaTo2L2PiTables)
+       process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequence + muonBPHTables + EtaMuMuSequence + EtaMuMuTables + EtaTo2L2PiSequence + EtaTo2L2PiTables)
     return process
 
 def nanoAOD_customizeEtaTo4MuBPH(process, isMC):
     if isMC:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + EtaTo4MuMCSequence + EtaTo4MuMCTables )
+       process.nanoSequence = cms.Sequence( process.nanoSequence + EtaTo4MuMCSequence + EtaTo4MuMCTables + EtaGenMCSequence + EtaGenMCTables )
     else:
        process.nanoSequence = cms.Sequence( process.nanoSequence + EtaTo4MuSequence + EtaTo4MuTables)
+    return process
+       
+def nanoAOD_customizeEtaBPH(process, isMC):
+    if isMC:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequenceMC + muonBPHTablesMC + EtaMuMuMCSequence + EtaMuMuMCTables + EtaTo2L2PiMCSequence + EtaTo2L2PiMCTables + EtaTo4MuMCSequence + EtaTo4MuMCTables + EtaGenMCSequence + EtaGenMCTables)
+    else:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequence + muonBPHTables + EtaMuMuSequence + EtaMuMuTables + EtaTo2L2PiSequence + EtaTo2L2PiTables + EtaTo4MuSequence + EtaTo4MuTables)
     return process
 
 def nanoAOD_customizeBDKstar(process, isMC):
@@ -89,9 +121,9 @@ def nanoAOD_customizeBDKstar(process, isMC):
 
 def nanoAOD_customizeTrackBPH(process,isMC):
     if isMC:
-       process.nanoSequence =  cms.Sequence( process.nanoSequence + tracksBPHSequenceMC)# + tracksBPHTablesMC)
+       process.nanoSequence =  cms.Sequence( process.nanoSequence + tracksBPHSequenceMC + tracksBPHTablesMC)
     else:
-       process.nanoSequence = cms.Sequence( process.nanoSequence + tracksBPHSequence)# + tracksBPHTables)
+       process.nanoSequence = cms.Sequence( process.nanoSequence + tracksBPHSequence + tracksBPHTables)
     return process
 
 

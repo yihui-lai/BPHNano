@@ -73,7 +73,8 @@ print(options)
 print("/////////////////////////////////////////////////////////////////////////")
 
 globaltag = '130X_mcRun3_2022_realistic_v5' if options.isMC else '130X_dataRun3_Prompt_v3'
-
+#globaltag = '130X_mcRun3_2022_realistic_postEE_v6'
+#globaltag = '130X_mcRun3_2022_realistic_v5'
 
 if options.isMC:
    options.tag+="_mc"
@@ -112,8 +113,8 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('PhysicsTools.BPHNano.nanoBPH_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+
 process.MessageLogger.cerr.FwkReport.reportEvery = options.reportEvery
-process.MessageLogger.cerr.FwkReport.reportEvery = 500
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(options.maxEvents)
 )
@@ -184,7 +185,12 @@ if options.isMC:
 # BPH nano
 #process = nanoAOD_customizeMuonBPH(process, options.isMC)
 #process = nanoAOD_customizeTrackBPH(process, options.isMC)
-process = nanoAOD_customizeBDKstar(process,options.isMC)
+#process = nanoAOD_customizeEta2Mu2PiBPH(process,options.isMC)
+
+process = nanoAOD_customizeMuonBPH(process, options.isMC)
+process = nanoAOD_customizeEtaTo4MuBPH(process,options.isMC)
+
+#process = nanoAOD_customizeEtaBPH(process,options.isMC)
 
 
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)

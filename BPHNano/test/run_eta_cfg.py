@@ -74,7 +74,6 @@ print("/////////////////////////////////////////////////////////////////////////
 
 globaltag = '130X_mcRun3_2022_realistic_v5' if options.isMC else '130X_dataRun3_Prompt_v3'
 
-
 if options.isMC:
    options.tag+="_mc"
 else:
@@ -182,14 +181,13 @@ if options.isMC:
 
 
 # BPH nano
-#process = nanoAOD_customizeMuonBPH(process, options.isMC)
-#process = nanoAOD_customizeTrackBPH(process, options.isMC)
+process = nanoAOD_customizeTrackBPH(process, options.isMC)
 #process = nanoAOD_customizeEta2Mu2PiBPH(process,options.isMC)
-
-process = nanoAOD_customizeMuonBPH(process, options.isMC)
-process = nanoAOD_customizeEtaTo4MuBPH(process,options.isMC)
+process = nanoAOD_customizeEta2Mu2PiAnd4MuBPH(process,options.isMC)
 
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
+
+
 
 #nanoTableTaskFS = cms.Task(
 #    genParticleTask, particleLevelTask, globalTablesMCTask,

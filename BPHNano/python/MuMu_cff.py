@@ -5,10 +5,10 @@ from PhysicsTools.NanoAOD.common_cff import *
 
 MuMu = cms.EDProducer(
     'DiMuonBuilder',
-    src = cms.InputTag('muonBPH', 'SelectedMuons'),
-    transientTracksSrc = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
-    #src = cms.InputTag('muonBPH', 'AllMuons'),
-    #transientTracksSrc = cms.InputTag('muonBPH', 'AllTransientMuons'),
+    #src = cms.InputTag('muonBPH', 'SelectedMuons'),
+    #transientTracksSrc = cms.InputTag('muonBPH', 'SelectedTransientMuons'),
+    src = cms.InputTag('muonBPH', 'AllMuons'),
+    transientTracksSrc = cms.InputTag('muonBPH', 'AllTransientMuons'),
     lep1Selection = cms.string('pt > 0.3 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
     lep2Selection = cms.string('pt > 0.3 && abs(eta) < 2.4 && isLooseMuon && isGlobalMuon'),
     preVtxSelection  = cms.string('abs(userCand("l1").vz - userCand("l2").vz) <= 1.'

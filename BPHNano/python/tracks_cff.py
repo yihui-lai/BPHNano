@@ -6,7 +6,7 @@ tracksBPH = cms.EDProducer(
     beamSpot        = cms.InputTag("offlineBeamSpot"),
     tracks          = cms.InputTag("packedPFCandidates"),
     lostTracks      = cms.InputTag("lostTracks"),
-    trackSelection  = cms.string("pt>2 && abs(eta)<2.4"),  # We need all tracks for tagging, no cuts here for now
+    trackSelection  = cms.string("pt>1.0 && abs(eta)<2.5"),  # We need all tracks for tagging, no cuts here for now
     muons           = cms.InputTag("slimmedMuons"),
     electrons       = cms.InputTag("slimmedElectrons"),
     maxDzDilep      = cms.double(-1.0),
@@ -38,6 +38,11 @@ trackBPHTable = cms.EDProducer(
         #dzTrg   = Var("userFloat('dzTrg')", float, doc="dz from the corresponding trigger muon [cm]"),
         isMatchedToMuon = Var("userInt('isMatchedToMuon')", bool, doc="track was used to build a muon"),
         isMatchedToEle  = Var("userInt('isMatchedToEle')", bool, doc="track was used to build a PF ele"),
+        isPFMuon      = Var("userInt('isPFMuon')", int, doc="isPFMuon"),
+        isTracker     = Var("userInt('isTracker')", int, doc="isTracker"),
+        isGlobal      = Var("userInt('isGlobal')", int, doc="isGlobal"),
+        isLoose     = Var("userInt('isLoose')", int, doc="isLoose"),
+        isMedium    = Var("userInt('isMedium')", int, doc="isMedium"),
         nValidHits      = Var("userInt('nValidHits')", int, doc="Number of valid hits"),
         # Covariance matrix elements for helix parameters for decay time uncertainty
         covQopQop = Var("userFloat('covQopQop')", float, doc="Cov. of q/p with q/p", precision=10),

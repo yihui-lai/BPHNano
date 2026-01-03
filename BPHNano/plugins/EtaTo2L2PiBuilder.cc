@@ -216,6 +216,7 @@ void EtaTo2L2PiBuilder::produce(edm::StreamID, edm::Event &evt, edm::EventSetup 
         cand.addUserFloat("fitted_mass", fit_p4.mass());
         cand.addUserFloat("fitted_massErr",
                           sqrt(fitter.fitted_candidate().kinematicParametersError().matrix()(6, 6)));
+        cand.addUserFloat("fitted_rapidity", fit_p4.Rapidity());
 
         // other vars
         cand.addUserFloat("cos_theta_2D",
