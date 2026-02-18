@@ -32,6 +32,7 @@ public:
     produces<nanoaod::FlatTable>();
     const std::string & type = params.getParameter<std::string>("objType");
     if (type == "Muon") type_ = MMuon;
+    else if (type == "BPHMuon") type_ = MMuon;
     else if (type == "Electron") type_ = MElectron;
     else if (type == "Tau") type_ = MTau;
     else if (type == "Photon") type_ = MPhoton;

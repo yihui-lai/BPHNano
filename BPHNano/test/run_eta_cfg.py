@@ -200,7 +200,7 @@ nanoTableTaskFS = cms.Task(
 
 if options.isMC:
     #process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(genWeightsTableTask) )
-    process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(nanoTableTaskFS))
+    process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(nanoTableTaskFS) )
 
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.FEVTDEBUGHLToutput_step = cms.EndPath(process.FEVTDEBUGHLToutput)

@@ -6,7 +6,7 @@ tracksBPH = cms.EDProducer(
     beamSpot        = cms.InputTag("offlineBeamSpot"),
     tracks          = cms.InputTag("packedPFCandidates"),
     lostTracks      = cms.InputTag("lostTracks"),
-    trackSelection  = cms.string("pt>1.0 && abs(eta)<2.5"),  # We need all tracks for tagging, no cuts here for now
+    trackSelection  = cms.string("pt>0.5 && abs(eta)<2.5"),  # We need all tracks for tagging, no cuts here for now
     muons           = cms.InputTag("slimmedMuons"),
     electrons       = cms.InputTag("slimmedElectrons"),
     maxDzDilep      = cms.double(-1.0),
@@ -45,14 +45,14 @@ trackBPHTable = cms.EDProducer(
         isMedium    = Var("userInt('isMedium')", int, doc="isMedium"),
         nValidHits      = Var("userInt('nValidHits')", int, doc="Number of valid hits"),
         # Covariance matrix elements for helix parameters for decay time uncertainty
-        covQopQop = Var("userFloat('covQopQop')", float, doc="Cov. of q/p with q/p", precision=10),
-        covQopLam = Var("userFloat('covQopLam')", float, doc="Cov. of q/p with lambda", precision=10),
-        covQopPhi = Var("userFloat('covQopPhi')", float, doc="Cov. of q/p with phi", precision=10),
-        covLamLam = Var("userFloat('covLamLam')", float, doc="Cov. of lambda with lambda", precision=10),
-        covLamPhi = Var("userFloat('covLamPhi')", float, doc="Cov. of lambda with phi", precision=10),
-        covPhiPhi = Var("userFloat('covPhiPhi')", float, doc="Cov. of phi with phi", precision=10),
+        #covQopQop = Var("userFloat('covQopQop')", float, doc="Cov. of q/p with q/p", precision=10),
+        #covQopLam = Var("userFloat('covQopLam')", float, doc="Cov. of q/p with lambda", precision=10),
+        #covQopPhi = Var("userFloat('covQopPhi')", float, doc="Cov. of q/p with phi", precision=10),
+        #covLamLam = Var("userFloat('covLamLam')", float, doc="Cov. of lambda with lambda", precision=10),
+        #covLamPhi = Var("userFloat('covLamPhi')", float, doc="Cov. of lambda with phi", precision=10),
+        #covPhiPhi = Var("userFloat('covPhiPhi')", float, doc="Cov. of phi with phi", precision=10),
         # Additional track parameters for tagging
-        ptErr      = Var("userFloat('ptErr')", float, doc="Pt uncertainty"),
+        #ptErr      = Var("userFloat('ptErr')", float, doc="Pt uncertainty"),
         normChi2   = Var("userFloat('normChi2')", float, doc="Track fit chi-squared divided by n.d.o.f."),
         nValidPixelHits = Var("userInt('nValidPixelHits')", float, doc="Number of pixel hits"),
         # TODO: check impact parameters

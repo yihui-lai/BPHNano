@@ -1,9 +1,11 @@
 import FWCore.ParameterSet.Config as cms
+#from PhysicsTools.NanoAOD.nano_eras_cff import *
 from PhysicsTools.NanoAOD.common_cff import *
+#from PhysicsTools.NanoAOD.simplePATMuonFlatTableProducer_cfi import simplePATMuonFlatTableProducer
 
 Path=["HLT_DoubleMu4_3_LowMass", "HLT_DoubleMu2_Jpsi_LowPt", "HLT_Dimuon0_Jpsi3p5_Muon2"]
 
-Path=["HLT_DoubleMu4_3_LowMass", "HLT_Mu4_L1DoubleMu", "HLT_Mu0_L1DoubleMu", "HLT_Mu8"]
+Path=["HLT_DoubleMu4_3_LowMass", "HLT_Mu4_L1DoubleMu", "HLT_Mu0_L1DoubleMu", "HLT_Mu8", "HLT_Dimuon10_Upsilon_y1p4"]
 #Path=["HLT_DoubleMu4_3_LowMass"]
 
 use_allmuon=True
@@ -63,8 +65,12 @@ muonBPHTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         rawmuon_idx = Var("userInt('rawmuon_idx')", int, doc="rawmuon_idx"),
         mediumId    = Var("passed('CutBasedIdMedium')", bool, doc="cut-based ID, medium WP"),
         tightId     = Var("passed('CutBasedIdTight')", bool, doc="cut-based ID, tight WP"),
-        softId      = Var("passed('SoftCutBasedId')", bool, doc="soft cut-based ID"),
-        softMvaId   = Var("passed('SoftMvaId')", bool, doc="soft MVA ID"),
+        softId = Var("passed('SoftCutBasedId')",bool,doc="soft cut-based ID"),
+        softMvaId = Var("passed('SoftMvaId')",bool,doc="soft MVA ID"),
+#        softMva = Var("softMvaValue()",float,doc="soft MVA ID score",precision=6),
+#        softMvaRun3 = Var("softMvaRun3Value()",float,doc="soft MVA Run3 ID score",precision=6),
+#        mvaMuID     = Var("userFloat('mvaIDMuon')", float, doc="MVA-based ID score",precision=6),
+#        mvaMuID_WP  = Var("userFloat('mvaIDMuon_wpMedium') + userFloat('mvaIDMuon_wpTight')","uint8",doc="MVA-based ID selector WPs (1=MVAIDwpMedium,2=MVAIDwpTight)"),
         pfIsoId     = Var("passed('PFIsoVeryLoose')+passed('PFIsoLoose')+passed('PFIsoMedium')+passed('PFIsoTight')+passed('PFIsoVeryTight')+passed('PFIsoVeryVeryTight')", "uint8", doc="PFIso ID from miniAOD selector (1=PFIsoVeryLoose, 2=PFIsoLoose, 3=PFIsoMedium, 4=PFIsoTight, 5=PFIsoVeryTight, 6=PFIsoVeryVeryTight)"),
         tkIsoId     = Var("?passed('TkIsoTight')?2:passed('TkIsoLoose')", "uint8", doc="TkIso ID (1=TkIsoLoose, 2=TkIsoTight)"),
         miniIsoId   = Var("passed('MiniIsoLoose')+passed('MiniIsoMedium')+passed('MiniIsoTight')+passed('MiniIsoVeryTight')", "uint8", doc="MiniIso ID from miniAOD selector (1=MiniIsoLoose, 2=MiniIsoMedium, 3=MiniIsoTight, 4=MiniIsoVeryTight)"),
@@ -77,6 +83,10 @@ muonBPHTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         fired_HLT_Mu0_L1DoubleMu = Var("userInt('HLT_Mu0_L1DoubleMu')", int, doc="reco muon fired this trigger"),
         fired_HLT_Mu8 = Var("userInt('HLT_Mu8')", int, doc="reco muon fired this trigger"),
     ),
+#    externalVariables = cms.PSet(
+#        promptMVA = ExtVar(cms.InputTag("muonPROMPTMVA"),float, doc="Prompt MVA lepton ID score. Corresponds to the previous mvaTTH",precision=14),
+#        mvaLowPt = ExtVar(cms.InputTag("muonMVALowPt"),float, doc="Low pt muon ID score",precision=14),
+#    ),
 )
 
 muonBPHMCMatch = cms.EDProducer("MCMatcher",                  # cut on deltaR, deltaPt/Pt; pick best by deltaR

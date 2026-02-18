@@ -118,6 +118,7 @@ void TrackMerger::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const 
     //arranging cuts for speed
     if (!trk.hasTrackDetails()) continue;
     if (fabs(trk.pdgId()) != 211 && fabs(trk.pdgId()) != 321) continue; //do we want also to keep muons?
+    //if (fabs(trk.pdgId()) != 11 ) continue;
     if ( !track_selection_(trk) ) continue;
 
     //bool skipTrack = true;
