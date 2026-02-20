@@ -64,7 +64,8 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/eos/user/y/yilai/eta/crab_etaprimeTo4mu/Run3Summer22_MiniAODv4/MiniAODv4_1.root'),
+    #fileNames = cms.untracked.vstring('file:/eos/user/y/yilai/eta/crab_etaprimeTo4mu/Run3Summer22_MiniAODv4/MiniAODv4_1.root'),
+    fileNames = cms.untracked.vstring('file:/eos/cms/store/group/phys_bphys/yilai/pluto_mc/Eta_4mu/Run3Summer23BPix_MiniAODv4/260218_231914/0000/MiniAODv4_7.root'),
     #fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/y/yilai/gamma/LambdaBToJpsiLambda_JpsiFilter_MuFilter_LambdaFilter.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
@@ -155,8 +156,11 @@ process = nanoAOD_customizeMC(process)
 # Lambdab0 -> lambda0 + hh
 #process = nanoAOD_customizeLambdahh(process, True)
 
-process = nanoAOD_customizeMuonBPH(process, True)
-process = nanoAOD_customizeEtaTo4MuBPH(process, True)
+#process = nanoAOD_customizeMuonBPH(process, True)
+#process = nanoAOD_customizeEtaTo4MuBPH(process, True)
+
+process = nanoAOD_customizeTrackBPH(process, True)
+process = nanoAOD_customizeEta2Mu2PiAnd4MuBPH(process,True)
 
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(genWeightsTableTask))
 

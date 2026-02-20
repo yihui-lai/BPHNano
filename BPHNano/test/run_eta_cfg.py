@@ -188,19 +188,19 @@ process = nanoAOD_customizeEta2Mu2PiAnd4MuBPH(process,options.isMC)
 process.nanoAOD_BPH_step = cms.Path(process.nanoSequence)
 
 
-
 #nanoTableTaskFS = cms.Task(
 #    genParticleTask, particleLevelTask, globalTablesMCTask,
-#    genWeightsTableTask, genVertexTablesTask, genParticleTablesTask, genProtonTablesTask, particleLevelTablesTask
+#    #genWeightsTableTask, 
+#    genVertexTablesTask, genParticleTablesTask, genProtonTablesTask, particleLevelTablesTask
+#)
+#
+#nanoTableTaskFS = cms.Task(
+#    genWeightsTableTask
 #)
 
-nanoTableTaskFS = cms.Task(
-    genWeightsTableTask
-)
-
-if options.isMC:
-    #process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(genWeightsTableTask) )
-    process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(nanoTableTaskFS) )
+#if options.isMC:
+#    #process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(genWeightsTableTask) )
+#    process.nanoAOD_BPH_step = cms.Path(process.nanoSequence + cms.Sequence(nanoTableTaskFS) )
 
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.FEVTDEBUGHLToutput_step = cms.EndPath(process.FEVTDEBUGHLToutput)
