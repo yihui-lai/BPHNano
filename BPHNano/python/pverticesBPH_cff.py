@@ -1,7 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 #from PhysicsTools.NanoAOD.vertices_cff import *
-from PhysicsTools.NanoAOD.simpleCandidateFlatTableProducer_cfi import simpleCandidateFlatTableProducer
 
 pVertexTable = cms.EDProducer("PVertexBPHTable",
     pvSrc = cms.InputTag("offlineSlimmedPrimaryVertices"),

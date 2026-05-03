@@ -26,7 +26,6 @@ echo Found Proxy in: $X509_USER_PROXY
 echo "Running script with arguments: $@"
 # Run the main CMSSW configuration
 #echo ">>> Running cmsRun..."
-#cmsRun test_mc_2022.py
 echo 'cmsRun -j FrameworkJobReport.xml -p PSet.py'
 cmsRun -j FrameworkJobReport.xml PSet.py
 echo 'DONE cmsRun PSet.py'
@@ -37,5 +36,5 @@ ls
 
 # Run post-processing script (if needed)
 echo ">>> Running post-processing..."
-python3 BDh_postproc.py
+python3 postproc_mc.py
 fi
