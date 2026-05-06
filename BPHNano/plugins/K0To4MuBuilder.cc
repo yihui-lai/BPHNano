@@ -1,0 +1,358 @@
+/// original authors: RK18 team
+#include "FWCore/Framework/interface/global/EDProducer.h"
+#include "FWCore/Framework/interface/Event.h"
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
+#include "FWCore/Utilities/interface/InputTag.h"
+#include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
+#include "MagneticField/Engine/interface/MagneticField.h"
+#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
+
+#include <vector>
+#include <memory>
+#include <map>
+#include <string>
+#include "CommonTools/Utils/interface/StringCutObjectSelector.h"
+#include "DataFormats/PatCandidates/interface/CompositeCandidate.h"
+#include "DataFormats/Math/interface/deltaR.h"
+#include "CommonTools/Statistics/interface/ChiSquaredProbability.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+#include "helper.h"
+#include <limits>
+#include <algorithm>
+#include <numeric>
+#include "KinVtxFitter.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
+
+template<typename Lepton>
+class K0To4LepBuilder : public edm::global::EDProducer<> {
+
+  // perhaps we need better structure here (begin run etc)
+public:
+  typedef std::vector<Lepton> LeptonCollection;
+  typedef std::vector<reco::TransientTrack> TransientTrackCollection;
+
+  explicit K0To4LepBuilder(const edm::ParameterSet &cfg):
+    l1_selection_{cfg.getParameter<std::string>("lep1Selection")},
+    l2_selection_{cfg.getParameter<std::string>("lep2Selection")},
+    l3_selection_{cfg.getParameter<std::string>("lep3Selection")},
+    l4_selection_{cfg.getParameter<std::string>("lep4Selection")},
+    pre_vtx_selection_{cfg.getParameter<std::string>("preVtxSelection")},
+    post_vtx_selection_{cfg.getParameter<std::string>("postVtxSelection")},
+    bFieldToken_{esConsumes<MagneticField, IdealMagneticFieldRecord>()},
+    muonSrc_{consumes<pat::MuonCollection>( cfg.getParameter<edm::InputTag>("muonCollection") )},
+    src_{consumes<LeptonCollection>( cfg.getParameter<edm::InputTag>("src") )},
+    ttracks_src_{consumes<TransientTrackCollection>( cfg.getParameter<edm::InputTag>("transientTracksSrc") )} {
+    produces<pat::CompositeCandidateCollection>("Selected4Leptons");
+  }
+
+  ~K0To4LepBuilder() override {}
+
+  void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
+
+  static void fillDescriptions(edm::ConfigurationDescriptions &descriptions) {}
+
+private:
+  const StringCutObjectSelector<Lepton> l1_selection_; // cut on leading lepton
+  const StringCutObjectSelector<Lepton> l2_selection_; // cut on sub-leading lepton
+  const StringCutObjectSelector<Lepton> l3_selection_; // cut on leading lepton
+  const StringCutObjectSelector<Lepton> l4_selection_; // cut on sub-leading lepton
+  const StringCutObjectSelector<pat::CompositeCandidate> pre_vtx_selection_; // cut on the di-lepton before the SV fit
+  const StringCutObjectSelector<pat::CompositeCandidate> post_vtx_selection_; // cut on the di-lepton after the SV fit
+  const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> bFieldToken_;
+  const edm::EDGetTokenT<pat::MuonCollection> muonSrc_;
+
+  const edm::EDGetTokenT<LeptonCollection> src_;
+  const edm::EDGetTokenT<TransientTrackCollection> ttracks_src_;
+};
+
+template<typename Lepton>
+void K0To4LepBuilder<Lepton>::produce(edm::StreamID, edm::Event &evt, edm::EventSetup const &iSetup) const {
+   
+  edm::ESHandle<MagneticField> fieldHandle;
+  const auto& bField = iSetup.getData(bFieldToken_);
+  AnalyticalImpactPointExtrapolator extrapolator(&bField);
+
+  //input
+  edm::Handle<pat::MuonCollection> muons;
+  evt.getByToken(muonSrc_, muons);
+
+  edm::Handle<LeptonCollection> leptons;
+  evt.getByToken(src_, leptons);
+
+  edm::Handle<TransientTrackCollection> ttracks;
+  evt.getByToken(ttracks_src_, ttracks);
+
+  // output
+  std::unique_ptr<pat::CompositeCandidateCollection> ret_value(new pat::CompositeCandidateCollection());
+
+//  std::cout<<"leptons->size: "<< leptons->size()<<std::endl;
+//  std::cout<<"muons->size: "<< muons->size()<<std::endl;
+  const size_t nLep = leptons->size();
+//  //if (nLep < 4) {
+//  //  evt.put(std::move(ret_value), "Selected4Leptons");
+//  //  return;
+//  //}
+//
+//
+//  for (unsigned int l1_idx = 0; l1_idx < muons->size(); l1_idx++) {
+//      auto l1_ptr = muons->at(l1_idx);
+//      //if (!l1_selection_(&l1_ptr)) continue;
+//
+//      for (unsigned int l2_idx = (l1_idx + 1); l2_idx < muons->size(); l2_idx++) {
+//          auto l2_ptr = muons->at(l2_idx);
+//          //if (!l2_selection_(*l2_ptr)) continue;
+//      
+//      	  for (unsigned int l3_idx = (l2_idx + 1); l3_idx < muons->size(); l3_idx++) {
+//              auto l3_ptr = muons->at(l3_idx);
+//              //if (!l3_selection_(*l3_ptr)) continue;
+//      
+//      	      for (unsigned int l4_idx = (l3_idx + 1); l4_idx < muons->size(); l4_idx++) {
+//                  auto l4_ptr = muons->at(l4_idx);
+//                  //if (!l4_selection_(*l4_ptr)) continue;
+//
+//                  const reco::TransientTrack l1_ptrTT((*(l1_ptr.bestTrack())), &bField);
+//                  const reco::TransientTrack l2_ptrTT((*(l1_ptr.bestTrack())), &bField);
+//                  const reco::TransientTrack l3_ptrTT((*(l1_ptr.bestTrack())), &bField);
+//                  const reco::TransientTrack l4_ptrTT((*(l1_ptr.bestTrack())), &bField);
+//                  if (!l1_ptrTT.isValid()) continue;
+//                  if (!l2_ptrTT.isValid()) continue;
+//                  if (!l3_ptrTT.isValid()) continue;
+//                  if (!l4_ptrTT.isValid()) continue;
+//	            pat::CompositeCandidate four_lepton;
+//          math::PtEtaPhiMLorentzVector l1_p4(
+//              l1_ptr.pt(),
+//              l1_ptr.eta(),
+//              l1_ptr.phi(),
+//              MUON_MASS
+//          );
+//          math::PtEtaPhiMLorentzVector l2_p4(
+//              l2_ptr.pt(),
+//              l2_ptr.eta(),
+//              l2_ptr.phi(),
+//              MUON_MASS
+//          );
+//          math::PtEtaPhiMLorentzVector l3_p4(
+//              l3_ptr.pt(),
+//              l3_ptr.eta(),
+//              l3_ptr.phi(),
+//              MUON_MASS
+//          );
+//          math::PtEtaPhiMLorentzVector l4_p4(
+//              l4_ptr.pt(),
+//              l4_ptr.eta(),
+//              l4_ptr.phi(),
+//              MUON_MASS
+//          );
+//          auto etap4 = l1_p4 + l2_p4 + l3_p4 + l4_p4;
+//          four_lepton.setP4(etap4);
+//          if (!pre_vtx_selection_(four_lepton)) continue;
+//          std::cout<<"pt: "<< four_lepton.pt()<<std::endl;
+//          std::cout<<"mass: "<< four_lepton.mass()<<std::endl;
+//          std::cout<<"pass pre_vtx_selection_ "<<std::endl;
+//
+//		  //
+//          KinVtxFitter fitter(
+//			  {l1_ptrTT, l2_ptrTT, l3_ptrTT, l4_ptrTT},
+//          {MUON_MASS,MUON_MASS,MUON_MASS,MUON_MASS},
+//          {LEP_SIGMA, LEP_SIGMA, LEP_SIGMA, LEP_SIGMA} //some small sigma for the particle mass
+//          );
+//          std::cout<<"fitter.success? "<<fitter.success()<<std::endl;
+//if (!fitter.success()) continue;
+//          std::cout<<"pass fit "<<std::endl;
+//                  std::cout << "Muon Pt=" << l1_ptr.pt() << " K0=" << l1_ptr.eta() << " Phi=" << l1_ptr.phi()  << std::endl;
+//                  std::cout << "Muon Pt=" << l2_ptr.pt() << " K0=" << l2_ptr.eta() << " Phi=" << l2_ptr.phi()  << std::endl;
+//                  std::cout << "Muon Pt=" << l3_ptr.pt() << " K0=" << l3_ptr.eta() << " Phi=" << l3_ptr.phi()  << std::endl;
+//                  std::cout << "Muon Pt=" << l4_ptr.pt() << " K0=" << l4_ptr.eta() << " Phi=" << l4_ptr.phi()  << std::endl;
+//
+//	  //
+//	      }
+//	  }
+//      }
+//  }
+
+
+  for (size_t l1_idx = 0; l1_idx < nLep; ++l1_idx) {
+    edm::Ptr<Lepton> l1_ptr(leptons, l1_idx);
+    if (!l1_selection_(*l1_ptr)) continue;
+
+    for (size_t l2_idx = l1_idx + 1; l2_idx < nLep; ++l2_idx) {
+      edm::Ptr<Lepton> l2_ptr(leptons, l2_idx);
+      if (!l2_selection_(*l2_ptr)) continue;
+      
+      for (size_t l3_idx = l2_idx + 1; l3_idx < nLep; ++l3_idx) {
+        //if (l3_idx==l1_idx || l3_idx==l2_idx) continue;
+     	edm::Ptr<Lepton> l3_ptr(leptons, l3_idx);
+        if (!l3_selection_(*l3_ptr)) continue;
+
+        for (size_t l4_idx = l3_idx + 1; l4_idx < nLep; ++l4_idx) {
+          //if (l4_idx==l1_idx || l4_idx==l2_idx) continue;
+  	  edm::Ptr<Lepton> l4_ptr(leptons, l4_idx);
+          if (!l4_selection_(*l4_ptr)) continue;
+
+	  // any 4 leptons
+
+	  //if(l1_ptr->pt()< l3_ptr->pt()) continue;
+
+          pat::CompositeCandidate four_lepton;
+          math::PtEtaPhiMLorentzVector l1_p4(
+              l1_ptr->pt(),
+              l1_ptr->eta(),
+              l1_ptr->phi(),
+              MUON_MASS
+          );
+          math::PtEtaPhiMLorentzVector l2_p4(
+              l2_ptr->pt(),
+              l2_ptr->eta(),
+              l2_ptr->phi(),
+              MUON_MASS
+          );
+          math::PtEtaPhiMLorentzVector l3_p4(
+              l3_ptr->pt(),
+              l3_ptr->eta(),
+              l3_ptr->phi(),
+              MUON_MASS
+          );
+          math::PtEtaPhiMLorentzVector l4_p4(
+              l4_ptr->pt(),
+              l4_ptr->eta(),
+              l4_ptr->phi(),
+              MUON_MASS
+          );
+          auto k0p4 = l1_p4 + l2_p4 + l3_p4 + l4_p4;
+          four_lepton.setP4(k0p4);
+          four_lepton.setCharge(l1_ptr->charge() + l2_ptr->charge() + l3_ptr->charge() + l4_ptr->charge());
+
+          four_lepton.addUserInt("l1_idx", l1_idx);
+          four_lepton.addUserInt("l2_idx", l2_idx);
+          four_lepton.addUserInt("l3_idx", l3_idx);
+          four_lepton.addUserInt("l4_idx", l4_idx);
+
+          four_lepton.addUserCand("l1", l1_ptr);
+          four_lepton.addUserCand("l2", l2_ptr);
+          four_lepton.addUserCand("l3", l3_ptr);
+          four_lepton.addUserCand("l4", l4_ptr);
+          //std::cout<<"pass lep selections: "<<std::endl;
+          //std::cout<<"pt: "<< four_lepton.pt()<<std::endl;
+          //std::cout<<"mass: "<< four_lepton.mass()<<std::endl;
+          //std::cout<<"charge: "<< four_lepton.charge()<<std::endl;
+          ////std::cout<<"mass: "<< l1_ptr->mass()<< l2_ptr->mass()<< l3_ptr->mass()<< l4_ptr->mass()<<std::endl;
+          //std::cout << "Muon Pt=" << l1_ptr->pt() << " K0=" << l1_ptr->eta() << " Phi=" << l1_ptr->phi()  << std::endl;
+          //std::cout << "Muon Pt=" << l2_ptr->pt() << " K0=" << l2_ptr->eta() << " Phi=" << l2_ptr->phi()  << std::endl;
+          //std::cout << "Muon Pt=" << l3_ptr->pt() << " K0=" << l3_ptr->eta() << " Phi=" << l3_ptr->phi()  << std::endl;
+          //std::cout << "Muon Pt=" << l4_ptr->pt() << " K0=" << l4_ptr->eta() << " Phi=" << l4_ptr->phi()  << std::endl;
+
+          if (!pre_vtx_selection_(four_lepton)) continue;
+          //std::cout<<"pass pre_vtx_selection_ "<<std::endl;
+          //std::cout << "Muon Pt=" << l1_ptr->pt() << " K0=" << l1_ptr->eta() << " Phi=" << l1_ptr->phi()  << std::endl;
+          //std::cout << "Muon Pt=" << l2_ptr->pt() << " K0=" << l2_ptr->eta() << " Phi=" << l2_ptr->phi()  << std::endl;
+          //std::cout << "Muon Pt=" << l3_ptr->pt() << " K0=" << l3_ptr->eta() << " Phi=" << l3_ptr->phi()  << std::endl;
+          //std::cout << "Muon Pt=" << l4_ptr->pt() << " K0=" << l4_ptr->eta() << " Phi=" << l4_ptr->phi()  << std::endl;
+
+	  // Vertex fit
+	  KinVtxFitter fitter(
+          {ttracks->at(l1_idx), ttracks->at(l2_idx), ttracks->at(l3_idx), ttracks->at(l4_idx)},
+          {MUON_MASS,MUON_MASS,MUON_MASS,MUON_MASS},
+          {LEP_SIGMA, LEP_SIGMA, LEP_SIGMA, LEP_SIGMA} //some small sigma for the particle mass
+          );
+	  //std::cout<<"fitter.success? "<<fitter.success()<<std::endl;
+
+          //std::array<size_t, 4> iidxs = {{l1_idx, l2_idx, l3_idx, l4_idx}};
+          //for (size_t i = 0; i < 4; ++i) {
+          //    auto state = ttracks->at(iidxs[i]).impactPointState();
+	  //    if (!state.isValid()) std::cout << "Invalid state" << std::endl;
+          //    std::cout << "pT: " << state.globalMomentum().perp()
+          //              << " | pos: " << state.globalPosition()
+          //              << std::endl;
+          //}
+
+          if (!fitter.success()) continue;
+          //std::cout<<"pass fit "<<std::endl;
+
+	  //if (fitter.success()){
+	  four_lepton.setVertex(reco::Candidate::Point(
+            fitter.fitted_vtx().x(),
+            fitter.fitted_vtx().y(),
+            fitter.fitted_vtx().z()
+          ));
+
+          std::vector<std::string> dnames{ "l1", "l2", "l3", "l4" };
+          for (size_t idaughter = 0; idaughter < dnames.size(); idaughter++) {
+            four_lepton.addUserFloat("fitted_" + dnames[idaughter] + "_pt" , fitter.daughter_p4(idaughter).pt() );
+            four_lepton.addUserFloat("fitted_" + dnames[idaughter] + "_eta", fitter.daughter_p4(idaughter).eta() );
+            four_lepton.addUserFloat("fitted_" + dnames[idaughter] + "_phi", fitter.daughter_p4(idaughter).phi() );
+          }
+
+          //four_lepton.addUserFloat("lep_deltaR", reco::deltaR(*l1_ptr, *l2_ptr));
+          four_lepton.addUserInt("sv_ok", fitter.success() ? 1 : 0);
+          four_lepton.addUserFloat("sv_chi2", fitter.chi2());
+          four_lepton.addUserFloat("sv_ndof", fitter.dof());
+          four_lepton.addUserFloat("sv_prob", fitter.prob());
+	  auto fit_p4 = fitter.fitted_p4();
+          four_lepton.addUserFloat("fitted_mass", fitter.success() ? fitter.fitted_candidate().mass() : -1);
+          four_lepton.addUserFloat("fitted_pt", fitter.success() ? fit_p4.pt() : -1);
+          four_lepton.addUserFloat("fitted_eta", fitter.success() ? fit_p4.eta() : -1);
+          four_lepton.addUserFloat("fitted_phi", fitter.success() ? fit_p4.phi() : -1);
+          four_lepton.addUserFloat("fitted_rapidity", fitter.success() ? fit_p4.Rapidity() : -1);
+
+	  four_lepton.addUserFloat("fitted_massErr", fitter.success() ? sqrt(fitter.fitted_candidate().kinematicParametersError().matrix()(6, 6)) : -1);
+          four_lepton.addUserFloat("vtx_x", four_lepton.vx());
+          four_lepton.addUserFloat("vtx_y", four_lepton.vy());
+          four_lepton.addUserFloat("vtx_z", four_lepton.vz());
+
+          if (!post_vtx_selection_(four_lepton)) continue;
+          //std::cout<<"pass pot fit cut "<<fitter.fitted_candidate().mass()<<std::endl;
+
+	  // You can compute pairwise dca if needed, e.g. average over 6 pairs:
+          float dca_sum = 0; int dca_n = 0;
+          std::array<size_t, 4> idxs = {{l1_idx, l2_idx, l3_idx, l4_idx}};
+          for (size_t i = 0; i < 4; ++i) {
+            for (size_t j = i+1; j < 4; ++j) {
+              const auto& imp1 = ttracks->at(idxs[i]).impactPointTSCP();
+              const auto& imp2 = ttracks->at(idxs[j]).impactPointTSCP();
+              if (!imp1.isValid() || !imp2.isValid()) continue;
+              ClosestApproachInRPhi cApp;
+              cApp.calculate(imp1.theState(), imp2.theState());
+              if (!cApp.status()) continue;
+              dca_sum += std::abs(cApp.distance());
+              dca_n++;
+            }
+          }
+          four_lepton.addUserFloat("dca_avg", dca_n > 0 ? dca_sum/dca_n : -1);
+          //std::cout<<"dca_avg "<<dca_sum/dca_n<<std::endl;
+
+          std::vector<float> dRs;
+          dRs.reserve(6);
+          dRs.push_back(reco::deltaR(*l1_ptr, *l2_ptr));
+          dRs.push_back(reco::deltaR(*l1_ptr, *l3_ptr));
+          dRs.push_back(reco::deltaR(*l1_ptr, *l4_ptr));
+          dRs.push_back(reco::deltaR(*l2_ptr, *l3_ptr));
+          dRs.push_back(reco::deltaR(*l2_ptr, *l4_ptr));
+          dRs.push_back(reco::deltaR(*l3_ptr, *l4_ptr));
+          
+          float minDR = *std::min_element(dRs.begin(), dRs.end());
+          float maxDR = *std::max_element(dRs.begin(), dRs.end());
+          float avgDR = std::accumulate(dRs.begin(), dRs.end(), 0.0f) / dRs.size();
+          
+          four_lepton.addUserFloat("lep_min_deltaR", minDR);
+          four_lepton.addUserFloat("lep_max_deltaR", maxDR);
+          four_lepton.addUserFloat("lep_avg_deltaR", avgDR);
+
+          ret_value->push_back(four_lepton);
+	}
+      }
+    }
+  }
+
+  evt.put(std::move(ret_value), "Selected4Leptons");
+}
+
+#include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
+typedef K0To4LepBuilder<pat::Muon> K0To4MuBuilder;
+typedef K0To4LepBuilder<pat::Electron> K0To4ElBuilder;
+
+#include "FWCore/Framework/interface/MakerMacros.h"
+DEFINE_FWK_MODULE(K0To4MuBuilder);
+DEFINE_FWK_MODULE(K0To4ElBuilder);

@@ -33,6 +33,9 @@ from PhysicsTools.BPHNano.EtaMuMu_cff import *
 from PhysicsTools.BPHNano.EtaTo4Mu_cff import *
 from PhysicsTools.BPHNano.EtaTo2L2Pi_cff import *
 from PhysicsTools.BPHNano.EtaTo2L2PiGamma_cff import *
+from PhysicsTools.BPHNano.K0MuMu_cff import *
+from PhysicsTools.BPHNano.K0To4Mu_cff import *
+from PhysicsTools.BPHNano.K0To2L2Pi_cff import *
 from PhysicsTools.BPHNano.BToMuMuGammaConv_cff import *
 from PhysicsTools.BPHNano.LambdabToLambdahhBuilder import *
 from PhysicsTools.BPHNano.BDKstar_cff import *
@@ -82,6 +85,13 @@ def nanoAOD_customizeEta2Mu2PiAnd4MuBPH(process, isMC):
        process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequenceMC + muonBPHTablesMC + EtaMuMuMCSequence + EtaMuMuMCTables + EtaTo2L2PiMCSequence + EtaTo2L2PiMCTables + EtaTo4MuMCSequence + EtaTo4MuMCTables + EtaGenMCSequence + EtaGenMCTables  )
     else:
        process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequence + muonBPHTables + EtaMuMuSequence + EtaMuMuTables + EtaTo2L2PiSequence + EtaTo2L2PiTables + EtaTo4MuSequence + EtaTo4MuTables)
+    return process
+
+def nanoAOD_customizeK02Mu2PiAnd4MuBPH(process, isMC):
+    if isMC:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequenceMC + muonBPHTablesMC + K0MuMuMCSequence + K0MuMuMCTables + K0To2L2PiMCSequence + K0To2L2PiMCTables + K0To4MuMCSequence + K0To4MuMCTables + K0GenMCSequence + K0GenMCTables  )
+    else:
+       process.nanoSequence = cms.Sequence( process.nanoSequence + muonBPHSequence + muonBPHTables + K0MuMuSequence + K0MuMuTables + K0To2L2PiSequence + K0To2L2PiTables + K0To4MuSequence + K0To4MuTables)
     return process
 
 
